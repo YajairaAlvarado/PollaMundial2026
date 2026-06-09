@@ -40,7 +40,7 @@ jobs:
         working-directory: frontend
         env:
           VITE_STANDALONE: 'true'
-          VITE_BASE_URL: '/mipaginaweb/'
+          VITE_BASE_URL: '/PollaMundial2026/'
         run: npm run build
 
       - name: Setup Pages
