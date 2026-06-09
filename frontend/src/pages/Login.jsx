@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, LogIn, AlertCircle, Zap } from 'lucide-react';
 
 const mascots = [
   { emoji: '🦌', name: 'Alce', flag: '🇨🇦', country: 'Canadá' },
@@ -10,7 +10,7 @@ const mascots = [
 ];
 
 export default function Login() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, demoLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
@@ -76,8 +76,27 @@ export default function Login() {
           ))}
         </div>
 
+        {/* Quick access button */}
+        <div className="mb-4 fade-slide-in" style={{ animationDelay: '0.2s' }}>
+          <button
+            onClick={() => { demoLogin(); navigate('/dashboard', { replace: true }); }}
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-base bg-gradient-to-r from-yellow-400 to-yellow-500 text-blue-950 hover:from-yellow-300 hover:to-yellow-400 transition-all shadow-2xl shadow-yellow-500/30 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Zap size={20} />
+            ENTRAR A VER LA APP ⚽
+          </button>
+          <p className="text-white/30 text-xs text-center mt-2">Acceso rápido sin credenciales</p>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 mb-4 fade-slide-in" style={{ animationDelay: '0.25s' }}>
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-white/30 text-xs uppercase tracking-widest">o con cuenta corporativa</span>
+          <div className="h-px flex-1 bg-white/10" />
+        </div>
+
         {/* Login card */}
-        <div className="glass-card-dark rounded-2xl p-6 md:p-8 fade-slide-in" style={{ animationDelay: '0.2s' }}>
+        <div className="glass-card-dark rounded-2xl p-6 md:p-8 fade-slide-in" style={{ animationDelay: '0.3s' }}>
           <div className="text-center mb-6">
             <h2 className="text-white font-bold text-xl mb-1">Bienvenido</h2>
             <p className="text-white/50 text-sm">Ingresar con credenciales corporativas</p>

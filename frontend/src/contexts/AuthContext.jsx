@@ -39,6 +39,15 @@ export function AuthProvider({ children }) {
     return newUser;
   };
 
+  const demoLogin = () => {
+    const demoUser = { id: 0, username: 'demo', display_name: 'Visitante Demo', department: 'Andersen', avatar_initials: 'VD' };
+    const demoToken = 'demo-mode';
+    setToken(demoToken);
+    setUser(demoUser);
+    localStorage.setItem('wc2026_token', demoToken);
+    localStorage.setItem('wc2026_user', JSON.stringify(demoUser));
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -53,7 +62,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, loading, login, demoLogin, logout, updateUser, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );
