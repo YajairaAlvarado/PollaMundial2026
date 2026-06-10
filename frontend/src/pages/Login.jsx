@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
-import canchaBg from '../assets/andersen-cancha.jpg';
+import canchaBg from '../assets/papelitos2.jpg';
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
@@ -53,7 +53,7 @@ export default function Login() {
     >
       {/* Dark overlay for legibility */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.78) 0%, rgba(10,0,0,0.66) 45%, rgba(10,0,0,0.88) 100%)' }} />
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.65) 0%, rgba(10,0,0,0.55) 35%, rgba(10,0,0,0.82) 100%)' }} />
 
 <div className="w-full max-w-[420px] relative z-10">
 
@@ -62,14 +62,14 @@ export default function Login() {
           <img
             src={andersenLogo}
             alt="Andersen"
-            className="w-48"
-            style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.7))' }}
+            className="w-72"
+            style={{ filter: 'drop-shadow(0 3px 12px rgba(0,0,0,0.8))' }}
           />
           <img
             src={mundialistaLogo}
             alt="Mundialista"
-            className="w-[340px] max-w-full"
-            style={{ filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.6))' }}
+            className="w-[400px] max-w-full"
+            style={{ filter: 'drop-shadow(0 3px 14px rgba(0,0,0,0.7))' }}
           />
         </div>
 
