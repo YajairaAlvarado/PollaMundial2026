@@ -60,44 +60,106 @@ db.exec(`
   );
 `);
 
-// Check if data already seeded
-const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
-if (userCount.count === 0) {
-  seedData();
+// Seed employees (INSERT OR IGNORE — preserves password changes across redeploys)
+seedUsers();
+
+// Seed matches only if none exist
+const matchCount = db.prepare('SELECT COUNT(*) as count FROM matches').get();
+if (matchCount.count === 0) {
+  seedMatches();
 }
 
-function seedData() {
-  console.log('Seeding database...');
+function cap(s) { return s[0].toUpperCase() + s.slice(1); }
 
-  // Seed users
+const EMPLOYEE_MAILS = [
+  'raissa.aguila@ec.Andersen.com','sandy.alava@ec.Andersen.com','saray.aleman@ec.Andersen.com',
+  'ingrid.almeida@ec.Andersen.com','cristina.altamirano@ec.Andersen.com','yajaira.alvarado@ec.Andersen.com',
+  'britney.alvarez@ec.Andersen.com','juan.alvarez@ec.Andersen.com','luis.andrade@ec.Andersen.com',
+  'zoila.andrade@ec.Andersen.com','abraham.anzules@ec.Andersen.com','ana.aponte@ec.Andersen.com',
+  'ambar.aragundy@ec.Andersen.com','adriana.arcos@ec.Andersen.com','vanessa.arguello@ec.Andersen.com',
+  'nohelia.arreaga@ec.Andersen.com','kristel.arriaga@ec.Andersen.com','diana.bajana@ec.Andersen.com',
+  'domenica.baldeon@ec.Andersen.com','Daniela.Banegas@ec.Andersen.com','dante.bardellini@ec.Andersen.com',
+  'leandro.barona@ec.Andersen.com','aurelio.barreto@ec.Andersen.com','emilio.bazurto@ec.Andersen.com',
+  'beatriz.bolanos@ec.Andersen.com','raul.bolanos@ec.Andersen.com','marlon.bonilla@ec.Andersen.com',
+  'joselin.borja@ec.Andersen.com','francisco.briones@ec.Andersen.com','gabriela.burgos@ec.Andersen.com',
+  'alfredo.bustos@ec.Andersen.com','daniel.bustos@ec.Andersen.com','mercedes.calderon@ec.Andersen.com',
+  'hector.calderon@ec.Andersen.com','milena.canote@ec.Andersen.com','sofia.carranza@ec.Andersen.com',
+  'christian.castro@ec.Andersen.com','kevin.castro@ec.Andersen.com','adrian.cercado@ec.Andersen.com',
+  'noemi.cevallos@ec.Andersen.com','johnny.chacon@ec.Andersen.com','diego.chavez@ec.Andersen.com',
+  'Indira.Siongtay@ec.Andersen.com','lissette.chele@ec.Andersen.com','aleida.cherres@ec.Andersen.com',
+  'dexer.chinga@ec.Andersen.com','gabriel.chiriboga@ec.Andersen.com','wilson.cobo@ec.Andersen.com',
+  'cristhian.contreras@ec.Andersen.com','jefferson.cordova@ec.Andersen.com','kenya.crespin@ec.Andersen.com',
+  'marlon.cruz@ec.Andersen.com','katherine.deloor@ec.Andersen.com','fiorella.demori@ec.Andersen.com',
+  'josue.demera@ec.Andersen.com','ashley.endara@ec.Andersen.com','ivan.enriquez@ec.Andersen.com',
+  'luis.escudero@ec.Andersen.com','gloria.fernandez@ec.Andersen.com','julio.fernandez@ec.Andersen.com',
+  'miguel.franco@ec.Andersen.com','andy.garces@ec.Andersen.com','freddy.garcia@ec.Andersen.com',
+  'emilio.garzon@ec.Andersen.com','keila.gonzabay@ec.Andersen.com','paola.gonzalez@ec.Andersen.com',
+  'pierina.granados@ec.Andersen.com','tais.guachambo@ec.Andersen.com','douglas.gualpa@ec.Andersen.com',
+  'nayely.guaman@ec.Andersen.com','jennifer.guasco@ec.Andersen.com','gabriela.guerrero@ec.Andersen.com',
+  'dulce.guevara@ec.Andersen.com','pablo.guevara@ec.Andersen.com','anahi.gutierrez@ec.Andersen.com',
+  'jorge.heupel@ec.Andersen.com','irene.holguin@ec.Andersen.com','madeleine.holguin@ec.Andersen.com',
+  'luis.iniga@ec.Andersen.com','angelica.lainez@ec.Andersen.com','stephany.lara@ec.Andersen.com',
+  'gianpaolo.lauri@ec.Andersen.com','Juliana.Lazaro@ec.Andersen.com','hower.leon@ec.Andersen.com',
+  'daniel.leon@ec.Andersen.com','wellington.leon@ec.Andersen.com','jose.leon@ec.Andersen.com',
+  'fiorella.limones@ec.Andersen.com','arianna.lindao@ec.Andersen.com','julio.loayza@ec.Andersen.com',
+  'sara.lopez@ec.Andersen.com','grace.lopez@ec.Andersen.com','belen.luces@ec.Andersen.com',
+  'Michelle.Moran@ec.Andersen.com','jeancarlos.marcillo@ec.Andersen.com','joao.marcillo@ec.Andersen.com',
+  'romina.mariduena@ec.Andersen.com','francisco.mena@ec.Andersen.com','amy.mendoza@ec.Andersen.com',
+  'alejandro.merchan@ec.Andersen.com','madelyne.meza@ec.Andersen.com','Jonathan.Minga@ec.Andersen.com',
+  'azael.mite@ec.Andersen.com','allisson.monar@ec.Andersen.com','carlos.montiel@ec.Andersen.com',
+  'camila.mora@ec.Andersen.com','sindy.moran@ec.Andersen.com','melany.moreira@ec.Andersen.com',
+  'jemima.moreira@ec.Andersen.com','farina.morejon@ec.Andersen.com','gustavo.moreno@ec.Andersen.com',
+  'jhon.munoz@ec.Andersen.com','abel.murillo@ec.Andersen.com','marcelo.murillo@ec.Andersen.com',
+  'jenniffer.narvaez@ec.Andersen.com','dennis.noboa@ec.Andersen.com','mario.orellana@ec.Andersen.com',
+  'marcelo.orellana@ec.Andersen.com','miguel.orozco@ec.Andersen.com','Adriana.Paguay@ec.Andersen.com',
+  'amina.palacios@ec.Andersen.com','Andres.Pardo@ec.Andersen.com','gabriel.paredes@ec.Andersen.com',
+  'daniela.paredes@ec.Andersen.com','mariana.pastor@ec.Andersen.com','vicente.pazmino@ec.Andersen.com',
+  'daniel.penafiel@ec.Andersen.com','isabel.penaherrera@ec.Andersen.com','yamilet.penaherrera@ec.Andersen.com',
+  'aracely.pesantez@ec.Andersen.com','lesny.pico@ec.Andersen.com','melanny.pincay@ec.Andersen.com',
+  'angely.pincay@ec.Andersen.com','sofia.pinduisaca@ec.Andersen.com','francisco.pita@ec.Andersen.com',
+  'lilibeth.plaza@ec.Andersen.com','judith.pluas@ec.Andersen.com','alex.ponce@ec.Andersen.com',
+  'kevin.preciado@ec.Andersen.com','isorela.puglla@ec.Andersen.com','ninoska.quijano@ec.Andersen.com',
+  'Naomy.Quimis@ec.Andersen.com','michelle.quinde@ec.Andersen.com','marcos.quinde@ec.Andersen.com',
+  'johnny.quinonez@ec.Andersen.com','iveth.quinto@ec.Andersen.com','john.quiroz@ec.Andersen.com',
+  'josua.quirumbay@ec.Andersen.com','diana.quishpillo@ec.Andersen.com','isabella.raymond@ec.Andersen.com',
+  'mauricio.reyes@ec.Andersen.com','alfonso.rios@ec.Andersen.com','genesis.rizzo@ec.Andersen.com',
+  'alexis.robayo@ec.Andersen.com','abraham.rodriguez@ec.Andersen.com','sebastian.rodriguez@ec.Andersen.com',
+  'gabriela.romero@ec.Andersen.com','willian.rosado@ec.Andersen.com','naomy.rosas@ec.Andersen.com',
+  'luciana.salame@ec.Andersen.com','lissette.sanchez@ec.Andersen.com','denisse.sares@ec.Andersen.com',
+  'luis.sarmiento@ec.Andersen.com','miguel.silva@ec.Andersen.com','milena.soledispa@ec.Andersen.com',
+  'rosalinda.soriano@ec.Andersen.com','karen.suarez@ec.Andersen.com','samuel.suarez@ec.Andersen.com',
+  'ricardo.taipe@ec.Andersen.com','selene.tapia@ec.Andersen.com','paulina.tirsio@ec.Andersen.com',
+  'lady.toala@ec.Andersen.com','veronica.tomala@ec.Andersen.com','melanny.tomala@ec.Andersen.com',
+  'kevin.torres@ec.Andersen.com','carlos.torres@ec.Andersen.com','ruben.tubay@ec.Andersen.com',
+  'allan.vargas@ec.Andersen.com','jose.vega@ec.Andersen.com','samira.velastegui@ec.Andersen.com',
+  'maria.velastegui@ec.Andersen.com','gabriela.verdesoto@ec.Andersen.com','samantha.villacis@ec.Andersen.com',
+  'joffre.villegas@ec.Andersen.com','joyce.villon@ec.Andersen.com','erick.vitores@ec.Andersen.com',
+  'cindy.vivar@ec.Andersen.com','roger.yagual@ec.Andersen.com','briggitte.yupa@ec.Andersen.com',
+  'francisco.zabala@ec.Andersen.com','solange.zambrano@ec.Andersen.com','tonny.zambrano@ec.Andersen.com',
+  'belen.zambrano@ec.Andersen.com','daniela.zorrilla@ec.Andersen.com',
+];
+
+function seedUsers() {
+  const defaultHash = bcrypt.hashSync('Mundial2026', 10);
   const insertUser = db.prepare(`
-    INSERT INTO users (username, password_hash, display_name, email, department, avatar_initials)
+    INSERT OR IGNORE INTO users (username, password_hash, display_name, email, department, avatar_initials)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
-
-  const testUsers = [
-    { username: 'admin', password: 'admin123', name: 'Admin Demo', email: 'admin@empresa.com', dept: 'IT', initials: 'AD' },
-    { username: 'user1', password: 'pass123', name: 'Ana García', email: 'ana.garcia@empresa.com', dept: 'Finanzas', initials: 'AG' },
-    { username: 'user2', password: 'pass123', name: 'Carlos López', email: 'carlos.lopez@empresa.com', dept: 'Contabilidad', initials: 'CL' },
-    { username: 'mrodriguez', password: 'pass123', name: 'María Rodríguez', email: 'maria.rodriguez@empresa.com', dept: 'RRHH', initials: 'MR' },
-    { username: 'jperez', password: 'pass123', name: 'José Pérez', email: 'jose.perez@empresa.com', dept: 'Auditoría', initials: 'JP' },
-    { username: 'lmartinez', password: 'pass123', name: 'Laura Martínez', email: 'laura.martinez@empresa.com', dept: 'Impuestos', initials: 'LM' },
-    { username: 'rherrera', password: 'pass123', name: 'Roberto Herrera', email: 'roberto.herrera@empresa.com', dept: 'Finanzas', initials: 'RH' },
-    { username: 'sjimenez', password: 'pass123', name: 'Sandra Jiménez', email: 'sandra.jimenez@empresa.com', dept: 'Legal', initials: 'SJ' },
-    { username: 'fmorales', password: 'pass123', name: 'Fernando Morales', email: 'fernando.morales@empresa.com', dept: 'Consultoría', initials: 'FM' },
-    { username: 'ptorres', password: 'pass123', name: 'Patricia Torres', email: 'patricia.torres@empresa.com', dept: 'Contabilidad', initials: 'PT' },
-    { username: 'dcervantes', password: 'pass123', name: 'Diego Cervantes', email: 'diego.cervantes@empresa.com', dept: 'IT', initials: 'DC' },
-    { username: 'iflores', password: 'pass123', name: 'Isabel Flores', email: 'isabel.flores@empresa.com', dept: 'Auditoría', initials: 'IF' },
-    { username: 'aconcha', password: 'pass123', name: 'Andrés Concha', email: 'andres.concha@empresa.com', dept: 'Impuestos', initials: 'AC' },
-  ];
-
-  const seedUsers = db.transaction(() => {
-    for (const u of testUsers) {
-      const hash = bcrypt.hashSync(u.password, 10);
-      insertUser.run(u.username, hash, u.name, u.email, u.dept, u.initials);
+  const seed = db.transaction(() => {
+    for (const mail of EMPLOYEE_MAILS) {
+      const username = mail.split('@')[0].toLowerCase();
+      const parts = username.split('.');
+      const displayName = parts.map(cap).join(' ');
+      const initials = parts.map(p => p[0].toUpperCase()).join('').slice(0, 2);
+      insertUser.run(username, defaultHash, displayName, mail.toLowerCase(), 'Andersen Ecuador', initials);
     }
   });
-  seedUsers();
+  seed();
+  console.log('Usuarios Andersen Ecuador verificados/sincronizados.');
+}
+
+function seedMatches() {
+  console.log('Sembrando partidos...');
 
   // Seed matches - all 72 group stage matches
   // Groups: A through L, 4 teams each, 6 matches per group
@@ -206,25 +268,6 @@ function seedData() {
   // Day 7-12: groups G-L matchday 1
   // Day 13-17: matchday 2 and 3
   const groupKeys = Object.keys(groups);
-  let matchDayIndex = 0;
-
-  // Starting date: June 11, 2026
-  const startDate = new Date('2026-06-11T16:00:00Z');
-
-  // Create a schedule
-  // Matchday 1: rounds [0,1] for all groups -> days 1-12 (2 groups per day, 2 matches each = 4 per day... actually 1 match per timeslot)
-  // Let's distribute: 72 matches / 17 days = ~4.2 matches per day
-  // We'll do 4-5 per day
-
-  const schedule = [];
-
-  // Matchday 1 (pairs [0,1] and [2,3]): 12 groups * 2 matches = 24 matches
-  // Matchday 2 (pairs [0,2] and [1,3]): 12 groups * 2 matches = 24 matches
-  // Matchday 3 (pairs [0,3] and [1,2]): 12 groups * 2 matches = 24 matches
-
-  // MD1: June 11-15 (3 groups per day)
-  // MD2: June 16-20
-  // MD3: June 22-27
 
   const md1Dates = [
     '2026-06-11', '2026-06-11', '2026-06-11',
@@ -246,14 +289,10 @@ function seedData() {
   ];
   const times = ['16:00:00', '19:00:00', '22:00:00'];
 
-  const seedMatches = db.transaction(() => {
+  const runInsert = db.transaction(() => {
     groupKeys.forEach((groupName, groupIdx) => {
       const teams = groups[groupName];
       const venue = venues[groupIdx % venues.length];
-
-      // MD1: match 0 ([0,1]) and match 1 ([2,3])
-      // MD2: match 2 ([0,2]) and match 3 ([1,3])
-      // MD3: match 4 ([0,3]) and match 5 ([1,2])
 
       const matchData = [
         { pair: matchPairs[0], dateStr: md1Dates[groupIdx], time: times[groupIdx % 3] },
@@ -278,9 +317,9 @@ function seedData() {
       });
     });
   });
-  seedMatches();
+  runInsert();
 
-  console.log('Database seeded successfully!');
+  console.log('Partidos sembrados correctamente.');
 }
 
 module.exports = db;

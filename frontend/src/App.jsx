@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Matches from './pages/Matches';
 import Leaderboard from './pages/Leaderboard';
+import Bracket from './pages/Bracket';
 import Profile from './pages/Profile';
 
 function ProtectedLayout() {
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route element={<ProtectedLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/matches" element={<Matches />} />
+        <Route path="/bracket" element={<Bracket />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/profile" element={<Profile />} />
       </Route>

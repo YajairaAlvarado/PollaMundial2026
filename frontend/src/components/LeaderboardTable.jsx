@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Star, Target, CheckCircle } from 'lucide-react';
 
 const AVATAR_COLORS = [
   'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
@@ -8,101 +7,96 @@ const AVATAR_COLORS = [
   'bg-cyan-600', 'bg-amber-600', 'bg-lime-600', 'bg-red-600',
 ];
 
+const RANK_COLORS = {
+  1: '#F59E0B',
+  2: '#94a3b8',
+  3: '#cd7f32',
+};
+
 function RankBadge({ rank }) {
-  if (rank === 1) return <span className="text-2xl">🥇</span>;
-  if (rank === 2) return <span className="text-2xl">🥈</span>;
-  if (rank === 3) return <span className="text-2xl">🥉</span>;
-  return (
-    <span className="text-white/50 font-bold text-sm w-8 text-center">{rank}</span>
-  );
+  if (rank === 1) return <span className="text-xl">🥇</span>;
+  if (rank === 2) return <span className="text-xl">🥈</span>;
+  if (rank === 3) return <span className="text-xl">🥉</span>;
+  return <span className="text-sm font-bold w-7 text-center block" style={{ color: 'rgba(255,255,255,0.4)' }}>{rank}</span>;
 }
 
-export default function LeaderboardTable({ data, showTop = false }) {
+export default function LeaderboardTable({ data }) {
   const { user } = useAuth();
 
   if (!data || data.length === 0) {
     return (
-      <div className="glass-card p-8 text-center">
-        <p className="text-white/50">No hay datos en la tabla aún</p>
+      <div
+        className="rounded-xl p-8 text-center"
+        style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <p style={{ color: 'rgba(255,255,255,0.4)' }}>No hay datos en la tabla aún</p>
       </div>
     );
   }
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div className="rounded-xl overflow-hidden" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
       {/* Header */}
-      <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-white/5 border-b border-white/10 text-xs text-white/40 uppercase tracking-widest font-semibold">
+      <div
+        className="grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+        style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)' }}
+      >
         <div className="col-span-1 text-center">#</div>
         <div className="col-span-5">Jugador</div>
-        <div className="col-span-2 text-center flex items-center justify-center gap-1">
-          <Star size={11} className="text-yellow-400" />
-          <span className="hidden sm:inline">Pts</span>
-        </div>
-        <div className="col-span-2 text-center flex items-center justify-center gap-1">
-          <Target size={11} className="text-emerald-400" />
-          <span className="hidden sm:inline">Exactos</span>
-        </div>
-        <div className="col-span-2 text-center flex items-center justify-center gap-1">
-          <CheckCircle size={11} className="text-blue-400" />
-          <span className="hidden sm:inline">Correctos</span>
-        </div>
+        <div className="col-span-2 text-center">Pts</div>
+        <div className="col-span-2 text-center">Exactos</div>
+        <div className="col-span-2 text-center">Correctos</div>
       </div>
 
       {/* Rows */}
-      <div className="divide-y divide-white/5">
-        {data.map((entry) => {
+      <div>
+        {data.map((entry, idx) => {
           const isCurrentUser = user && entry.username === user.username;
           const colorIdx = entry.username.charCodeAt(0) % AVATAR_COLORS.length;
-          const avatarColor = AVATAR_COLORS[colorIdx];
+          const rankColor = RANK_COLORS[entry.rank] || 'white';
 
           return (
             <div
               key={entry.id}
-              className={`grid grid-cols-12 gap-2 px-4 py-3 items-center transition-all ${
-                isCurrentUser
-                  ? 'bg-andersen-blue/30 border-l-4 border-l-yellow-400'
-                  : 'hover:bg-white/5'
-              }`}
+              className="grid grid-cols-12 gap-2 px-4 py-3 items-center transition-colors"
+              style={{
+                borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                background: isCurrentUser ? 'rgba(245,158,11,0.06)' : 'transparent',
+                borderLeft: isCurrentUser ? '3px solid #F59E0B' : '3px solid transparent',
+              }}
             >
-              {/* Rank */}
               <div className="col-span-1 flex justify-center">
                 <RankBadge rank={entry.rank} />
               </div>
 
-              {/* Player info */}
-              <div className="col-span-5 flex items-center gap-2.5">
-                <div className={`avatar-circle ${avatarColor} text-white text-xs flex-shrink-0`}>
+              <div className="col-span-5 flex items-center gap-2.5 min-w-0">
+                <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-xs flex-shrink-0`} style={{ width: 30, height: 30 }}>
                   {entry.avatar_initials || entry.display_name?.substring(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className={`text-sm font-semibold truncate ${isCurrentUser ? 'text-yellow-400' : 'text-white'}`}>
+                  <p
+                    className="text-sm font-semibold truncate"
+                    style={{ color: isCurrentUser ? '#F59E0B' : 'white' }}
+                  >
                     {entry.display_name}
-                    {isCurrentUser && <span className="ml-1 text-xs text-yellow-400/70">(tú)</span>}
+                    {isCurrentUser && <span className="ml-1 text-xs" style={{ color: 'rgba(245,158,11,0.6)' }}>(tú)</span>}
                   </p>
-                  <p className="text-white/40 text-xs truncate">{entry.department}</p>
+                  <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{entry.department}</p>
                 </div>
               </div>
 
-              {/* Total points */}
               <div className="col-span-2 text-center">
-                <span className={`text-lg font-black ${
-                  entry.rank === 1 ? 'text-yellow-400' :
-                  entry.rank === 2 ? 'text-slate-300' :
-                  entry.rank === 3 ? 'text-amber-600' :
-                  'text-white'
-                }`}>
+                <span className="font-black text-base" style={{ color: rankColor }}>
                   {entry.total_points}
                 </span>
               </div>
 
-              {/* Exact scores */}
               <div className="col-span-2 text-center">
-                <span className="text-sm font-semibold text-emerald-400">{entry.exact_scores}</span>
+                <span className="text-sm font-semibold" style={{ color: '#34d399' }}>{entry.exact_scores}</span>
               </div>
 
-              {/* Correct results */}
               <div className="col-span-2 text-center">
-                <span className="text-sm font-semibold text-blue-400">{entry.correct_results}</span>
+                <span className="text-sm font-semibold" style={{ color: '#60a5fa' }}>{entry.correct_results}</span>
               </div>
             </div>
           );

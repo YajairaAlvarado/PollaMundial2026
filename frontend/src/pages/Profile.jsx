@@ -4,7 +4,7 @@ import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { User, Trophy, Target, CheckCircle, Calendar, Star } from 'lucide-react';
+import { User, Trophy, Target, CheckCircle, Calendar, Star, Lock, Eye, EyeOff } from 'lucide-react';
 
 const AVATAR_COLORS = [
   'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
@@ -81,6 +81,95 @@ function PredictionRow({ pred }) {
           <span className="font-black text-sm">{ptsLabel}</span>
         )}
       </div>
+    </div>
+  );
+}
+
+function ChangePasswordForm() {
+  const { changePassword } = useAuth();
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNext, setShowNext] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMsg(null);
+    if (next !== confirm) { setMsg({ ok: false, text: 'Las contraseñas nuevas no coinciden' }); return; }
+    if (next.length < 6) { setMsg({ ok: false, text: 'La contraseña debe tener al menos 6 caracteres' }); return; }
+    setSaving(true);
+    try {
+      await changePassword(current, next);
+      setMsg({ ok: true, text: 'Contraseña actualizada correctamente' });
+      setCurrent(''); setNext(''); setConfirm('');
+    } catch (err) {
+      setMsg({ ok: false, text: err.response?.data?.error || 'Error al cambiar la contraseña' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputStyle = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    caretColor: '#F59E0B',
+  };
+
+  return (
+    <div className="glass-card p-6">
+      <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+        <Lock size={18} className="text-yellow-400" />
+        Cambiar Contraseña
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-3 max-w-sm">
+        {[
+          { label: 'Contraseña actual', val: current, set: setCurrent, show: showCurrent, toggle: () => setShowCurrent(v => !v) },
+          { label: 'Nueva contraseña', val: next, set: setNext, show: showNext, toggle: () => setShowNext(v => !v) },
+          { label: 'Confirmar nueva contraseña', val: confirm, set: setConfirm, show: showNext, toggle: null },
+        ].map(({ label, val, set, show, toggle }) => (
+          <div key={label}>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              {label}
+            </label>
+            <div className="relative">
+              <input
+                type={show ? 'text' : 'password'}
+                value={val}
+                onChange={e => set(e.target.value)}
+                required
+                className="w-full rounded-xl px-4 py-2.5 pr-10 text-white text-sm outline-none transition-all"
+                style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = '#60A5FA'; e.target.style.boxShadow = '0 0 0 3px rgba(96,165,250,0.15)'; }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+              />
+              {toggle && (
+                <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  {show ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {msg && (
+          <div className="rounded-xl px-4 py-2.5 text-sm" style={{ background: msg.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${msg.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, color: msg.ok ? '#6ee7b7' : '#fca5a5' }}>
+            {msg.text}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: '#06101F' }}
+        >
+          <Lock size={14} />
+          {saving ? 'Guardando...' : 'Cambiar Contraseña'}
+        </button>
+      </form>
     </div>
   );
 }
@@ -164,6 +253,9 @@ export default function Profile() {
           </div>
         ))}
       </div>
+
+      {/* Change password */}
+      <ChangePasswordForm />
 
       {/* Prediction history */}
       <div>

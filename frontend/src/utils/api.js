@@ -1,15 +1,23 @@
 import axios from 'axios';
 import mockApi from './mockApi';
+import liveApi from './liveApi';
 
 export const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
+const hasApiKey = !!import.meta.env.VITE_FOOTBALL_API_KEY;
+const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
 let api;
 
-if (isStandalone) {
+if (isStandalone && hasApiKey) {
+  // Datos en tiempo real desde football-data.org
+  api = liveApi;
+} else if (isStandalone) {
+  // Datos de demostración locales (sin API key)
   api = mockApi;
 } else {
+  // Backend propio (Node.js + SQLite / Render)
   const instance = axios.create({
-    baseURL: '/api',
+    baseURL: apiUrl,
     headers: { 'Content-Type': 'application/json' },
     timeout: 10000,
   });

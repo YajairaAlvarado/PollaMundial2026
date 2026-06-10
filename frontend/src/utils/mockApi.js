@@ -1,72 +1,73 @@
 // Standalone mode: no backend needed. All data lives here + localStorage.
 import { calculatePoints } from './scoring';
 
+// Grupos del sorteo oficial FIFA (5 dic 2025)
 const GROUPS_DATA = [
   {
     name: 'A',
     teams: [
-      { name: 'USA', code: 'us' }, { name: 'Alemania', code: 'de' },
-      { name: 'Marruecos', code: 'ma' }, { name: 'Japón', code: 'jp' },
+      { name: 'México', code: 'mx' }, { name: 'Sudáfrica', code: 'za' },
+      { name: 'Corea del Sur', code: 'kr' }, { name: 'Chequia', code: 'cz' },
     ],
-    venues: ['MetLife Stadium', 'AT&T Stadium'],
-    cities: ['New York/New Jersey', 'Dallas'],
-    md1: '2026-06-11', md2: '2026-06-18', md3: '2026-06-25',
+    venues: ['Estadio Azteca', 'AT&T Stadium'],
+    cities: ['Ciudad de México', 'Dallas'],
+    md1: '2026-06-11', md2: '2026-06-18', md3: '2026-06-24',
   },
   {
     name: 'B',
     teams: [
-      { name: 'México', code: 'mx' }, { name: 'Francia', code: 'fr' },
-      { name: 'Senegal', code: 'sn' }, { name: 'Corea del Sur', code: 'kr' },
+      { name: 'Canadá', code: 'ca' }, { name: 'Bosnia-Herzegovina', code: 'ba' },
+      { name: 'Qatar', code: 'qa' }, { name: 'Suiza', code: 'ch' },
     ],
-    venues: ['Estadio Azteca', 'BMO Field'],
-    cities: ['Ciudad de México', 'Toronto'],
-    md1: '2026-06-12', md2: '2026-06-19', md3: '2026-06-26',
+    venues: ['BMO Field', 'BC Place'],
+    cities: ['Toronto', 'Vancouver'],
+    md1: '2026-06-12', md2: '2026-06-19', md3: '2026-06-25',
   },
   {
     name: 'C',
     teams: [
-      { name: 'Canadá', code: 'ca' }, { name: 'Inglaterra', code: 'gb-eng' },
-      { name: 'Costa de Marfil', code: 'ci' }, { name: 'Australia', code: 'au' },
+      { name: 'Brasil', code: 'br' }, { name: 'Marruecos', code: 'ma' },
+      { name: 'Haití', code: 'ht' }, { name: 'Escocia', code: 'gb-sct' },
     ],
-    venues: ['BC Place', 'Gillette Stadium'],
-    cities: ['Vancouver', 'Boston'],
-    md1: '2026-06-12', md2: '2026-06-19', md3: '2026-06-26',
+    venues: ['MetLife Stadium', 'SoFi Stadium'],
+    cities: ['Nueva York', 'Los Ángeles'],
+    md1: '2026-06-12', md2: '2026-06-19', md3: '2026-06-25',
   },
   {
     name: 'D',
     teams: [
-      { name: 'España', code: 'es' }, { name: 'Brasil', code: 'br' },
-      { name: 'Ghana', code: 'gh' }, { name: 'Irán', code: 'ir' },
+      { name: 'USA', code: 'us' }, { name: 'Paraguay', code: 'py' },
+      { name: 'Australia', code: 'au' }, { name: 'Turquía', code: 'tr' },
+    ],
+    venues: ['MetLife Stadium', 'AT&T Stadium'],
+    cities: ['Nueva York', 'Dallas'],
+    md1: '2026-06-13', md2: '2026-06-20', md3: '2026-06-26',
+  },
+  {
+    name: 'E',
+    teams: [
+      { name: 'Alemania', code: 'de' }, { name: 'Curazao', code: 'cw' },
+      { name: 'Costa de Marfil', code: 'ci' }, { name: 'Ecuador', code: 'ec' },
     ],
     venues: ['SoFi Stadium', 'NRG Stadium'],
     cities: ['Los Ángeles', 'Houston'],
     md1: '2026-06-13', md2: '2026-06-20', md3: '2026-06-26',
   },
   {
-    name: 'E',
-    teams: [
-      { name: 'Portugal', code: 'pt' }, { name: 'Argentina', code: 'ar' },
-      { name: 'Egipto', code: 'eg' }, { name: 'Arabia Saudita', code: 'sa' },
-    ],
-    venues: ['Hard Rock Stadium', "Levi's Stadium"],
-    cities: ['Miami', 'San Francisco'],
-    md1: '2026-06-13', md2: '2026-06-20', md3: '2026-06-26',
-  },
-  {
     name: 'F',
     teams: [
-      { name: 'Países Bajos', code: 'nl' }, { name: 'Colombia', code: 'co' },
-      { name: 'Camerún', code: 'cm' }, { name: 'Uzbekistán', code: 'uz' },
+      { name: 'Países Bajos', code: 'nl' }, { name: 'Japón', code: 'jp' },
+      { name: 'Suecia', code: 'se' }, { name: 'Túnez', code: 'tn' },
     ],
     venues: ['Arrowhead Stadium', 'Lincoln Financial Field'],
-    cities: ['Kansas City', 'Philadelphia'],
+    cities: ['Kansas City', 'Filadelfia'],
     md1: '2026-06-14', md2: '2026-06-21', md3: '2026-06-27',
   },
   {
     name: 'G',
     teams: [
-      { name: 'Bélgica', code: 'be' }, { name: 'Italia', code: 'it' },
-      { name: 'Sudáfrica', code: 'za' }, { name: 'Irak', code: 'iq' },
+      { name: 'Bélgica', code: 'be' }, { name: 'Egipto', code: 'eg' },
+      { name: 'Irán', code: 'ir' }, { name: 'Nueva Zelanda', code: 'nz' },
     ],
     venues: ['Estadio Akron', 'Lumen Field'],
     cities: ['Guadalajara', 'Seattle'],
@@ -75,67 +76,67 @@ const GROUPS_DATA = [
   {
     name: 'H',
     teams: [
-      { name: 'Croacia', code: 'hr' }, { name: 'Uruguay', code: 'uy' },
-      { name: 'Argelia', code: 'dz' }, { name: 'Jordania', code: 'jo' },
+      { name: 'España', code: 'es' }, { name: 'Cabo Verde', code: 'cv' },
+      { name: 'Arabia Saudita', code: 'sa' }, { name: 'Uruguay', code: 'uy' },
     ],
-    venues: ['AT&T Stadium', 'MetLife Stadium'],
-    cities: ['Dallas', 'New York/New Jersey'],
-    md1: '2026-06-15', md2: '2026-06-22', md3: '2026-06-27',
+    venues: ['Hard Rock Stadium', "Levi's Stadium"],
+    cities: ['Miami', 'San Francisco'],
+    md1: '2026-06-15', md2: '2026-06-22', md3: '2026-06-28',
   },
   {
     name: 'I',
     teams: [
-      { name: 'Suiza', code: 'ch' }, { name: 'Ecuador', code: 'ec' },
-      { name: 'Nigeria', code: 'ng' }, { name: 'Costa Rica', code: 'cr' },
+      { name: 'Francia', code: 'fr' }, { name: 'Senegal', code: 'sn' },
+      { name: 'Irak', code: 'iq' }, { name: 'Noruega', code: 'no' },
     ],
-    venues: ['NRG Stadium', 'SoFi Stadium'],
-    cities: ['Houston', 'Los Ángeles'],
-    md1: '2026-06-15', md2: '2026-06-22', md3: '2026-06-27',
+    venues: ['NRG Stadium', 'BC Place'],
+    cities: ['Houston', 'Vancouver'],
+    md1: '2026-06-15', md2: '2026-06-22', md3: '2026-06-28',
   },
   {
     name: 'J',
     teams: [
-      { name: 'Dinamarca', code: 'dk' }, { name: 'Paraguay', code: 'py' },
-      { name: 'Honduras', code: 'hn' }, { name: 'Panamá', code: 'pa' },
+      { name: 'Argentina', code: 'ar' }, { name: 'Argelia', code: 'dz' },
+      { name: 'Austria', code: 'at' }, { name: 'Jordania', code: 'jo' },
     ],
-    venues: ['Hard Rock Stadium', 'Estadio BBVA'],
-    cities: ['Miami', 'Monterrey'],
-    md1: '2026-06-16', md2: '2026-06-23', md3: '2026-06-27',
+    venues: ['MetLife Stadium', 'Hard Rock Stadium'],
+    cities: ['Nueva York', 'Miami'],
+    md1: '2026-06-16', md2: '2026-06-23', md3: '2026-06-29',
   },
   {
     name: 'K',
     teams: [
-      { name: 'Austria', code: 'at' }, { name: 'Escocia', code: 'gb-sct' },
-      { name: 'Jamaica', code: 'jm' }, { name: 'El Salvador', code: 'sv' },
+      { name: 'Portugal', code: 'pt' }, { name: 'Congo DR', code: 'cd' },
+      { name: 'Uzbekistán', code: 'uz' }, { name: 'Colombia', code: 'co' },
     ],
-    venues: ['BC Place', 'BMO Field'],
-    cities: ['Vancouver', 'Toronto'],
-    md1: '2026-06-16', md2: '2026-06-23', md3: '2026-06-27',
+    venues: ['Gillette Stadium', "Levi's Stadium"],
+    cities: ['Boston', 'San Francisco'],
+    md1: '2026-06-16', md2: '2026-06-23', md3: '2026-06-29',
   },
   {
     name: 'L',
     teams: [
-      { name: 'Turquía', code: 'tr' }, { name: 'Polonia', code: 'pl' },
-      { name: 'Serbia', code: 'rs' }, { name: 'Guatemala', code: 'gt' },
+      { name: 'Inglaterra', code: 'gb-eng' }, { name: 'Croacia', code: 'hr' },
+      { name: 'Ghana', code: 'gh' }, { name: 'Panamá', code: 'pa' },
     ],
-    venues: ['Estadio Azteca', 'Lincoln Financial Field'],
-    cities: ['Ciudad de México', 'Philadelphia'],
-    md1: '2026-06-17', md2: '2026-06-24', md3: '2026-06-27',
+    venues: ['Gillette Stadium', 'SoFi Stadium'],
+    cities: ['Boston', 'Los Ángeles'],
+    md1: '2026-06-17', md2: '2026-06-24', md3: '2026-06-29',
   },
 ];
 
 // Pre-defined demo scores for "finished" matches (Groups A-E matchday 1)
 const DEMO_SCORES = {
-  1: { home: 2, away: 1 }, // USA vs Alemania
-  2: { home: 1, away: 0 }, // Marruecos vs Japón
-  3: { home: 2, away: 2 }, // México vs Francia
-  4: { home: 1, away: 1 }, // Senegal vs Corea del Sur
-  5: { home: 0, away: 1 }, // Canadá vs Inglaterra
-  6: { home: 3, away: 0 }, // Costa de Marfil vs Australia
-  7: { home: 1, away: 2 }, // España vs Brasil
-  8: { home: 2, away: 0 }, // Ghana vs Irán
-  9: { home: 2, away: 0 }, // Portugal vs Argentina
-  10: { home: 3, away: 1 }, // Egipto vs Arabia Saudita
+  1: { home: 2, away: 1 }, // México vs Sudáfrica
+  2: { home: 1, away: 0 }, // Corea del Sur vs Chequia
+  3: { home: 0, away: 1 }, // Canadá vs Bosnia-Herzegovina
+  4: { home: 1, away: 2 }, // Qatar vs Suiza
+  5: { home: 3, away: 0 }, // Brasil vs Marruecos
+  6: { home: 1, away: 1 }, // Haití vs Escocia
+  7: { home: 2, away: 0 }, // USA vs Paraguay
+  8: { home: 1, away: 2 }, // Australia vs Turquía
+  9: { home: 4, away: 0 }, // Alemania vs Curazao
+  10: { home: 2, away: 1 }, // Costa de Marfil vs Ecuador
 };
 
 // Generate all 72 group stage matches
@@ -181,7 +182,7 @@ function buildMatches() {
 
 export const ALL_MATCHES = buildMatches();
 
-const MOCK_LEADERBOARD = [
+export const MOCK_LEADERBOARD = [
   { rank: 1, username: 'ana.garcia', display_name: 'Ana García', avatar_initials: 'AG', department: 'Tax', total_points: 18, exact_scores: 4, correct_results: 3 },
   { rank: 2, username: 'carlos.lopez', display_name: 'Carlos López', avatar_initials: 'CL', department: 'Audit', total_points: 15, exact_scores: 3, correct_results: 3 },
   { rank: 3, username: 'maria.torres', display_name: 'María Torres', avatar_initials: 'MT', department: 'Advisory', total_points: 14, exact_scores: 2, correct_results: 5 },
@@ -195,6 +196,63 @@ const MOCK_LEADERBOARD = [
   { rank: 11, username: 'valeria.luna', display_name: 'Valeria Luna', avatar_initials: 'VL', department: 'Tax', total_points: 5, exact_scores: 1, correct_results: 1 },
   { rank: 12, username: 'demo', display_name: 'Visitante Demo', avatar_initials: 'VD', department: 'Andersen', total_points: 0, exact_scores: 0, correct_results: 0 },
 ];
+
+export const MOCK_BRACKET = {
+  r32: Array.from({ length: 16 }, (_, i) => ({
+    id: `r32_${i + 1}`,
+    home_team: null, home_code: null,
+    away_team: null, away_code: null,
+    home_score: null, away_score: null,
+    status: 'scheduled',
+    home_label: `Clasificado ${2 * i + 1}`,
+    away_label: `Clasificado ${2 * i + 2}`,
+  })),
+  r16: Array.from({ length: 8 }, (_, i) => ({
+    id: `r16_${i + 1}`,
+    home_team: null, home_code: null,
+    away_team: null, away_code: null,
+    home_score: null, away_score: null,
+    status: 'scheduled',
+    home_label: `G. R32-${2 * i + 1}`,
+    away_label: `G. R32-${2 * i + 2}`,
+  })),
+  qf: Array.from({ length: 4 }, (_, i) => ({
+    id: `qf_${i + 1}`,
+    home_team: null, home_code: null,
+    away_team: null, away_code: null,
+    home_score: null, away_score: null,
+    status: 'scheduled',
+    home_label: `G. Octavo ${2 * i + 1}`,
+    away_label: `G. Octavo ${2 * i + 2}`,
+  })),
+  sf: Array.from({ length: 2 }, (_, i) => ({
+    id: `sf_${i + 1}`,
+    home_team: null, home_code: null,
+    away_team: null, away_code: null,
+    home_score: null, away_score: null,
+    status: 'scheduled',
+    home_label: `G. Cuarto ${2 * i + 1}`,
+    away_label: `G. Cuarto ${2 * i + 2}`,
+  })),
+  final: [{
+    id: 'final_1',
+    home_team: null, home_code: null,
+    away_team: null, away_code: null,
+    home_score: null, away_score: null,
+    status: 'scheduled',
+    home_label: 'G. Semifinal 1',
+    away_label: 'G. Semifinal 2',
+  }],
+  thirdPlace: {
+    id: 'third_1',
+    home_team: null, home_code: null,
+    away_team: null, away_code: null,
+    home_score: null, away_score: null,
+    status: 'scheduled',
+    home_label: 'Perd. Semifinal 1',
+    away_label: 'Perd. Semifinal 2',
+  },
+};
 
 // --- LocalStorage helpers ---
 function getPreds() {
@@ -269,6 +327,7 @@ function mockGet(url) {
     const preds = getPreds();
     return preds[matchId] || null;
   }
+  if (path === '/bracket') return MOCK_BRACKET;
   if (path === '/leaderboard') {
     // Inject demo user's real points
     const preds = getPreds();

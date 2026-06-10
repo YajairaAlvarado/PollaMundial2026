@@ -22,103 +22,112 @@ export default function MatchCard({ match, prediction, onPredict }) {
   const isScheduled = match.status === 'scheduled';
 
   const matchDate = parseISO(match.match_date);
-  const dateStr = format(matchDate, "d 'de' MMMM", { locale: es });
+  const dateStr = format(matchDate, "d MMM", { locale: es });
   const timeStr = format(matchDate, 'HH:mm');
 
   const hasPrediction = !!prediction;
   const canPredict = isScheduled && new Date() < matchDate;
 
-  // Determine prediction result styling
-  let predBg = '';
+  let borderAccent = 'rgba(255,255,255,0.08)';
   if (isFinished && hasPrediction) {
-    if (prediction.points_earned === 3) predBg = 'border-emerald-500/50 bg-emerald-500/5';
-    else if (prediction.points_earned === 2) predBg = 'border-yellow-500/50 bg-yellow-500/5';
-    else predBg = 'border-red-500/20';
+    if (prediction.points_earned === 3) borderAccent = 'rgba(52,211,153,0.35)';
+    else if (prediction.points_earned === 2) borderAccent = 'rgba(245,158,11,0.35)';
+    else borderAccent = 'rgba(239,68,68,0.25)';
+  } else if (isLive) {
+    borderAccent = 'rgba(239,68,68,0.35)';
   }
 
   return (
-    <div className={`glass-card p-4 hover:scale-[1.01] transition-all duration-200 ${predBg || 'border-white/10'}`}>
-      {/* Header */}
+    <div
+      className="rounded-xl p-4 transition-all duration-150 hover:translate-y-[-1px]"
+      style={{ background: '#0D1B30', border: `1px solid ${borderAccent}` }}
+    >
+      {/* Header row */}
       <div className="flex items-center justify-between mb-3">
         <span className="group-badge">Grupo {match.group_name}</span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {isLive && (
-            <span className="flex items-center gap-1 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 bg-red-400 rounded-full live-dot"></span>
+            <span
+              className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+            >
+              <span className="w-1.5 h-1.5 bg-red-400 rounded-full live-dot" />
               EN VIVO
             </span>
           )}
           {isFinished && (
-            <span className="bg-white/10 text-white/50 text-xs px-2 py-0.5 rounded-full">Final</span>
+            <span
+              className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}
+            >
+              Final
+            </span>
+          )}
+          {isScheduled && (
+            <span
+              className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)', color: 'rgba(147,197,253,0.8)' }}
+            >
+              {dateStr} · {timeStr}
+            </span>
           )}
         </div>
       </div>
 
-      {/* Teams */}
+      {/* Teams & score */}
       <div className="flex items-center justify-between gap-2 mb-3">
-        {/* Home team */}
         <div className="flex flex-col items-center gap-1.5 flex-1">
           <FlagImg code={match.home_code} name={match.home_team} size={48} />
           <p className="text-white text-xs font-semibold text-center leading-tight">{match.home_team}</p>
         </div>
 
-        {/* Score / VS */}
-        <div className="text-center px-2 min-w-[60px]">
+        <div className="text-center px-2 min-w-[56px]">
           {isLive || isFinished ? (
-            <div className="flex items-center gap-1">
-              <span className="text-3xl font-black text-white">{match.home_score ?? '-'}</span>
-              <span className="text-white/40 text-lg font-light">–</span>
-              <span className="text-3xl font-black text-white">{match.away_score ?? '-'}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-3xl font-black text-white tabular-nums">{match.home_score ?? '-'}</span>
+              <span className="text-lg font-light" style={{ color: 'rgba(255,255,255,0.3)' }}>–</span>
+              <span className="text-3xl font-black text-white tabular-nums">{match.away_score ?? '-'}</span>
             </div>
           ) : (
-            <div>
-              <p className="text-white/50 text-lg font-bold">VS</p>
-              <p className="text-yellow-400/70 text-xs">{timeStr}</p>
-            </div>
+            <p className="text-lg font-black" style={{ color: 'rgba(255,255,255,0.35)' }}>VS</p>
           )}
         </div>
 
-        {/* Away team */}
         <div className="flex flex-col items-center gap-1.5 flex-1">
           <FlagImg code={match.away_code} name={match.away_team} size={48} />
           <p className="text-white text-xs font-semibold text-center leading-tight">{match.away_team}</p>
         </div>
       </div>
 
-      {/* Date & Venue */}
-      <div className="flex items-center justify-center gap-3 text-white/40 text-xs mb-3">
-        <span className="flex items-center gap-1">
-          <Clock size={11} />
-          {dateStr} · {timeStr}
-        </span>
-        {match.city && (
-          <span className="flex items-center gap-1">
-            <MapPin size={11} />
-            {match.city}
-          </span>
-        )}
-      </div>
+      {/* Venue */}
+      {match.city && (
+        <div className="flex items-center justify-center gap-1 mb-3 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <MapPin size={10} />
+          <span>{match.city}</span>
+        </div>
+      )}
 
-      {/* Prediction section */}
+      {/* Prediction badge */}
       {hasPrediction && (
-        <div className={`rounded-lg px-3 py-2 mb-2 text-center border ${
-          isFinished
-            ? prediction.points_earned === 3
-              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-              : prediction.points_earned === 2
-                ? 'bg-yellow-500/15 border-yellow-500/30 text-yellow-300'
-                : 'bg-red-500/15 border-red-500/30 text-red-300'
-            : 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-        }`}>
-          <span className="text-xs font-medium">
-            Mi predicción: {prediction.home_score} – {prediction.away_score}
-            {isFinished && (
-              <span className="ml-2 font-bold">
-                {prediction.points_earned === 3 ? '⭐ ¡Exacto! +3' :
-                 prediction.points_earned === 2 ? '✓ Correcto +2' : '✗ Incorrecto +0'}
-              </span>
-            )}
-          </span>
+        <div
+          className="rounded-lg px-3 py-2 mb-2 text-center text-xs font-medium"
+          style={
+            isFinished
+              ? prediction.points_earned === 3
+                ? { background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#6ee7b7' }
+                : prediction.points_earned === 2
+                  ? { background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', color: '#fcd34d' }
+                  : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.22)', color: '#fca5a5' }
+              : { background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', color: '#93c5fd' }
+          }
+        >
+          Mi predicción: {prediction.home_score} – {prediction.away_score}
+          {isFinished && (
+            <span className="ml-2 font-bold">
+              {prediction.points_earned === 3 ? '⭐ ¡Exacto! +3' :
+               prediction.points_earned === 2 ? '✓ Correcto +2' : '✗ Incorrecto +0'}
+            </span>
+          )}
         </div>
       )}
 
@@ -126,18 +135,22 @@ export default function MatchCard({ match, prediction, onPredict }) {
       {canPredict && (
         <button
           onClick={() => onPredict && onPredict(match)}
-          className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all"
+          style={
             hasPrediction
-              ? 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
-              : 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-blue-950 hover:from-yellow-300 hover:to-yellow-400 shadow-lg'
-          }`}
+              ? { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }
+              : { background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: '#06101F', boxShadow: '0 2px 10px rgba(245,158,11,0.25)' }
+          }
         >
-          {hasPrediction ? <><Edit2 size={12} /> Editar predicción</> : <><Plus size={12} /> Predecir resultado</>}
+          {hasPrediction ? <><Edit2 size={11} /> Editar predicción</> : <><Plus size={11} /> Predecir resultado</>}
         </button>
       )}
 
       {isScheduled && !canPredict && (
-        <div className="w-full py-2 rounded-lg text-xs text-center text-white/30 border border-white/10">
+        <div
+          className="w-full py-2 rounded-lg text-xs text-center"
+          style={{ color: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
           Predicción cerrada
         </div>
       )}

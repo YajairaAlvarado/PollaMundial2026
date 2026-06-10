@@ -121,4 +121,31 @@ router.get('/me', require('../middleware/auth').authenticateToken, (req, res) =>
   });
 });
 
+// PUT /api/auth/password — change password (requires auth)
+router.put('/password', require('../middleware/auth').authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Se requieren currentPassword y newPassword' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.userId);
+  if (!user) {
+    return res.status(404).json({ error: 'Usuario no encontrado' });
+  }
+
+  const valid = bcrypt.compareSync(currentPassword, user.password_hash);
+  if (!valid) {
+    return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+  }
+
+  const newHash = bcrypt.hashSync(newPassword, 10);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, user.id);
+
+  res.json({ message: 'Contraseña actualizada correctamente' });
+});
+
 module.exports = router;

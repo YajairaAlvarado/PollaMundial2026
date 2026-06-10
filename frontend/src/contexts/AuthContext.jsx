@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api, { isStandalone } from '../utils/api';
+import { findUser } from '../utils/users';
 
 const AuthContext = createContext(null);
 
@@ -40,6 +41,29 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (username, password) => {
+    if (isStandalone) {
+      const found = findUser(username, password);
+      if (!found) {
+        const err = new Error('Usuario o contraseña incorrectos');
+        err.response = { data: { error: 'Usuario o contraseña incorrectos' } };
+        throw err;
+      }
+      const normalized = normalizeUser({
+        id: found.id,
+        username: found.username,
+        display_name: found.displayName,
+        email: found.email,
+        department: found.department,
+        avatar_initials: found.avatarInitials,
+      });
+      const fakeToken = `standalone-${found.username}`;
+      setToken(fakeToken);
+      setUser(normalized);
+      localStorage.setItem('wc2026_token', fakeToken);
+      localStorage.setItem('wc2026_user', JSON.stringify(normalized));
+      return normalized;
+    }
+
     const response = await api.post('/auth/login', { username, password });
     const { token: newToken, user: newUser } = response.data;
     const normalized = normalizeUser(newUser);
@@ -48,9 +72,7 @@ export function AuthProvider({ children }) {
     setUser(normalized);
     localStorage.setItem('wc2026_token', newToken);
     localStorage.setItem('wc2026_user', JSON.stringify(normalized));
-    if (!isStandalone) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-    }
+    api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     return normalized;
   };
 
@@ -75,13 +97,29 @@ export function AuthProvider({ children }) {
     if (!isStandalone) delete api.defaults.headers.common['Authorization'];
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    if (isStandalone) {
+      const found = findUser(user.username, currentPassword);
+      if (!found) {
+        const err = new Error('La contraseña actual es incorrecta');
+        err.response = { data: { error: 'La contraseña actual es incorrecta' } };
+        throw err;
+      }
+      const overrides = JSON.parse(localStorage.getItem('wc2026_pw_overrides') || '{}');
+      overrides[user.username] = newPassword;
+      localStorage.setItem('wc2026_pw_overrides', JSON.stringify(overrides));
+      return;
+    }
+    await api.put('/auth/password', { currentPassword, newPassword });
+  };
+
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem('wc2026_user', JSON.stringify(updatedUser));
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, demoLogin, logout, updateUser, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, loading, login, demoLogin, logout, updateUser, changePassword, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

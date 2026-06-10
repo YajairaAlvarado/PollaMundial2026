@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, Trophy, Calendar, User, LogOut } from 'lucide-react';
+import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network } from 'lucide-react';
+
+const AVATAR_COLORS = [
+  'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
+  'bg-orange-600', 'bg-teal-600', 'bg-indigo-600', 'bg-pink-600',
+];
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -16,90 +21,99 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { to: '/matches', label: 'Partidos', icon: <Calendar size={16} /> },
-    { to: '/leaderboard', label: 'Tabla de Posiciones', icon: <Trophy size={16} /> },
+    { to: '/dashboard', label: 'Inicio', icon: <LayoutDashboard size={14} /> },
+    { to: '/matches', label: 'Partidos', icon: <Calendar size={14} /> },
+    { to: '/bracket', label: 'Llaves', icon: <Network size={14} /> },
+    { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
   ];
 
   const isActive = (path) => location.pathname.startsWith(path);
-
-  // Avatar background colors based on initials
-  const avatarColors = [
-    'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
-    'bg-orange-600', 'bg-teal-600', 'bg-indigo-600', 'bg-pink-600',
-  ];
-  const colorIdx = user ? (user.username.charCodeAt(0) % avatarColors.length) : 0;
-  const avatarColor = avatarColors[colorIdx];
+  const colorIdx = user ? (user.username.charCodeAt(0) % AVATAR_COLORS.length) : 0;
+  const avatarColor = AVATAR_COLORS[colorIdx];
 
   return (
-    <nav className="navbar-glass sticky top-0 z-50">
+    <nav className="sticky top-0 z-50" style={{ background: '#0D1B30', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:animate-spin-slow transition-all">⚽</span>
-            <div className="hidden sm:block">
-              <span className="text-white font-bold text-lg">Mundial 2026</span>
-              <span className="text-yellow-400 font-bold text-lg"> Predictor</span>
+          <Link to="/dashboard" className="flex items-center gap-2.5 group">
+            <span className="text-lg">⚽</span>
+            <div className="hidden sm:flex items-baseline gap-1">
+              <span className="text-white font-black text-[15px] tracking-tight">POLLA MUNDIAL</span>
+              <span className="font-black text-[15px] tracking-tight" style={{ color: '#F59E0B' }}>2026</span>
             </div>
-            <div className="sm:hidden">
-              <span className="text-yellow-400 font-bold text-base">M2026</span>
-            </div>
+            <span className="sm:hidden font-black text-sm" style={{ color: '#F59E0B' }}>PM26</span>
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive(link.to)
-                    ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}
+                className="relative flex items-center gap-1.5 px-4 py-5 text-[13px] font-semibold transition-colors duration-150"
+                style={{ color: isActive(link.to) ? '#ffffff' : 'rgba(255,255,255,0.45)' }}
+                onMouseEnter={(e) => { if (!isActive(link.to)) e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+                onMouseLeave={(e) => { if (!isActive(link.to)) e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
               >
                 {link.icon}
                 {link.label}
+                {isActive(link.to) && (
+                  <span
+                    className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full"
+                    style={{ background: '#F59E0B' }}
+                  />
+                )}
               </Link>
             ))}
           </div>
 
           {/* User section */}
-          <div className="flex items-center gap-3">
-            {/* Profile dropdown */}
+          <div className="flex items-center gap-2">
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 hover:bg-white/10 rounded-xl px-3 py-2 transition-all"
+                className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 transition-all"
+                style={{ background: profileOpen ? 'rgba(255,255,255,0.06)' : 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                onMouseLeave={(e) => { if (!profileOpen) e.currentTarget.style.background = 'transparent'; }}
               >
-                <div className={`avatar-circle ${avatarColor} text-white text-sm`}>
+                <div className={`avatar-circle ${avatarColor} text-white text-xs`}>
                   {user?.avatarInitials || '??'}
                 </div>
-                <span className="hidden sm:block text-white text-sm font-medium max-w-[120px] truncate">
-                  {user?.displayName}
+                <span className="hidden sm:block text-[13px] font-medium max-w-[90px] truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  {user?.displayName?.split(' ')[0]}
                 </span>
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 glass-card-dark rounded-xl shadow-2xl border border-white/10 overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-white/10">
+                <div
+                  className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-2xl overflow-hidden z-50"
+                  style={{ background: '#0A1628', border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                     <p className="text-white font-semibold text-sm truncate">{user?.displayName}</p>
-                    <p className="text-white/50 text-xs truncate">{user?.department}</p>
+                    <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>{user?.department}</p>
                   </div>
-                  <div className="p-2">
+                  <div className="p-1.5">
                     <Link
                       to="/profile"
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                      className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all"
+                      style={{ color: 'rgba(255,255,255,0.65)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'white'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
                       onClick={() => setProfileOpen(false)}
                     >
-                      <User size={15} />
+                      <User size={14} />
                       Mi Perfil
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all text-red-400"
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
-                      <LogOut size={15} />
+                      <LogOut size={14} />
                       Cerrar Sesión
                     </button>
                   </div>
@@ -107,28 +121,29 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile hamburger */}
             <button
-              className="md:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all"
+              className="md:hidden p-2 rounded-lg transition-all"
+              style={{ color: 'rgba(255,255,255,0.5)' }}
               onClick={() => setMenuOpen(!menuOpen)}
             >
-              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden border-t border-white/10 py-3 space-y-1">
+          <div className="md:hidden py-2 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                  isActive(link.to)
-                    ? 'bg-yellow-400/20 text-yellow-400'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}
+                className="flex items-center gap-2.5 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  color: isActive(link.to) ? 'white' : 'rgba(255,255,255,0.5)',
+                  background: isActive(link.to) ? 'rgba(255,255,255,0.05)' : 'transparent',
+                  borderLeft: isActive(link.to) ? '2px solid #F59E0B' : '2px solid transparent',
+                }}
                 onClick={() => setMenuOpen(false)}
               >
                 {link.icon}
@@ -139,12 +154,8 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Close dropdowns on outside click */}
       {profileOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setProfileOpen(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
       )}
     </nav>
   );

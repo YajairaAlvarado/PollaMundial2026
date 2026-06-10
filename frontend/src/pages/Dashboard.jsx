@@ -6,17 +6,32 @@ import WorldCupBanner from '../components/WorldCupBanner';
 import MatchCard from '../components/MatchCard';
 import PredictionModal from '../components/PredictionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { Trophy, Target, CheckCircle, Calendar, ArrowRight, Zap } from 'lucide-react';
+import { Trophy, Target, CheckCircle, Calendar, ArrowRight } from 'lucide-react';
 
-function StatCard({ icon, label, value, color }) {
+const STAT_CONFIGS = [
+  { key: 'total',   label: 'Puntos',       color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',   icon: <Trophy size={18} />    },
+  { key: 'exact',   label: 'Exactos',      color: '#34d399', bg: 'rgba(52,211,153,0.1)',   icon: <Target size={18} />    },
+  { key: 'correct', label: 'Correctos',    color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',   icon: <CheckCircle size={18}/> },
+  { key: 'made',    label: 'Predicciones', color: '#a78bfa', bg: 'rgba(167,139,250,0.1)',  icon: <Calendar size={18} />  },
+];
+
+function StatCard({ config, value }) {
   return (
-    <div className="glass-card p-5 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
-        {icon}
+    <div
+      className="rounded-xl p-4 flex items-center gap-3"
+      style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}
+    >
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: config.bg, color: config.color }}
+      >
+        {config.icon}
       </div>
       <div>
-        <p className="text-3xl font-black text-white">{value}</p>
-        <p className="text-white/50 text-xs font-medium uppercase tracking-widest">{label}</p>
+        <p className="text-white font-black text-2xl leading-none">{value}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          {config.label}
+        </p>
       </div>
     </div>
   );
@@ -41,11 +56,8 @@ export default function Dashboard() {
         api.get('/predictions/my'),
       ]);
 
-      // Get next 6 upcoming matches
-      const upcoming = matchesRes.data.slice(0, 6);
-      setUpcomingMatches(upcoming);
+      setUpcomingMatches(matchesRes.data.slice(0, 6));
 
-      // Build prediction map
       const predMap = {};
       let totalPts = 0, exactCount = 0, correctCount = 0;
       for (const p of predsRes.data) {
@@ -55,12 +67,7 @@ export default function Dashboard() {
         if (p.points_earned === 2) correctCount++;
       }
       setMyPredictions(predMap);
-      setStats({
-        total: totalPts,
-        exact: exactCount,
-        correct: correctCount,
-        made: predsRes.data.length,
-      });
+      setStats({ total: totalPts, exact: exactCount, correct: correctCount, made: predsRes.data.length });
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -69,73 +76,55 @@ export default function Dashboard() {
   };
 
   const handlePredictionSaved = (prediction) => {
-    setMyPredictions((prev) => ({
-      ...prev,
-      [prediction.match_id]: prediction,
-    }));
+    setMyPredictions((prev) => ({ ...prev, [prediction.match_id]: prediction }));
   };
 
   if (loading) return <LoadingSpinner size="lg" text="Cargando datos..." />;
 
+  const firstName = user?.displayName?.split(' ')[0];
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
-      {/* Banner */}
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <WorldCupBanner />
 
       {/* Welcome */}
-      <div className="fade-slide-in">
-        <h2 className="text-2xl font-bold text-white">
-          ¡Hola, <span className="text-yellow-400">{user?.displayName?.split(' ')[0]}</span>! ⚽
+      <div>
+        <h2 className="text-xl font-bold text-white">
+          Hola, <span style={{ color: '#F59E0B' }}>{firstName}</span> ⚽
         </h2>
-        <p className="text-white/50 text-sm mt-1">Realiza tus predicciones y sube en la tabla</p>
+        <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          Realiza tus predicciones y sube en la tabla
+        </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 fade-slide-in">
-        <StatCard
-          icon={<Trophy size={22} className="text-yellow-400" />}
-          label="Puntos totales"
-          value={stats.total}
-          color="bg-yellow-400/10"
-        />
-        <StatCard
-          icon={<Target size={22} className="text-emerald-400" />}
-          label="Exactos"
-          value={stats.exact}
-          color="bg-emerald-400/10"
-        />
-        <StatCard
-          icon={<CheckCircle size={22} className="text-blue-400" />}
-          label="Correctos"
-          value={stats.correct}
-          color="bg-blue-400/10"
-        />
-        <StatCard
-          icon={<Calendar size={22} className="text-purple-400" />}
-          label="Predicciones"
-          value={stats.made}
-          color="bg-purple-400/10"
-        />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {STAT_CONFIGS.map((cfg) => (
+          <StatCard key={cfg.key} config={cfg} value={stats[cfg.key]} />
+        ))}
       </div>
 
       {/* Upcoming matches */}
-      <div className="fade-slide-in">
+      <div>
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Zap size={20} className="text-yellow-400" />
-            <h3 className="text-white font-bold text-lg">Próximos Partidos</h3>
-          </div>
+          <h3 className="text-white font-bold text-base">Próximos Partidos</h3>
           <Link
             to="/matches"
-            className="flex items-center gap-1 text-yellow-400/70 hover:text-yellow-400 text-sm transition-colors"
+            className="flex items-center gap-1 text-sm font-medium transition-colors"
+            style={{ color: 'rgba(245,158,11,0.7)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#F59E0B'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,158,11,0.7)'; }}
           >
-            Ver todos <ArrowRight size={15} />
+            Ver todos <ArrowRight size={14} />
           </Link>
         </div>
 
         {upcomingMatches.length === 0 ? (
-          <div className="glass-card p-8 text-center">
-            <p className="text-white/50">No hay partidos programados próximamente</p>
+          <div
+            className="rounded-xl p-8 text-center"
+            style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <p style={{ color: 'rgba(255,255,255,0.4)' }}>No hay partidos programados próximamente</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -152,37 +141,42 @@ export default function Dashboard() {
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-slide-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
           to="/matches"
-          className="glass-card p-5 flex items-center gap-4 group hover:border-yellow-400/30 transition-all"
+          className="flex items-center gap-4 rounded-xl p-4 group transition-all"
+          style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(96,165,250,0.3)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
         >
-          <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Calendar size={22} className="text-blue-400" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa' }}>
+            <Calendar size={18} />
           </div>
-          <div>
-            <p className="text-white font-bold">Ver Todos los Partidos</p>
-            <p className="text-white/40 text-xs mt-0.5">72 partidos de fase de grupos</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-semibold text-sm">Ver Todos los Partidos</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>72 partidos de fase de grupos</p>
           </div>
-          <ArrowRight size={18} className="text-white/30 ml-auto group-hover:text-yellow-400 transition-colors" />
+          <ArrowRight size={15} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
         </Link>
 
         <Link
           to="/leaderboard"
-          className="glass-card p-5 flex items-center gap-4 group hover:border-yellow-400/30 transition-all"
+          className="flex items-center gap-4 rounded-xl p-4 group transition-all"
+          style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.3)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
         >
-          <div className="w-12 h-12 rounded-xl bg-yellow-400/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Trophy size={22} className="text-yellow-400" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B' }}>
+            <Trophy size={18} />
           </div>
-          <div>
-            <p className="text-white font-bold">Tabla de Posiciones</p>
-            <p className="text-white/40 text-xs mt-0.5">¿En qué posición estás?</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-semibold text-sm">Tabla de Posiciones</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>¿En qué posición estás?</p>
           </div>
-          <ArrowRight size={18} className="text-white/30 ml-auto group-hover:text-yellow-400 transition-colors" />
+          <ArrowRight size={15} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
         </Link>
       </div>
 
-      {/* Prediction modal */}
       {selectedMatch && (
         <PredictionModal
           match={selectedMatch}

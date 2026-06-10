@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 import LeaderboardTable from '../components/LeaderboardTable';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { Trophy, Star } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 const AVATAR_COLORS = [
   'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
@@ -11,32 +11,32 @@ const AVATAR_COLORS = [
   'bg-cyan-600', 'bg-amber-600', 'bg-lime-600', 'bg-red-600',
 ];
 
-function PodiumCard({ entry, podiumClass, emoji, heightClass }) {
-  const colorIdx = entry.username.charCodeAt(0) % AVATAR_COLORS.length;
+const PODIUM = [
+  { rank: 1, emoji: '🥇', label: '1°', height: 'h-16', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)', textColor: '#F59E0B' },
+  { rank: 2, emoji: '🥈', label: '2°', height: 'h-10', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.3)', textColor: '#94a3b8' },
+  { rank: 3, emoji: '🥉', label: '3°', height: 'h-6',  bg: 'rgba(205,127,50,0.12)',  border: 'rgba(205,127,50,0.3)',  textColor: '#cd7f32' },
+];
 
+function PodiumCard({ entry, config }) {
+  const colorIdx = entry.username.charCodeAt(0) % AVATAR_COLORS.length;
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className={`glass-card p-4 text-center w-full ${podiumClass} hover:scale-105 transition-all duration-300`}>
-        <div className="text-3xl mb-2">{emoji}</div>
-        <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-sm mx-auto mb-2`}>
+    <div className="flex flex-col items-center gap-0">
+      <div
+        className="w-full rounded-xl p-4 text-center mb-0"
+        style={{ background: config.bg, border: `1px solid ${config.border}` }}
+      >
+        <div className="text-2xl mb-2">{config.emoji}</div>
+        <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-xs mx-auto mb-2`}>
           {entry.avatar_initials}
         </div>
-        <p className="text-white font-bold text-sm leading-tight">{entry.display_name}</p>
-        <p className="text-white/40 text-xs mb-2">{entry.department}</p>
-        <div className="flex items-center justify-center gap-1">
-          <Star size={14} className="text-yellow-400" />
-          <span className="text-yellow-400 font-black text-lg">{entry.total_points}</span>
-        </div>
-        <p className="text-white/40 text-xs mt-1">
-          {entry.exact_scores} exactos · {entry.correct_results} correctos
+        <p className="text-white font-bold text-xs leading-tight truncate">{entry.display_name}</p>
+        <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.38)' }}>{entry.department}</p>
+        <p className="font-black text-xl mt-2" style={{ color: config.textColor }}>{entry.total_points}</p>
+        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          {entry.exact_scores} exactos
         </p>
       </div>
-      {/* Podium block */}
-      <div className={`w-full rounded-b-lg ${heightClass} ${
-        podiumClass.includes('podium-1st') ? 'bg-yellow-400/30' :
-        podiumClass.includes('podium-2nd') ? 'bg-slate-400/30' :
-        'bg-amber-700/30'
-      }`} />
+      <div className={`w-full ${config.height} rounded-b-lg`} style={{ background: config.bg, opacity: 0.6 }} />
     </div>
   );
 }
@@ -60,41 +60,45 @@ export default function Leaderboard() {
   const top3 = data.slice(0, 3);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Header */}
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <Trophy size={28} className="text-yellow-400" />
-          <h1 className="text-3xl font-black text-white">Tabla de Posiciones</h1>
-          <Trophy size={28} className="text-yellow-400" />
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B' }}>
+          <Trophy size={20} />
         </div>
-        <p className="text-white/40 text-sm">Predictor Mundial 2026</p>
+        <div>
+          <h1 className="text-xl font-black text-white">Tabla de Posiciones</h1>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>Predictor Mundial 2026</p>
+        </div>
       </div>
 
-      {/* My rank card */}
+      {/* My rank */}
       {myRank && (
-        <div className="glass-card p-4 border-yellow-400/30 bg-andersen-blue/20 flex items-center justify-between fade-slide-in">
+        <div
+          className="flex items-center justify-between rounded-xl p-4"
+          style={{ background: '#0D1B30', border: '1px solid rgba(245,158,11,0.25)', borderLeft: '3px solid #F59E0B' }}
+        >
           <div className="flex items-center gap-3">
-            <div className={`avatar-circle ${AVATAR_COLORS[user.username.charCodeAt(0) % AVATAR_COLORS.length]} text-white`}>
+            <div className={`avatar-circle ${AVATAR_COLORS[user.username.charCodeAt(0) % AVATAR_COLORS.length]} text-white text-xs`}>
               {user.avatarInitials}
             </div>
             <div>
-              <p className="text-white font-bold text-sm">{user.displayName}</p>
-              <p className="text-white/40 text-xs">{user.department}</p>
+              <p className="text-white font-semibold text-sm">{user.displayName}</p>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>{user.department}</p>
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
             <div className="text-center hidden sm:block">
-              <p className="text-white/40 text-xs">Posición</p>
-              <p className="text-yellow-400 font-black text-2xl">#{myRank.rank}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.38)' }}>Pos.</p>
+              <p className="font-black text-xl" style={{ color: '#F59E0B' }}>#{myRank.rank}</p>
             </div>
             <div className="text-center">
-              <p className="text-white/40 text-xs">Puntos</p>
-              <p className="text-white font-black text-2xl">{myRank.total_points}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.38)' }}>Pts</p>
+              <p className="text-white font-black text-xl">{myRank.total_points}</p>
             </div>
             <div className="text-center hidden sm:block">
-              <p className="text-white/40 text-xs">Exactos</p>
-              <p className="text-emerald-400 font-black text-2xl">{myRank.exact_scores}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.38)' }}>Exactos</p>
+              <p className="font-black text-xl" style={{ color: '#34d399' }}>{myRank.exact_scores}</p>
             </div>
           </div>
         </div>
@@ -102,40 +106,21 @@ export default function Leaderboard() {
 
       {/* Podium */}
       {top3.length >= 3 && (
-        <div className="fade-slide-in">
-          <h2 className="text-center text-white/40 text-xs uppercase tracking-widest mb-6 font-semibold">
+        <div>
+          <p className="text-center text-xs uppercase tracking-widest font-semibold mb-4" style={{ color: 'rgba(255,255,255,0.25)' }}>
             Podio
-          </h2>
-          <div className="grid grid-cols-3 gap-3 items-end max-w-2xl mx-auto">
-            {/* 2nd place */}
-            <PodiumCard
-              entry={top3[1]}
-              podiumClass="podium-2nd border border-slate-400/30"
-              emoji="🥈"
-              heightClass="h-12"
-            />
-            {/* 1st place */}
-            <PodiumCard
-              entry={top3[0]}
-              podiumClass="podium-1st border border-yellow-400/40 pulse-glow"
-              emoji="🥇"
-              heightClass="h-20"
-            />
-            {/* 3rd place */}
-            <PodiumCard
-              entry={top3[2]}
-              podiumClass="podium-3rd border border-amber-700/40"
-              emoji="🥉"
-              heightClass="h-8"
-            />
+          </p>
+          <div className="grid grid-cols-3 gap-3 items-end max-w-xl mx-auto">
+            <PodiumCard entry={top3[1]} config={PODIUM[1]} />
+            <PodiumCard entry={top3[0]} config={PODIUM[0]} />
+            <PodiumCard entry={top3[2]} config={PODIUM[2]} />
           </div>
         </div>
       )}
 
       {/* Full table */}
-      <div className="fade-slide-in">
-        <h2 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
-          <Trophy size={18} className="text-yellow-400" />
+      <div>
+        <h2 className="text-white font-bold text-sm uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
           Clasificación Completa
         </h2>
         <LeaderboardTable data={data} />
