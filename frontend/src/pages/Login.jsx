@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
+import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
 import canchaBg from '../assets/andersen-cancha.jpg';
 
@@ -54,31 +55,22 @@ export default function Login() {
       <div className="absolute inset-0 pointer-events-none"
         style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.78) 0%, rgba(10,0,0,0.66) 45%, rgba(10,0,0,0.88) 100%)' }} />
 
-      {/* Ecuador flag stripe at very top */}
-      <div className="absolute top-0 left-0 right-0 flex" style={{ height: '4px' }}>
-        <div style={{ flex: 2, background: '#FFD100' }} />
-        <div style={{ flex: 1, background: '#003DA5' }} />
-        <div style={{ flex: 1, background: '#EF3340' }} />
-      </div>
-
-      <div className="w-full max-w-[420px] relative z-10">
+<div className="w-full max-w-[420px] relative z-10">
 
         {/* ── Branding header ── */}
-        <div className="text-center mb-7 fade-slide-in">
-          <div className="flex justify-center">
-            <img
-              src={mundialistaLogo}
-              alt="Mundialista"
-              className="w-[340px] max-w-full"
-              style={{ filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.6))' }}
-            />
-          </div>
-          <div
-            className="text-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 mt-1"
-            style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", color: '#FFFFFF', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}
-          >
-            2026 <span className="text-xl">🇪🇨</span>
-          </div>
+        <div className="text-center mb-7 fade-slide-in flex flex-col items-center gap-2">
+          <img
+            src={andersenLogo}
+            alt="Andersen"
+            className="w-48"
+            style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.7))' }}
+          />
+          <img
+            src={mundialistaLogo}
+            alt="Mundialista"
+            className="w-[340px] max-w-full"
+            style={{ filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.6))' }}
+          />
         </div>
 
         {/* ── Login card ── */}
