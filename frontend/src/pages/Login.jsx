@@ -2,33 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
-
-function AndersenLogo({ className = '' }) {
-  return (
-    <svg viewBox="0 0 240 82" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Andersen">
-      <defs>
-        <linearGradient id="al-main" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%"   stopColor="#5A0000" />
-          <stop offset="30%"  stopColor="#C0001C" />
-          <stop offset="65%"  stopColor="#E4002B" />
-          <stop offset="100%" stopColor="#8B0015" />
-        </linearGradient>
-        <linearGradient id="al-shine" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%"   stopColor="rgba(255,140,140,0.35)" />
-          <stop offset="100%" stopColor="transparent" />
-        </linearGradient>
-      </defs>
-      {/* Main swoosh */}
-      <path d="M 5,27 C 30,8 88,1 232,5 C 237,5 237,9 232,10 C 88,8 34,19 9,40 Z" fill="url(#al-main)" />
-      {/* Highlight stripe */}
-      <path d="M 5,27 C 30,8 88,1 232,5 C 155,3 65,13 12,32 Z" fill="url(#al-shine)" />
-      {/* ANDERSEN */}
-      <text x="2" y="72" fontFamily="Georgia,'Times New Roman',serif" fontSize="31" fontWeight="bold" fill="#FFFFFF" letterSpacing="4">ANDERSEN</text>
-      {/* ® */}
-      <text x="225" y="57" fontFamily="Georgia,serif" fontSize="10" fill="rgba(255,255,255,0.65)">®</text>
-    </svg>
-  );
-}
+import andersenLogo from '../assets/andersen-logo-white-red.png';
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
@@ -98,8 +72,8 @@ export default function Login() {
 
         {/* ── Branding header ── */}
         <div className="text-center mb-7 fade-slide-in">
-          <div className="flex justify-center mb-5">
-            <AndersenLogo className="w-56" />
+          <div className="flex justify-center mb-3">
+            <img src={andersenLogo} alt="Andersen" className="w-64" />
           </div>
           <div className="leading-none space-y-1">
             <div

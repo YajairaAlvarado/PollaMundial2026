@@ -2,33 +2,12 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network } from 'lucide-react';
+import andersenLogo from '../assets/andersen-logo-white-red.png';
 
 const AVATAR_COLORS = [
   'bg-red-800', 'bg-rose-700', 'bg-red-700', 'bg-rose-800',
   'bg-red-900', 'bg-rose-900', 'bg-red-600', 'bg-rose-600',
 ];
-
-function AndersenNavLogo() {
-  return (
-    <svg viewBox="0 0 182 50" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto flex-shrink-0" aria-label="Andersen">
-      <defs>
-        <linearGradient id="nl-sw" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%"   stopColor="#5A0000" />
-          <stop offset="40%"  stopColor="#C0001C" />
-          <stop offset="100%" stopColor="#8B0015" />
-        </linearGradient>
-        <linearGradient id="nl-sh" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%"   stopColor="rgba(255,130,130,0.32)" />
-          <stop offset="100%" stopColor="transparent" />
-        </linearGradient>
-      </defs>
-      <path d="M 3,17 C 18,5 52,1 176,4 C 179,4 179,7 176,8 C 52,6 20,13 6,25 Z" fill="url(#nl-sw)" />
-      <path d="M 3,17 C 18,5 52,1 176,4 C 110,3 40,10 8,23 Z" fill="url(#nl-sh)" />
-      <text x="1" y="44" fontFamily="Georgia,'Times New Roman',serif" fontSize="21" fontWeight="bold" fill="#FFFFFF" letterSpacing="2.5">ANDERSEN</text>
-      <text x="169" y="36" fontFamily="Georgia,serif" fontSize="7" fill="rgba(255,255,255,0.6)">®</text>
-    </svg>
-  );
-}
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -58,7 +37,7 @@ export default function Navbar() {
 
           {/* ── Logo ── */}
           <Link to="/dashboard" className="flex items-center gap-3 group min-w-0">
-            <AndersenNavLogo />
+            <img src={andersenLogo} alt="Andersen" className="h-10 w-auto flex-shrink-0" />
             <div className="hidden sm:flex flex-col leading-none">
               <span
                 className="font-black text-white uppercase text-[17px]"
