@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
-import andersenLogo from '../assets/andersen-logo-white-red.png';
+import mundialistaLogo from '../assets/mundialista.png';
+import canchaBg from '../assets/andersen-cancha.jpg';
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
@@ -42,24 +43,16 @@ export default function Login() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #1C0000 0%, #2E0000 55%, #1A0000 100%)' }}
+      style={{
+        backgroundImage: `url(${canchaBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundColor: '#1C0000',
+      }}
     >
-      {/* Diagonal line texture */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.04 }} xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="lines" width="44" height="44" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
-            <line x1="0" y1="0" x2="0" y2="44" stroke="white" strokeWidth="1" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#lines)" />
-      </svg>
-
-      {/* Top glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[380px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse, rgba(228,0,43,0.16) 0%, transparent 70%)' }} />
-      {/* Bottom-right glow */}
-      <div className="absolute bottom-0 right-0 w-[450px] h-[320px] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at right bottom, rgba(228,0,43,0.1) 0%, transparent 70%)' }} />
+      {/* Dark overlay for legibility */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.78) 0%, rgba(10,0,0,0.66) 45%, rgba(10,0,0,0.88) 100%)' }} />
 
       {/* Ecuador flag stripe at very top */}
       <div className="absolute top-0 left-0 right-0 flex" style={{ height: '4px' }}>
@@ -72,22 +65,19 @@ export default function Login() {
 
         {/* ── Branding header ── */}
         <div className="text-center mb-7 fade-slide-in">
-          <div className="flex justify-center mb-3">
-            <img src={andersenLogo} alt="Andersen" className="w-64" />
+          <div className="flex justify-center">
+            <img
+              src={mundialistaLogo}
+              alt="Mundialista"
+              className="w-[340px] max-w-full"
+              style={{ filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.6))' }}
+            />
           </div>
-          <div className="leading-none space-y-1">
-            <div
-              className="text-[68px] font-black text-white uppercase"
-              style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", fontStyle: 'italic', lineHeight: 0.88, letterSpacing: '0.02em' }}
-            >
-              MUNDIALISTA
-            </div>
-            <div
-              className="text-3xl font-black uppercase tracking-widest flex items-center justify-center gap-2"
-              style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", color: '#E4002B' }}
-            >
-              2026 <span className="text-2xl">🇪🇨</span>
-            </div>
+          <div
+            className="text-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 mt-1"
+            style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", color: '#FFFFFF', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}
+          >
+            2026 <span className="text-xl">🇪🇨</span>
           </div>
         </div>
 
