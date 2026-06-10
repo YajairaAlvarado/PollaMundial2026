@@ -54,7 +54,7 @@ export default function Login() {
     >
       {/* Dark overlay for legibility */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.65) 0%, rgba(10,0,0,0.55) 35%, rgba(10,0,0,0.82) 100%)' }} />
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.28) 0%, rgba(10,0,0,0.22) 35%, rgba(10,0,0,0.45) 100%)' }} />
 
 <div className="w-full max-w-[420px] relative z-10">
 
