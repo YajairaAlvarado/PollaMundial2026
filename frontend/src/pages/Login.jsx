@@ -34,12 +34,13 @@ export default function Login() {
   };
 
   const inputStyle = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    background: '#F5F5F5',
+    border: '1px solid #DDD',
     caretColor: '#E4002B',
+    color: '#111',
   };
-  const focusStyle   = { borderColor: '#E4002B', boxShadow: '0 0 0 3px rgba(228,0,43,0.15)' };
-  const blurStyle    = { borderColor: 'rgba(255,255,255,0.1)', boxShadow: 'none' };
+  const focusStyle   = { borderColor: '#E4002B', boxShadow: '0 0 0 3px rgba(228,0,43,0.15)', background: '#FFF' };
+  const blurStyle    = { borderColor: '#DDD', boxShadow: 'none', background: '#F5F5F5' };
 
   return (
     <div
@@ -58,12 +59,12 @@ export default function Login() {
 <div className="w-full max-w-[420px] relative z-10">
 
         {/* ── Branding header ── */}
-        <div className="text-center mb-7 fade-slide-in flex flex-col items-center gap-2">
+        <div className="text-center mb-5 fade-slide-in flex flex-col items-center gap-0">
           <img
             src={andersenLogo}
             alt="Andersen"
             className="w-72"
-            style={{ filter: 'drop-shadow(0 3px 12px rgba(0,0,0,0.8))' }}
+            style={{ filter: 'drop-shadow(0 3px 12px rgba(0,0,0,0.8))', marginBottom: '-8px' }}
           />
           <img
             src={mundialistaLogo}
@@ -77,16 +78,16 @@ export default function Login() {
         <div
           className="rounded-2xl p-6 fade-slide-in"
           style={{
-            background: 'rgba(45, 0, 0, 0.75)',
-            border: '1px solid rgba(228,0,43,0.25)',
-            backdropFilter: 'blur(10px)',
+            background: '#FFFFFF',
+            border: '1px solid rgba(0,0,0,0.08)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
             animationDelay: '0.2s',
           }}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5"
-                style={{ color: 'rgba(255,255,255,0.38)' }}>
+                style={{ color: 'rgba(0,0,0,0.45)' }}>
                 Usuario
               </label>
               <input
@@ -95,7 +96,7 @@ export default function Login() {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="nombre.apellido"
                 autoComplete="username"
-                className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none transition-all"
+                className="w-full rounded-xl px-4 py-3 text-gray-800 text-sm outline-none transition-all"
                 style={inputStyle}
                 onFocus={(e) => Object.assign(e.target.style, focusStyle)}
                 onBlur={(e)  => Object.assign(e.target.style, blurStyle)}
@@ -104,7 +105,7 @@ export default function Login() {
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5"
-                style={{ color: 'rgba(255,255,255,0.38)' }}>
+                style={{ color: 'rgba(0,0,0,0.45)' }}>
                 Contraseña
               </label>
               <div className="relative">
@@ -114,7 +115,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className="w-full rounded-xl px-4 py-3 pr-11 text-white text-sm outline-none transition-all"
+                  className="w-full rounded-xl px-4 py-3 pr-11 text-gray-800 text-sm outline-none transition-all"
                   style={inputStyle}
                   onFocus={(e) => Object.assign(e.target.style, focusStyle)}
                   onBlur={(e)  => Object.assign(e.target.style, blurStyle)}
@@ -123,9 +124,9 @@ export default function Login() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: 'rgba(255,255,255,0.32)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.32)'; }}
+                  style={{ color: 'rgba(0,0,0,0.35)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(0,0,0,0.65)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(0,0,0,0.35)'; }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -154,11 +155,11 @@ export default function Login() {
           </form>
 
           <div className="mt-4 rounded-xl p-3"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.28)' }}>
-              Usuario: <span style={{ color: 'rgba(228,0,43,0.7)' }}>nombre.apellido</span>
-              <span className="mx-2" style={{ color: 'rgba(255,255,255,0.1)' }}>·</span>
-              Contraseña: <span style={{ color: 'rgba(228,0,43,0.7)' }}>tu número de cédula</span>
+            style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}>
+            <p className="text-xs text-center" style={{ color: 'rgba(0,0,0,0.4)' }}>
+              Usuario: <span style={{ color: '#E4002B' }}>nombre.apellido</span>
+              <span className="mx-2" style={{ color: 'rgba(0,0,0,0.15)' }}>·</span>
+              Contraseña: <span style={{ color: '#E4002B' }}>Cédula</span>
             </p>
           </div>
         </div>
