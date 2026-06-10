@@ -164,7 +164,7 @@ function ChangePasswordForm() {
           type="submit"
           disabled={saving}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: '#06101F' }}
+          style={{ background: 'linear-gradient(135deg, #E4002B, #B5001F)', color: '#FFFFFF' }}
         >
           <Lock size={14} />
           {saving ? 'Guardando...' : 'Cambiar Contraseña'}
@@ -218,7 +218,7 @@ export default function Profile() {
           <h1 className="text-2xl font-black text-white">{user?.displayName}</h1>
           <p className="text-white/50 text-sm">@{user?.username}</p>
           <div className="flex flex-wrap gap-2 mt-2">
-            <span className="bg-andersen-blue/40 border border-andersen-blue/60 text-blue-300 text-xs px-2.5 py-0.5 rounded-full">
+            <span className="text-xs px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(228,0,43,0.15)', border: '1px solid rgba(228,0,43,0.35)', color: '#FF9090' }}>
               {user?.department}
             </span>
             {user?.email && (

@@ -4,78 +4,108 @@ import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network } from 'lucide-react';
 
 const AVATAR_COLORS = [
-  'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
-  'bg-orange-600', 'bg-teal-600', 'bg-indigo-600', 'bg-pink-600',
+  'bg-red-800', 'bg-rose-700', 'bg-red-700', 'bg-rose-800',
+  'bg-red-900', 'bg-rose-900', 'bg-red-600', 'bg-rose-600',
 ];
+
+function AndersenNavLogo() {
+  return (
+    <svg viewBox="0 0 182 50" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto flex-shrink-0" aria-label="Andersen">
+      <defs>
+        <linearGradient id="nl-sw" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%"   stopColor="#5A0000" />
+          <stop offset="40%"  stopColor="#C0001C" />
+          <stop offset="100%" stopColor="#8B0015" />
+        </linearGradient>
+        <linearGradient id="nl-sh" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor="rgba(255,130,130,0.32)" />
+          <stop offset="100%" stopColor="transparent" />
+        </linearGradient>
+      </defs>
+      <path d="M 3,17 C 18,5 52,1 176,4 C 179,4 179,7 176,8 C 52,6 20,13 6,25 Z" fill="url(#nl-sw)" />
+      <path d="M 3,17 C 18,5 52,1 176,4 C 110,3 40,10 8,23 Z" fill="url(#nl-sh)" />
+      <text x="1" y="44" fontFamily="Georgia,'Times New Roman',serif" fontSize="21" fontWeight="bold" fill="#FFFFFF" letterSpacing="2.5">ANDERSEN</text>
+      <text x="169" y="36" fontFamily="Georgia,serif" fontSize="7" fill="rgba(255,255,255,0.6)">®</text>
+    </svg>
+  );
+}
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const location         = useLocation();
+  const navigate         = useNavigate();
+  const [menuOpen,    setMenuOpen]    = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   const navLinks = [
-    { to: '/dashboard', label: 'Inicio', icon: <LayoutDashboard size={14} /> },
-    { to: '/matches', label: 'Partidos', icon: <Calendar size={14} /> },
-    { to: '/bracket', label: 'Llaves', icon: <Network size={14} /> },
+    { to: '/dashboard',   label: 'Inicio',     icon: <LayoutDashboard size={14} /> },
+    { to: '/matches',     label: 'Partidos',   icon: <Calendar size={14} /> },
+    { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
     { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
   ];
 
-  const isActive = (path) => location.pathname.startsWith(path);
-  const colorIdx = user ? (user.username.charCodeAt(0) % AVATAR_COLORS.length) : 0;
+  const isActive   = (path) => location.pathname.startsWith(path);
+  const colorIdx   = user ? (user.username.charCodeAt(0) % AVATAR_COLORS.length) : 0;
   const avatarColor = AVATAR_COLORS[colorIdx];
 
   return (
-    <nav className="sticky top-0 z-50" style={{ background: '#0D1B30', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+    <nav className="sticky top-0 z-50"
+      style={{ background: 'rgba(12, 0, 0, 0.97)', borderBottom: '1px solid rgba(228,0,43,0.2)', backdropFilter: 'blur(12px)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
-          {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-2.5 group">
-            <span className="text-lg">⚽</span>
-            <div className="hidden sm:flex items-baseline gap-1">
-              <span className="text-white font-black text-[15px] tracking-tight">POLLA MUNDIAL</span>
-              <span className="font-black text-[15px] tracking-tight" style={{ color: '#F59E0B' }}>2026</span>
+
+          {/* ── Logo ── */}
+          <Link to="/dashboard" className="flex items-center gap-3 group min-w-0">
+            <AndersenNavLogo />
+            <div className="hidden sm:flex flex-col leading-none">
+              <span
+                className="font-black text-white uppercase text-[17px]"
+                style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", fontStyle: 'italic', letterSpacing: '0.04em', lineHeight: 1 }}
+              >
+                MUNDIALISTA
+              </span>
+              <span className="text-[10px] font-bold tracking-widest" style={{ color: '#E4002B' }}>
+                2026 🇪🇨
+              </span>
             </div>
-            <span className="sm:hidden font-black text-sm" style={{ color: '#F59E0B' }}>PM26</span>
+            <span
+              className="sm:hidden font-black text-[14px]"
+              style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", fontStyle: 'italic', color: '#E4002B' }}
+            >
+              MUNDIALISTA
+            </span>
           </Link>
 
-          {/* Desktop Nav */}
+          {/* ── Desktop nav ── */}
           <div className="hidden md:flex items-center">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 className="relative flex items-center gap-1.5 px-4 py-5 text-[13px] font-semibold transition-colors duration-150"
-                style={{ color: isActive(link.to) ? '#ffffff' : 'rgba(255,255,255,0.45)' }}
+                style={{ color: isActive(link.to) ? '#ffffff' : 'rgba(255,255,255,0.42)' }}
                 onMouseEnter={(e) => { if (!isActive(link.to)) e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
-                onMouseLeave={(e) => { if (!isActive(link.to)) e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
+                onMouseLeave={(e) => { if (!isActive(link.to)) e.currentTarget.style.color = 'rgba(255,255,255,0.42)'; }}
               >
                 {link.icon}
                 {link.label}
                 {isActive(link.to) && (
-                  <span
-                    className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full"
-                    style={{ background: '#F59E0B' }}
-                  />
+                  <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: '#E4002B' }} />
                 )}
               </Link>
             ))}
           </div>
 
-          {/* User section */}
+          {/* ── User section ── */}
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
                 className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 transition-all"
-                style={{ background: profileOpen ? 'rgba(255,255,255,0.06)' : 'transparent' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                style={{ background: profileOpen ? 'rgba(228,0,43,0.1)' : 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(228,0,43,0.08)'; }}
                 onMouseLeave={(e) => { if (!profileOpen) e.currentTarget.style.background = 'transparent'; }}
               >
                 <div className={`avatar-circle ${avatarColor} text-white text-xs`}>
@@ -89,9 +119,9 @@ export default function Navbar() {
               {profileOpen && (
                 <div
                   className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-2xl overflow-hidden z-50"
-                  style={{ background: '#0A1628', border: '1px solid rgba(255,255,255,0.1)' }}
+                  style={{ background: '#1A0000', border: '1px solid rgba(228,0,43,0.22)' }}
                 >
-                  <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(228,0,43,0.12)' }}>
                     <p className="text-white font-semibold text-sm truncate">{user?.displayName}</p>
                     <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>{user?.department}</p>
                   </div>
@@ -99,9 +129,9 @@ export default function Navbar() {
                     <Link
                       to="/profile"
                       className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all"
-                      style={{ color: 'rgba(255,255,255,0.65)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'white'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
+                      style={{ color: 'rgba(255,255,255,0.62)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(228,0,43,0.08)'; e.currentTarget.style.color = 'white'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.62)'; }}
                       onClick={() => setProfileOpen(false)}
                     >
                       <User size={14} />
@@ -109,8 +139,9 @@ export default function Navbar() {
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all text-red-400"
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all"
+                      style={{ color: '#FF8080' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(228,0,43,0.1)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       <LogOut size={14} />
@@ -131,18 +162,18 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* ── Mobile menu ── */}
         {menuOpen && (
-          <div className="md:hidden py-2 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="md:hidden py-2 space-y-0.5" style={{ borderTop: '1px solid rgba(228,0,43,0.15)' }}>
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 className="flex items-center gap-2.5 px-4 py-3 rounded-lg text-sm font-medium transition-all"
                 style={{
-                  color: isActive(link.to) ? 'white' : 'rgba(255,255,255,0.5)',
-                  background: isActive(link.to) ? 'rgba(255,255,255,0.05)' : 'transparent',
-                  borderLeft: isActive(link.to) ? '2px solid #F59E0B' : '2px solid transparent',
+                  color:      isActive(link.to) ? 'white' : 'rgba(255,255,255,0.48)',
+                  background: isActive(link.to) ? 'rgba(228,0,43,0.1)' : 'transparent',
+                  borderLeft: isActive(link.to) ? '2px solid #E4002B' : '2px solid transparent',
                 }}
                 onClick={() => setMenuOpen(false)}
               >
@@ -154,9 +185,7 @@ export default function Navbar() {
         )}
       </div>
 
-      {profileOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-      )}
+      {profileOpen && <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />}
     </nav>
   );
 }
