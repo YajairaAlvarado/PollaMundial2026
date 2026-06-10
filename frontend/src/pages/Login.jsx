@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
-import andersenLogo from '../assets/andersen-logo-white-red.png';
+import andersenLogo from '../assets/andersen-logo-dark.png';
 import mundialistaLogo from '../assets/mundialista.png';
 import canchaBg from '../assets/papelitos2.jpg';
 
@@ -58,19 +58,26 @@ export default function Login() {
 
 <div className="w-full max-w-[420px] relative z-10">
 
-        {/* ── Branding header ── */}
-        <div className="text-center mb-5 fade-slide-in flex flex-col items-center gap-0">
+        {/* ── Franja blanca con branding ── */}
+        <div
+          className="fade-slide-in flex flex-col items-center justify-center py-8 px-6 mb-4 w-full"
+          style={{
+            background: 'rgba(255,255,255,0.93)',
+            backdropFilter: 'blur(6px)',
+            borderRadius: '16px',
+            boxShadow: '0 4px 32px rgba(0,0,0,0.18)',
+          }}
+        >
           <img
             src={andersenLogo}
             alt="Andersen"
-            className="w-72"
-            style={{ filter: 'drop-shadow(0 3px 12px rgba(0,0,0,0.8))', marginBottom: '-8px' }}
+            className="w-56"
+            style={{ marginBottom: '-4px' }}
           />
           <img
             src={mundialistaLogo}
             alt="Mundialista"
-            className="w-[400px] max-w-full"
-            style={{ filter: 'drop-shadow(0 3px 14px rgba(0,0,0,0.7))' }}
+            className="w-[380px] max-w-full"
           />
         </div>
 
