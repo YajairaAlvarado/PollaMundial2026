@@ -7,6 +7,7 @@ import MatchCard from '../components/MatchCard';
 import PredictionModal from '../components/PredictionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Trophy, Target, CheckCircle, Calendar, ArrowRight } from 'lucide-react';
+import canchaBg from '../assets/andersen-cancha.jpg';
 
 const STAT_CONFIGS = [
   { key: 'total',   label: 'Puntos',       color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',   icon: <Trophy size={18} />    },
@@ -84,7 +85,20 @@ export default function Dashboard() {
   const firstName = user?.displayName?.split(' ')[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div
+      className="relative min-h-[calc(100vh-3.5rem)]"
+      style={{
+        backgroundImage: `url(${canchaBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      {/* Overlay */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.72) 0%, rgba(10,0,0,0.78) 100%)' }} />
+
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 relative z-10">
       <WorldCupBanner />
 
       {/* Welcome */}
@@ -185,6 +199,7 @@ export default function Dashboard() {
           onSaved={handlePredictionSaved}
         />
       )}
+    </div>
     </div>
   );
 }
