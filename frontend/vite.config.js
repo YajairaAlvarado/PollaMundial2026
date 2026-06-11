@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    base: env.VITE_BASE_URL || (isStandalone ? '/mipaginaweb/' : '/'),
+    base: env.VITE_BASE_URL || (isStandalone ? '/mipaginaweb/' : (mode === 'production' ? '/PollaMundial2026/' : '/')),
     server: {
       port: 5173,
       proxy: isStandalone ? {} : {

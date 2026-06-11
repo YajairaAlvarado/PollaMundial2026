@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const TOURNAMENT_START = new Date('2026-06-11T16:00:00Z');
+const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z');
 const TOURNAMENT_END = new Date('2026-07-19T20:00:00Z');
 
 function getCountdown() {
