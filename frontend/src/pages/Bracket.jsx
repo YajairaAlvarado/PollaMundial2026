@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Network } from 'lucide-react';
 import api from '../utils/api';
+import canchaBg from '../assets/andersen-cancha.jpg';
 
 const CARD_W = 160;
 const CARD_H = 72;
@@ -202,7 +203,11 @@ export default function Bracket() {
   if (!bracket) return null;
 
   return (
-    <div className="px-4 py-6 max-w-7xl mx-auto">
+    <div className="relative min-h-[calc(100vh-3.5rem)]"
+      style={{ backgroundImage: `url(${canchaBg})`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.72) 0%, rgba(10,0,0,0.78) 100%)' }} />
+    <div className="px-4 py-6 max-w-7xl mx-auto relative z-10">
       {/* Page header */}
       <div className="mb-5">
         <h1 className="text-white font-black text-xl flex items-center gap-2">
@@ -301,6 +306,7 @@ export default function Bracket() {
       <p className="text-center text-xs mt-4" style={{ color: 'rgba(255,255,255,0.15)' }}>
         Fase eliminatoria: 28 jun – 19 jul · Final: 19 jul · Los equipos clasificados aparecerán automáticamente
       </p>
+    </div>
     </div>
   );
 }

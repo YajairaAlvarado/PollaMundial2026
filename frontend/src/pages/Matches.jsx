@@ -4,6 +4,7 @@ import MatchCard from '../components/MatchCard';
 import PredictionModal from '../components/PredictionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { RefreshCw, Filter } from 'lucide-react';
+import canchaBg from '../assets/andersen-cancha.jpg';
 
 const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
 const FILTERS = [
@@ -82,7 +83,11 @@ export default function Matches() {
   }, [matches, filter, selectedGroup]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="relative min-h-[calc(100vh-3.5rem)]"
+      style={{ backgroundImage: `url(${canchaBg})`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.72) 0%, rgba(10,0,0,0.78) 100%)' }} />
+    <div className="max-w-7xl mx-auto px-4 py-6 relative z-10">
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -190,6 +195,7 @@ export default function Matches() {
           onSaved={handlePredictionSaved}
         />
       )}
+    </div>
     </div>
   );
 }
