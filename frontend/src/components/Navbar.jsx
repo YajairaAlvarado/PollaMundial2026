@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network } from 'lucide-react';
+import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck } from 'lucide-react';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
 
@@ -24,6 +24,7 @@ export default function Navbar() {
     { to: '/matches',     label: 'Partidos',   icon: <Calendar size={14} /> },
     { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
     { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
+    ...(user?.isAdmin ? [{ to: '/admin', label: 'Admin', icon: <ShieldCheck size={14} /> }] : []),
   ];
 
   const isActive   = (path) => location.pathname.startsWith(path);

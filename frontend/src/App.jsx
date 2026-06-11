@@ -5,6 +5,8 @@ import { isStandalone } from './utils/api';
 import Navbar from './components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
 import Login from './pages/Login';
+import ForcePasswordChange from './pages/ForcePasswordChange';
+import Admin from './pages/Admin';
 import Dashboard from './pages/Dashboard';
 import Matches from './pages/Matches';
 import Leaderboard from './pages/Leaderboard';
@@ -35,7 +37,7 @@ function ProtectedLayout() {
 }
 
 function AppRoutes() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -43,6 +45,11 @@ function AppRoutes() {
         <LoadingSpinner size="lg" text="Iniciando aplicación..." />
       </div>
     );
+  }
+
+  // Si está autenticado pero debe cambiar contraseña, bloquear toda la app
+  if (isAuthenticated && user?.mustChangePassword) {
+    return <ForcePasswordChange />;
   }
 
   return (
@@ -54,6 +61,7 @@ function AppRoutes() {
         <Route path="/bracket" element={<Bracket />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
       </Route>
       <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
       <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />

@@ -159,7 +159,7 @@ export default function Login() {
             <p className="text-xs text-center" style={{ color: 'rgba(0,0,0,0.4)' }}>
               Usuario: <span style={{ color: '#E4002B' }}>nombre.apellido</span>
               <span className="mx-2" style={{ color: 'rgba(0,0,0,0.15)' }}>·</span>
-              Contraseña: <span style={{ color: '#E4002B' }}>Cédula</span>
+              Contraseña: <span style={{ color: '#E4002B' }}>Mundial2026</span>
             </p>
           </div>
         </div>

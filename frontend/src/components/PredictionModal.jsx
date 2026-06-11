@@ -71,7 +71,7 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
     setError('');
     try {
       const res = await api.post(`/predictions/${match.id}`, { homeScore, awayScore });
-      onSaved && onSaved(res.data.prediction);
+      onSaved && onSaved(res.data);
       onClose();
     } catch (err) {
       setError(err.response?.data?.error || 'Error al guardar predicción');
