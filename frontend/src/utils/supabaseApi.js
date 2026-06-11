@@ -85,7 +85,7 @@ async function get(url) {
 
   // GET /leaderboard
   if (path === '/leaderboard') {
-    const { data, error } = await supabase.from('leaderboard').select('*');
+    const { data, error } = await supabase.from('leaderboard').select('*').order('rank');
     if (error) throw error;
     return { data };
   }

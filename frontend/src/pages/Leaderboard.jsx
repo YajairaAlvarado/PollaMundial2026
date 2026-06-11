@@ -20,22 +20,29 @@ const PODIUM = [
 
 function PodiumCard({ entry, config }) {
   const colorIdx = entry.username.charCodeAt(0) % AVATAR_COLORS.length;
+  const hasPoints = entry.total_points > 0;
   return (
     <div className="flex flex-col items-center gap-0">
       <div
         className="w-full rounded-xl p-4 text-center mb-0"
         style={{ background: config.bg, border: `1px solid ${config.border}` }}
       >
-        <div className="text-2xl mb-2">{config.emoji}</div>
-        <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-xs mx-auto mb-2`}>
-          {entry.avatar_initials}
-        </div>
-        <p className="text-white font-bold text-xs leading-tight truncate">{entry.display_name}</p>
-        <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.38)' }}>{entry.department}</p>
+        <div className="text-5xl mb-2">{config.emoji}</div>
+        {hasPoints && (
+          <>
+            <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-xs mx-auto mb-2`}>
+              {entry.avatar_initials}
+            </div>
+            <p className="text-white font-bold text-xs leading-tight truncate">{entry.display_name}</p>
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.38)' }}>{entry.department}</p>
+          </>
+        )}
         <p className="font-black text-xl mt-2" style={{ color: config.textColor }}>{entry.total_points}</p>
-        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          {entry.exact_scores} exactos
-        </p>
+        {hasPoints && (
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            {entry.exact_scores} exactos
+          </p>
+        )}
       </div>
       <div className={`w-full ${config.height} rounded-b-lg`} style={{ background: config.bg, opacity: 0.6 }} />
     </div>
