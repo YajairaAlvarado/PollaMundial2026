@@ -125,19 +125,8 @@ const GROUPS_DATA = [
   },
 ];
 
-// Pre-defined demo scores for "finished" matches (Groups A-E matchday 1)
-const DEMO_SCORES = {
-  1: { home: 2, away: 1 }, // México vs Sudáfrica
-  2: { home: 1, away: 0 }, // Corea del Sur vs Chequia
-  3: { home: 0, away: 1 }, // Canadá vs Bosnia-Herzegovina
-  4: { home: 1, away: 2 }, // Qatar vs Suiza
-  5: { home: 3, away: 0 }, // Brasil vs Marruecos
-  6: { home: 1, away: 1 }, // Haití vs Escocia
-  7: { home: 2, away: 0 }, // USA vs Paraguay
-  8: { home: 1, away: 2 }, // Australia vs Turquía
-  9: { home: 4, away: 0 }, // Alemania vs Curazao
-  10: { home: 2, away: 1 }, // Costa de Marfil vs Ecuador
-};
+// Match scores — populated as results come in during the tournament
+const DEMO_SCORES = {};
 
 // Generate all 72 group stage matches
 function buildMatches() {
@@ -158,7 +147,7 @@ function buildMatches() {
     ];
     for (const p of pairs) {
       const score = DEMO_SCORES[id];
-      const status = score ? 'finished' : (id <= 14 ? 'live' : 'scheduled');
+      const status = score ? 'finished' : 'scheduled';
       all.push({
         id,
         group_name: g.name,
