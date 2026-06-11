@@ -1,6 +1,9 @@
 import React from 'react';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { format, toZonedTime } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
+
+const TZ = 'America/Guayaquil';
 import { MapPin, Clock, Edit2, Plus } from 'lucide-react';
 
 function FlagImg({ code, name, size = 48 }) {
@@ -21,12 +24,12 @@ export default function MatchCard({ match, prediction, onPredict }) {
   const isFinished = match.status === 'finished';
   const isScheduled = match.status === 'scheduled';
 
-  const matchDate = parseISO(match.match_date);
-  const dateStr = format(matchDate, "d MMM", { locale: es });
-  const timeStr = format(matchDate, 'HH:mm');
+  const matchDate = toZonedTime(parseISO(match.match_date), TZ);
+  const dateStr = format(matchDate, "d MMM", { locale: es, timeZone: TZ });
+  const timeStr = format(matchDate, 'HH:mm', { timeZone: TZ });
 
   const hasPrediction = !!prediction;
-  const canPredict = isScheduled && new Date() < matchDate;
+  const canPredict = isScheduled && new Date() < parseISO(match.match_date);
 
   let borderAccent = 'rgba(255,255,255,0.08)';
   if (isFinished && hasPrediction) {
