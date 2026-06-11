@@ -234,19 +234,21 @@ async function handleGet(url, matches) {
 
   if (path === '/leaderboard') {
     const preds = getPreds();
-    let demoTotal = 0, demoExact = 0, demoCorrect = 0;
+    let myTotal = 0, myExact = 0, myCorrect = 0;
     for (const p of Object.values(preds)) {
-      demoTotal += p.points_earned || 0;
-      if (p.points_earned === 3) demoExact++;
-      else if (p.points_earned === 2) demoCorrect++;
+      myTotal += p.points_earned || 0;
+      if (p.points_earned === 3) myExact++;
+      else if (p.points_earned === 2) myCorrect++;
     }
+    const token = localStorage.getItem('wc2026_token') || '';
+    const currentUsername = token.startsWith('standalone-') ? token.replace('standalone-', '') : '';
     return MOCK_LEADERBOARD
       .map((e) =>
-        e.username === 'demo'
-          ? { ...e, total_points: demoTotal, exact_scores: demoExact, correct_results: demoCorrect }
+        currentUsername && e.username === currentUsername
+          ? { ...e, total_points: myTotal, exact_scores: myExact, correct_results: myCorrect }
           : e
       )
-      .sort((a, b) => b.total_points - a.total_points)
+      .sort((a, b) => b.total_points - a.total_points || a.display_name.localeCompare(b.display_name))
       .map((e, i) => ({ ...e, rank: i + 1 }));
   }
 

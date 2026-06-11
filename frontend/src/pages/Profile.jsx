@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import canchaBg from '../assets/andersen-cancha.jpg';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { User, Trophy, Target, CheckCircle, Calendar, Star, Lock, Eye, EyeOff } from 'lucide-react';
@@ -208,7 +209,11 @@ export default function Profile() {
   if (loading) return <LoadingSpinner size="lg" text="Cargando perfil..." />;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="relative min-h-[calc(100vh-3.5rem)]"
+      style={{ backgroundImage: `url(${canchaBg})`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.72) 0%, rgba(10,0,0,0.78) 100%)' }} />
+    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 relative z-10">
       {/* Profile header */}
       <div className="glass-card p-6 flex items-center gap-5">
         <div className={`w-20 h-20 rounded-2xl ${avatarColor} flex items-center justify-center text-white text-2xl font-black flex-shrink-0`}>
@@ -299,6 +304,7 @@ export default function Profile() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

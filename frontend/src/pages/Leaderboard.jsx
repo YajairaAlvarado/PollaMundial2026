@@ -4,6 +4,7 @@ import api from '../utils/api';
 import LeaderboardTable from '../components/LeaderboardTable';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Trophy } from 'lucide-react';
+import canchaBg from '../assets/andersen-cancha.jpg';
 
 const AVATAR_COLORS = [
   'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
@@ -60,7 +61,11 @@ export default function Leaderboard() {
   const top3 = data.slice(0, 3);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="relative min-h-[calc(100vh-3.5rem)]"
+      style={{ backgroundImage: `url(${canchaBg})`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.72) 0%, rgba(10,0,0,0.78) 100%)' }} />
+    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 relative z-10">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B' }}>
@@ -125,6 +130,7 @@ export default function Leaderboard() {
         </h2>
         <LeaderboardTable data={data} />
       </div>
+    </div>
     </div>
   );
 }
