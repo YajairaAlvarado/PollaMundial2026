@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network } from 'lucide-react';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
+import mundialistaLogo from '../assets/mundialista.png';
 
 const AVATAR_COLORS = [
   'bg-red-800', 'bg-rose-700', 'bg-red-700', 'bg-rose-800',
@@ -36,19 +37,9 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-14">
 
           {/* ── Logo ── */}
-          <Link to="/dashboard" className="flex items-center gap-3 group min-w-0">
-            <img src={andersenLogo} alt="Andersen" className="h-10 w-auto flex-shrink-0" />
-            <div className="hidden sm:flex flex-col leading-none">
-              <span
-                className="font-black text-white uppercase text-[17px]"
-                style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", fontStyle: 'italic', letterSpacing: '0.04em', lineHeight: 1 }}
-              >
-                MUNDIALISTA
-              </span>
-              <span className="text-[10px] font-bold tracking-widest" style={{ color: '#E4002B' }}>
-                2026 🇪🇨
-              </span>
-            </div>
+          <Link to="/dashboard" className="flex items-center gap-2 group min-w-0">
+            <img src={andersenLogo} alt="Andersen" className="h-9 w-auto flex-shrink-0" />
+            <img src={mundialistaLogo} alt="Mundialista" className="hidden sm:block h-7 w-auto flex-shrink-0" />
             <span
               className="sm:hidden font-black text-[14px]"
               style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", fontStyle: 'italic', color: '#E4002B' }}
