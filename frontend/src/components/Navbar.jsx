@@ -37,9 +37,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-14">
 
           {/* ── Logo ── */}
-          <Link to="/dashboard" className="flex items-center gap-2 group min-w-0">
-            <img src={andersenLogo} alt="Andersen" className="h-9 w-auto flex-shrink-0" />
-            <img src={mundialistaLogo} alt="Mundialista" className="hidden sm:block h-7 w-auto flex-shrink-0" />
+          <Link to="/dashboard" className="flex items-center group min-w-0">
+            <div className="hidden sm:flex flex-col items-start gap-0 leading-none">
+              <img src={andersenLogo} alt="Andersen" className="h-7 w-auto" />
+              <img src={mundialistaLogo} alt="Mundialista" className="h-5 w-auto" style={{ marginTop: '-2px' }} />
+            </div>
+            <img src={andersenLogo} alt="Andersen" className="sm:hidden h-8 w-auto flex-shrink-0" />
             <span
               className="sm:hidden font-black text-[14px]"
               style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", fontStyle: 'italic', color: '#E4002B' }}
