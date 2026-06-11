@@ -38,17 +38,10 @@ export default function Navbar() {
 
           {/* ── Logo ── */}
           <Link to="/dashboard" className="flex items-center group min-w-0">
-            <div className="hidden sm:flex flex-col items-start gap-0 leading-none">
+            <div className="flex flex-col items-start leading-none">
               <img src={andersenLogo} alt="Andersen" className="h-7 w-auto" />
               <img src={mundialistaLogo} alt="Mundialista" className="h-5 w-auto" style={{ marginTop: '-2px' }} />
             </div>
-            <img src={andersenLogo} alt="Andersen" className="sm:hidden h-8 w-auto flex-shrink-0" />
-            <span
-              className="sm:hidden font-black text-[14px]"
-              style={{ fontFamily: "'Barlow Condensed', Impact, sans-serif", fontStyle: 'italic', color: '#E4002B' }}
-            >
-              MUNDIALISTA
-            </span>
           </Link>
 
           {/* ── Desktop nav ── */}
