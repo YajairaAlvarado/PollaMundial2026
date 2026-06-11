@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    base: env.VITE_BASE_URL || (isStandalone ? '/mipaginaweb/' : '/'),
+    base: isStandalone ? (env.VITE_BASE_URL || '/mipaginaweb/') : '/',
     server: {
       port: 5173,
       proxy: isStandalone ? {} : {
