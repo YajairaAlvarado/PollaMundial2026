@@ -104,6 +104,8 @@ export function AuthProvider({ children }) {
       throw err;
     }
     const profile = await loadProfile(data.user);
+    // Registrar acceso
+    supabase.from('login_logs').insert({ user_id: data.user.id }).then(() => {});
     // onAuthStateChange se encarga de setUser/setToken
     return profile;
   };
