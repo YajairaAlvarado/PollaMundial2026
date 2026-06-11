@@ -91,7 +91,7 @@ export default function WorldCupBanner() {
                 <CountUnit value={countdown.minutes} label="minutos" />
               </div>
               <p className="text-center text-xs mt-4" style={{ color: 'rgba(255,255,255,0.22)' }}>
-                Primer partido: México vs Sudáfrica · 11 jun, 11:00 AM (COL/ECU)
+                Primer partido: México vs Sudáfrica · 11 jun, 14:00 (COL/ECU)
               </p>
             </div>
           ) : null}
