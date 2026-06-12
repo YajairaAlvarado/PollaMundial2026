@@ -40,7 +40,8 @@ function StatCard({ config, value }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [upcomingMatches, setUpcomingMatches] = useState([]);
+  const [upcomingMatches,    setUpcomingMatches]    = useState([]);
+  const [upcomingMatchesAll, setUpcomingMatchesAll] = useState([]);
   const [myPredictions, setMyPredictions] = useState({});
   const [stats, setStats] = useState({ total: 0, exact: 0, correct: 0, made: 0 });
   const [loading, setLoading] = useState(true);
@@ -57,6 +58,7 @@ export default function Dashboard() {
         api.get('/predictions/my'),
       ]);
 
+      setUpcomingMatchesAll(matchesRes.data);
       setUpcomingMatches(matchesRes.data.slice(0, 6));
 
       const predMap = {};
@@ -99,7 +101,11 @@ export default function Dashboard() {
         style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.72) 0%, rgba(10,0,0,0.78) 100%)' }} />
 
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 relative z-10">
-      <WorldCupBanner />
+      <WorldCupBanner
+        matches={upcomingMatchesAll}
+        predictions={myPredictions}
+        onPredict={(m) => setSelectedMatch(m)}
+      />
 
       {/* Welcome */}
       <div>

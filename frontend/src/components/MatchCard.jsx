@@ -4,7 +4,7 @@ import { format, toZonedTime } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 
 const TZ = 'America/Guayaquil';
-import { MapPin, Clock, Edit2, Plus } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
 
 function FlagImg({ code, name, size = 48 }) {
   const h = Math.round(size * 0.75);
@@ -20,16 +20,26 @@ function FlagImg({ code, name, size = 48 }) {
 }
 
 export default function MatchCard({ match, prediction, onPredict }) {
-  const isLive = match.status === 'live';
-  const isFinished = match.status === 'finished';
-  const isScheduled = match.status === 'scheduled';
+  const now       = new Date();
+  const start     = parseISO(match.match_date);
+  const liveUntil = new Date(start.getTime() + 145 * 60 * 1000); // start + 145 min
 
-  const matchDate = toZonedTime(parseISO(match.match_date), TZ);
+  // EN VIVO calculado por horario si el DB no lo marcó explícitamente
+  const isLive     = match.status === 'live' || (match.status !== 'finished' && now >= start && now < liveUntil);
+  const isFinished = match.status === 'finished';
+  const isScheduled= !isLive && !isFinished;
+
+  const matchDate = toZonedTime(start, TZ);
   const dateStr = format(matchDate, "d MMM", { locale: es, timeZone: TZ });
   const timeStr = format(matchDate, 'HH:mm', { timeZone: TZ });
 
   const hasPrediction = !!prediction;
-  const canPredict = isScheduled && new Date() < parseISO(match.match_date);
+  // Excepción México vs Sudáfrica: permitir predicciones hasta las 15:00 ECU (20:00 UTC)
+  const isMexSaf = match.home_team === 'México' && match.away_team === 'Sudáfrica';
+  const deadline = isMexSaf
+    ? new Date('2026-06-11T20:00:00Z')
+    : start;
+  const canPredict = isScheduled && now < deadline;
 
   let borderAccent = 'rgba(255,255,255,0.08)';
   if (isFinished && hasPrediction) {
@@ -134,18 +144,14 @@ export default function MatchCard({ match, prediction, onPredict }) {
         </div>
       )}
 
-      {/* Action button */}
-      {canPredict && (
+      {/* Action button — solo aparece si aún no predijo */}
+      {canPredict && !hasPrediction && (
         <button
           onClick={() => onPredict && onPredict(match)}
           className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all"
-          style={
-            hasPrediction
-              ? { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }
-              : { background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: '#06101F', boxShadow: '0 2px 10px rgba(245,158,11,0.25)' }
-          }
+          style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: '#06101F', boxShadow: '0 2px 10px rgba(245,158,11,0.25)' }}
         >
-          {hasPrediction ? <><Edit2 size={11} /> Editar predicción</> : <><Plus size={11} /> Predecir resultado</>}
+          <Plus size={11} /> Predecir resultado
         </button>
       )}
 

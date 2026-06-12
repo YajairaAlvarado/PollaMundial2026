@@ -83,9 +83,87 @@ async function get(url) {
     return { data };
   }
 
+  // GET /predictions/match/:matchId/all — todas las predicciones del partido con info de usuario
+  const predByMatchAll = path.match(/^\/predictions\/match\/(\d+)\/all$/);
+  if (predByMatchAll) {
+    const { data, error } = await supabase
+      .from('predictions')
+      .select('home_score, away_score, user:users(id, display_name, username, avatar_initials, department)')
+      .eq('match_id', predByMatchAll[1]);
+    if (error) throw error;
+    return { data };
+  }
+
+  // GET /bracket
+  if (path === '/bracket') {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .in('stage', ['r32', 'r16', 'qf', 'sf', 'final', 'third_place'])
+      .order('id');
+    if (error) throw error;
+    const byStage = (s) => data.filter((m) => m.stage === s);
+    return {
+      data: {
+        r32:        byStage('r32'),
+        r16:        byStage('r16'),
+        qf:         byStage('qf'),
+        sf:         byStage('sf'),
+        final:      byStage('final')[0] || null,
+        thirdPlace: byStage('third_place')[0] || null,
+      },
+    };
+  }
+
   // GET /leaderboard
   if (path === '/leaderboard') {
-    const { data, error } = await supabase.from('leaderboard').select('*').order('rank');
+    const [{ data, error }, { data: predCounts }] = await Promise.all([
+      supabase
+        .from('leaderboard')
+        .select('*')
+        .order('total_points',   { ascending: false })
+        .order('exact_scores',   { ascending: false })
+        .order('correct_results',{ ascending: false })
+        .order('display_name',   { ascending: true }),
+      supabase
+        .from('predictions')
+        .select('user_id, match:matches!inner(stage)')
+        .eq('match.stage', 'group'),
+    ]);
+    if (error) throw error;
+    // contar predicciones de grupo por user_id
+    const countMap = {};
+    for (const p of (predCounts ?? [])) {
+      countMap[p.user_id] = (countMap[p.user_id] ?? 0) + 1;
+    }
+    // enriquecer leaderboard con total_predictions
+    const enriched = (data ?? []).map((e) => ({ ...e, total_predictions: countMap[e.id] ?? 0 }));
+    return { data: enriched };
+  }
+
+  // GET /users — todos los usuarios (para promedios por departamento)
+  if (path === '/users') {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, display_name, username, avatar_initials, department')
+      .order('display_name', { ascending: true });
+    if (error) throw error;
+    return { data };
+  }
+
+  // GET /leaderboard/snapshot — último snapshot disponible
+  if (path === '/leaderboard/snapshot') {
+    const { data: dates } = await supabase
+      .from('leaderboard_snapshots')
+      .select('snapshot_date')
+      .order('snapshot_date', { ascending: false })
+      .limit(1);
+    if (!dates || dates.length === 0) return { data: [] };
+    const lastDate = dates[0].snapshot_date;
+    const { data, error } = await supabase
+      .from('leaderboard_snapshots')
+      .select('username, rank, total_points, exact_scores, snapshot_date')
+      .eq('snapshot_date', lastDate);
     if (error) throw error;
     return { data };
   }
@@ -128,6 +206,24 @@ async function post(url, body = {}) {
     return { data };
   }
 
+  // POST /leaderboard/snapshot — guarda snapshot del ranking actual
+  if (url === '/leaderboard/snapshot') {
+    const today = new Date().toISOString().slice(0, 10);
+    // Borrar snapshot del mismo día si existe
+    await supabase.from('leaderboard_snapshots').delete().eq('snapshot_date', today);
+    // Insertar filas nuevas
+    const rows = body.entries.map((e) => ({
+      username:     e.username,
+      rank:         e.rank,
+      total_points: e.total_points,
+      exact_scores: e.exact_scores ?? 0,
+      snapshot_date: today,
+    }));
+    const { error } = await supabase.from('leaderboard_snapshots').insert(rows);
+    if (error) throw error;
+    return { data: { saved: rows.length, date: today } };
+  }
+
   throw new Error(`[supabaseApi] Ruta desconocida POST: ${url}`);
 }
 
@@ -142,14 +238,38 @@ async function put(url, body = {}) {
   // PUT /matches/:id/result  (admin)
   const matchResult = url.match(/^\/matches\/(\d+)\/result$/);
   if (matchResult) {
-    const { data, error } = await supabase
+    const matchId = parseInt(matchResult[1]);
+
+    // 1. Actualizar el partido
+    const { data: match, error } = await supabase
       .from('matches')
       .update({ home_score: body.homeScore, away_score: body.awayScore, status: 'finished' })
-      .eq('id', matchResult[1])
+      .eq('id', matchId)
       .select()
       .single();
     if (error) throw error;
-    return { data };
+
+    // 2. Recalcular puntos de todas las predicciones de este partido
+    const { data: preds } = await supabase
+      .from('predictions')
+      .select('id, home_score, away_score')
+      .eq('match_id', matchId);
+
+    if (preds && preds.length > 0) {
+      await Promise.all(preds.map((p) =>
+        supabase
+          .from('predictions')
+          .update({
+            points_earned: calculatePoints(
+              { home_score: p.home_score, away_score: p.away_score },
+              { home_score: body.homeScore, away_score: body.awayScore }
+            ),
+          })
+          .eq('id', p.id)
+      ));
+    }
+
+    return { data: { ...match, predictionsUpdated: preds?.length ?? 0 } };
   }
 
   // PUT /matches/:id/status  (admin)

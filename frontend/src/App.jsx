@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter, BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { isStandalone } from './utils/api';
+import { useVersionCheck, currentVersionLabel } from './hooks/useVersionCheck';
 import Navbar from './components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
 import Login from './pages/Login';
@@ -69,11 +70,40 @@ function AppRoutes() {
   );
 }
 
+function UpdateBanner() {
+  const { updateAvailable, serverVersion } = useVersionCheck();
+  if (!updateAvailable) return null;
+  return (
+    <div
+      className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between px-4 py-2.5 gap-3"
+      style={{ background: '#E4002B', boxShadow: '0 2px 12px rgba(228,0,43,0.5)' }}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3">
+        <p className="text-white text-sm font-bold">🚀 Hay una nueva versión disponible</p>
+        <p className="text-white/75 text-xs">
+          Tu versión: <span className="font-semibold text-white">{currentVersionLabel}</span>
+          {serverVersion && (
+            <> · Servidor: <span className="font-semibold text-white">{serverVersion}</span></>
+          )}
+        </p>
+      </div>
+      <button
+        onClick={() => window.location.reload()}
+        className="flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-black transition-all"
+        style={{ background: 'white', color: '#E4002B' }}
+      >
+        Actualizar ahora
+      </button>
+    </div>
+  );
+}
+
 const Router = isStandalone ? HashRouter : BrowserRouter;
 
 export default function App() {
   return (
     <Router basename={import.meta.env.BASE_URL}>
+      <UpdateBanner />
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

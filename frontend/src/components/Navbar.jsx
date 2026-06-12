@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck } from 'lucide-react';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
+import { currentVersionLabel } from '../hooks/useVersionCheck';
 
 const AVATAR_COLORS = [
   'bg-red-800', 'bg-rose-700', 'bg-red-700', 'bg-rose-800',
@@ -22,9 +23,11 @@ export default function Navbar() {
   const navLinks = [
     { to: '/dashboard',   label: 'Inicio',     icon: <LayoutDashboard size={14} /> },
     { to: '/matches',     label: 'Partidos',   icon: <Calendar size={14} /> },
-    { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
     { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
-    ...(user?.isAdmin ? [{ to: '/admin', label: 'Admin', icon: <ShieldCheck size={14} /> }] : []),
+    ...(user?.isAdmin ? [
+      { to: '/bracket', label: 'Llaves', icon: <Network size={14} /> },
+      { to: '/admin',   label: 'Admin',  icon: <ShieldCheck size={14} /> },
+    ] : []),
   ];
 
   const isActive   = (path) => location.pathname.startsWith(path);
@@ -46,7 +49,13 @@ export default function Navbar() {
           </Link>
 
           {/* ── Desktop nav ── */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center gap-0">
+            {/* Versión */}
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded mr-2 select-none"
+              style={{ color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+              title="Versión de la app">
+              v {currentVersionLabel}
+            </span>
             {navLinks.map((link) => (
               <Link
                 key={link.to}

@@ -1,10 +1,172 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../utils/api';
 import MatchCard from '../components/MatchCard';
 import PredictionModal from '../components/PredictionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { RefreshCw, Filter } from 'lucide-react';
+import { RefreshCw, Users, Search } from 'lucide-react';
+import { format, isToday, isTomorrow, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { toZonedTime } from 'date-fns-tz';
 import canchaBg from '../assets/andersen-cancha.jpg';
+
+const AVATAR_COLORS = [
+  'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
+  'bg-orange-600','bg-teal-600','bg-indigo-600','bg-pink-600',
+];
+
+function FinishedMatchWithPanel({ match, prediction, onPredict }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <MatchCard match={match} prediction={prediction} onPredict={onPredict} />
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full mt-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+        style={{
+          background: open ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.04)',
+          color: open ? '#F59E0B' : 'rgba(255,255,255,0.3)',
+          border: `1px solid ${open ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.07)'}`,
+        }}>
+        <Users size={11} />
+        {open ? 'Ocultar predicciones' : 'Ver quién predijo qué'}
+        <span style={{ transform: open ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform .2s' }}>▾</span>
+      </button>
+      {open && <LivePredictionsPanel match={match} />}
+    </div>
+  );
+}
+
+function LivePredictionsPanel({ match }) {
+  const [allPreds, setAllPreds]   = useState(null);
+  const [loading,  setLoading]    = useState(true);
+  const [search,   setSearch]     = useState('');
+  const [view,     setView]       = useState('grouped'); // 'grouped' | 'person'
+
+  useEffect(() => {
+    setLoading(true);
+    api.get(`/predictions/match/${match.id}/all`)
+      .then((r) => setAllPreds(r.data))
+      .catch(() => setAllPreds([]))
+      .finally(() => setLoading(false));
+  }, [match.id]);
+
+  const filtered = useMemo(() => {
+    if (!allPreds) return [];
+    if (!search.trim()) return allPreds;
+    const q = search.toLowerCase();
+    return allPreds.filter((p) => p.user?.display_name?.toLowerCase().includes(q));
+  }, [allPreds, search]);
+
+  // Agrupar por marcador
+  const grouped = useMemo(() => {
+    const map = {};
+    for (const p of filtered) {
+      const key = `${p.home_score}-${p.away_score}`;
+      if (!map[key]) map[key] = { home: p.home_score, away: p.away_score, users: [] };
+      map[key].users.push(p.user);
+    }
+    return Object.values(map).sort((a, b) => b.users.length - a.users.length);
+  }, [filtered]);
+
+  const total = allPreds?.length ?? 0;
+
+  if (loading) return <div className="text-white/40 text-sm py-4 text-center">Cargando predicciones...</div>;
+  if (total === 0) return <div className="text-white/40 text-sm py-4 text-center">Nadie predijo este partido.</div>;
+
+  return (
+    <div className="mt-4 rounded-xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-2">
+          <Users size={14} style={{ color: '#F59E0B' }} />
+          <span className="text-white font-bold text-sm">Predicciones del grupo</span>
+          <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{total}</span>
+        </div>
+        <div className="flex gap-1">
+          {['grouped','person'].map((v) => (
+            <button key={v} onClick={() => setView(v)}
+              className="text-xs px-2.5 py-1 rounded-lg font-semibold transition-all"
+              style={{
+                background: view === v ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)',
+                color: view === v ? '#F59E0B' : 'rgba(255,255,255,0.4)',
+              }}>
+              {v === 'grouped' ? 'Por marcador' : 'Por persona'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Búsqueda */}
+      <div className="px-4 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <Search size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
+          <input
+            type="text"
+            placeholder="Buscar persona..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent outline-none text-white text-xs w-full placeholder:text-white/25"
+          />
+        </div>
+      </div>
+
+      {/* Contenido */}
+      <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+        {view === 'grouped' ? (
+          grouped.length === 0
+            ? <p className="text-white/30 text-xs text-center">Sin resultados</p>
+            : grouped.map((g) => (
+              <div key={`${g.home}-${g.away}`} className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-black text-lg text-white">{g.home} – {g.away}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
+                    {g.users.length} persona{g.users.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {g.users.map((u) => u && (
+                    <div key={u.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white flex-shrink-0 ${AVATAR_COLORS[u.username?.charCodeAt(0) % AVATAR_COLORS.length]}`}>
+                        {u.avatar_initials}
+                      </div>
+                      <span className="text-xs text-white/80">{u.display_name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+        ) : (
+          filtered.length === 0
+            ? <p className="text-white/30 text-xs text-center">Sin resultados</p>
+            : filtered.map((p) => p.user && (
+              <div key={p.user.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <div className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black text-white ${AVATAR_COLORS[p.user.username?.charCodeAt(0) % AVATAR_COLORS.length]}`}>
+                    {p.user.avatar_initials}
+                  </div>
+                  <div>
+                    <p className="text-white text-xs font-semibold">{p.user.display_name}</p>
+                    <p className="text-white/30 text-[10px]">{p.user.department}</p>
+                  </div>
+                </div>
+                <span className="font-black text-base text-white">{p.home_score} – {p.away_score}</span>
+              </div>
+            ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+const TZ = 'America/Guayaquil';
+
+function dateLabel(dateStr) {
+  const local = toZonedTime(parseISO(dateStr), TZ);
+  if (isToday(local))    return 'Hoy';
+  if (isTomorrow(local)) return 'Mañana';
+  return format(local, "d 'de' MMMM", { locale: es, timeZone: TZ });
+}
 
 const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
 const FILTERS = [
@@ -31,14 +193,25 @@ export default function Matches() {
     try {
       let matchUrl = '/matches?stage=group';
       if (filter === 'group') matchUrl += `&group=${selectedGroup}`;
-      else if (filter !== 'all') matchUrl += `&status=${filter}`;
 
       const [matchRes, predRes] = await Promise.all([
         api.get(matchUrl),
         api.get('/predictions/my'),
       ]);
 
-      setMatches(matchRes.data);
+      const now = new Date();
+      const isMatchLive = (m) => {
+        const start    = new Date(m.match_date);
+        const liveUntil = new Date(start.getTime() + 145 * 60 * 1000);
+        return m.status === 'live' || (m.status !== 'finished' && now >= start && now < liveUntil);
+      };
+
+      let allMatches = matchRes.data;
+      if (filter === 'live')      allMatches = allMatches.filter((m) => isMatchLive(m));
+      if (filter === 'finished')  allMatches = allMatches.filter((m) => m.status === 'finished');
+      if (filter === 'scheduled') allMatches = allMatches.filter((m) => m.status === 'scheduled' && !isMatchLive(m));
+
+      setMatches(allMatches);
 
       const predMap = {};
       for (const p of predRes.data) predMap[p.match_id] = p;
@@ -69,15 +242,27 @@ export default function Matches() {
     }));
   };
 
-  // Group matches by group_name for "all" view
+  // Agrupar partidos según el filtro activo
   const groupedMatches = React.useMemo(() => {
     if (filter === 'group') {
       return { [selectedGroup]: matches };
     }
+    // Próximos: agrupar por fecha local (Hoy / Mañana / dd de mes)
+    if (filter === 'scheduled') {
+      const grouped = {};
+      for (const m of matches) {
+        const key = dateLabel(m.match_date);
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(m);
+      }
+      return grouped;
+    }
+    // Resto: agrupar por grupo
     const grouped = {};
     for (const m of matches) {
-      if (!grouped[m.group_name]) grouped[m.group_name] = [];
-      grouped[m.group_name].push(m);
+      const key = m.group_name || 'Sin grupo';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(m);
     }
     return grouped;
   }, [matches, filter, selectedGroup]);
@@ -150,32 +335,52 @@ export default function Matches() {
         </div>
       ) : (
         <div className="space-y-8">
-          {Object.entries(groupedMatches).map(([groupName, groupMatches]) => (
-            <div key={groupName}>
-              {/* Group header */}
-              {(filter === 'all' || filter === 'group') && (
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-andersen-blue border border-yellow-400/30 flex items-center justify-center">
-                    <span className="text-yellow-400 font-black text-sm">{groupName}</span>
-                  </div>
-                  <h2 className="text-white font-bold">Grupo {groupName}</h2>
-                  <div className="h-px flex-1 bg-white/10"></div>
-                  <span className="text-white/30 text-xs">{groupMatches.length} partidos</span>
+          {filter === 'live' ? (
+            // Vista especial En Vivo: partido + panel de predicciones
+            matches.map((match) => (
+              <div key={match.id}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="animate-pulse text-red-400 text-xs font-bold">🔴 EN VIVO</span>
+                  <span className="text-white/40 text-xs">· Grupo {match.group_name}</span>
                 </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {groupMatches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    prediction={predictions[match.id]}
-                    onPredict={(m) => setSelectedMatch(m)}
-                  />
-                ))}
+                <MatchCard match={match} prediction={predictions[match.id]} onPredict={(m) => setSelectedMatch(m)} />
+                <LivePredictionsPanel match={match} />
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            Object.entries(groupedMatches).map(([groupName, groupMatches]) => (
+              <div key={groupName}>
+                {filter === 'scheduled' ? (
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="px-3 py-1 rounded-lg border"
+                      style={{ background: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.3)' }}>
+                      <span className="text-yellow-400 font-black text-sm">
+                        {groupName === 'Hoy' ? '📅 Hoy' : groupName === 'Mañana' ? '📅 Mañana' : `📅 ${groupName}`}
+                      </span>
+                    </div>
+                    <div className="h-px flex-1 bg-white/10" />
+                    <span className="text-white/30 text-xs">{groupMatches.length} partidos</span>
+                  </div>
+                ) : (filter === 'all' || filter === 'group') && (
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-andersen-blue border border-yellow-400/30 flex items-center justify-center">
+                      <span className="text-yellow-400 font-black text-sm">{groupName}</span>
+                    </div>
+                    <h2 className="text-white font-bold">Grupo {groupName}</h2>
+                    <div className="h-px flex-1 bg-white/10" />
+                    <span className="text-white/30 text-xs">{groupMatches.length} partidos</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {groupMatches.map((match) => (
+                    filter === 'finished'
+                      ? <FinishedMatchWithPanel key={match.id} match={match} prediction={predictions[match.id]} onPredict={(m) => setSelectedMatch(m)} />
+                      : <MatchCard key={match.id} match={match} prediction={predictions[match.id]} onPredict={(m) => setSelectedMatch(m)} />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 

@@ -17,7 +17,7 @@ function RankBadge({ rank }) {
   if (rank === 1) return <span className="text-xl">🥇</span>;
   if (rank === 2) return <span className="text-xl">🥈</span>;
   if (rank === 3) return <span className="text-xl">🥉</span>;
-  return <span className="text-sm font-bold w-7 text-center block" style={{ color: 'rgba(255,255,255,0.4)' }}>{rank}</span>;
+  return <span className="text-sm font-bold w-7 text-center block" style={{ color: 'rgba(255,255,255,0.4)' }}>#{rank}</span>;
 }
 
 export default function LeaderboardTable({ data }) {
@@ -65,8 +65,11 @@ export default function LeaderboardTable({ data }) {
                 borderLeft: isCurrentUser ? '3px solid #F59E0B' : '3px solid transparent',
               }}
             >
-              <div className="col-span-1 flex justify-center">
+              <div className="col-span-1 flex justify-center items-center gap-1">
                 <RankBadge rank={entry.rank} />
+                {entry.trend === 'up'   && <span style={{ color: '#34d399', fontSize: 11, fontWeight: 900 }}>▲</span>}
+                {entry.trend === 'down' && <span style={{ color: '#f87171', fontSize: 11, fontWeight: 900 }}>▼</span>}
+                {entry.trend === 'same' && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>–</span>}
               </div>
 
               <div className="col-span-5 flex items-center gap-2.5 min-w-0">

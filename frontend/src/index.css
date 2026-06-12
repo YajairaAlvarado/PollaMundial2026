@@ -61,6 +61,14 @@ body {
 .live-dot    { animation: blink 1s ease-in-out infinite; }
 .pulse-glow  { animation: pulse-glow 2s ease-in-out infinite; }
 
+/* Urgency pulses para conteo regresivo */
+@keyframes pulse-slow-kf   { 0%,100%{opacity:1;transform:scale(1)}   50%{opacity:.75;transform:scale(1.03)} }
+@keyframes pulse-medium-kf { 0%,100%{opacity:1;transform:scale(1)}   50%{opacity:.65;transform:scale(1.05)} }
+@keyframes pulse-fast-kf   { 0%,100%{opacity:1;transform:scale(1)}   50%{opacity:.5; transform:scale(1.07)} }
+.pulse-slow   { animation: pulse-slow-kf   2s    ease-in-out infinite; }
+.pulse-medium { animation: pulse-medium-kf 1s    ease-in-out infinite; }
+.pulse-fast   { animation: pulse-fast-kf   0.45s ease-in-out infinite; }
+
 /* ── Shimmer text ── */
 .shimmer-text {
   background: linear-gradient(90deg, #E4002B 0%, #FF6B6B 30%, #E4002B 60%, #FF6B6B 90%);
