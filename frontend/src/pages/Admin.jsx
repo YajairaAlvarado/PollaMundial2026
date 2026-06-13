@@ -468,6 +468,11 @@ function TabResultados() {
       const res = await api.put(`/matches/${match.id}/result`, { homeScore: home, awayScore: away });
       setDone((p) => ({ ...p, [match.id]: { predictionsUpdated: res.data.predictionsUpdated } }));
       setMatches((prev) => prev.filter((m) => m.id !== match.id));
+      // Guardar snapshot automáticamente después de cada resultado
+      try {
+        const { data: lb } = await api.get('/leaderboard');
+        await api.post('/leaderboard/snapshot', { entries: lb });
+      } catch { /* snapshot falla silenciosamente, no bloquea */ }
     } catch {
       setMatchError(match.id, 'Error guardando resultado');
       setMatchState(match.id, 'fetched');

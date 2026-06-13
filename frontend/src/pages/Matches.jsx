@@ -22,14 +22,16 @@ function FinishedMatchWithPanel({ match, prediction, onPredict }) {
       <MatchCard match={match} prediction={prediction} onPredict={onPredict} />
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full mt-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+        className="w-full mt-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
         style={{
-          background: open ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.04)',
-          color: open ? '#F59E0B' : 'rgba(255,255,255,0.3)',
-          border: `1px solid ${open ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.07)'}`,
+          background: open
+            ? 'rgba(52,211,153,0.12)'
+            : 'linear-gradient(90deg, rgba(52,211,153,0.08), rgba(96,165,250,0.08))',
+          color: open ? '#34d399' : '#6ee7b7',
+          border: `1px solid ${open ? 'rgba(52,211,153,0.35)' : 'rgba(52,211,153,0.2)'}`,
+          letterSpacing: '0.01em',
         }}>
-        <Users size={11} />
-        {open ? 'Ocultar predicciones' : 'Ver quién predijo qué'}
+        🐸 {open ? 'Ocultar sapada' : '¡Sapea a tus compañeros!'}
         <span style={{ transform: open ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform .2s' }}>▾</span>
       </button>
       {open && <LivePredictionsPanel match={match} />}
