@@ -717,18 +717,7 @@ export default function Admin() {
             <p className="text-white/40 text-sm">{users.length} usuarios registrados</p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <button
-            onClick={handleSnapshot}
-            disabled={savingSnap}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all"
-            style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.25)' }}
-            title="Guarda el ranking actual para mostrar flechas de subida/bajada">
-            <Trophy size={13} />
-            {savingSnap ? 'Guardando...' : 'Guardar ranking actual'}
-          </button>
-          {snapMsg && <span className="text-xs" style={{ color: snapMsg.startsWith('✓') ? '#34d399' : '#f87171' }}>{snapMsg}</span>}
-        </div>
+        <div />
       </div>
 
       {/* Tabs */}

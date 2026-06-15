@@ -179,18 +179,36 @@ function TabPersonas({ data, user }) {
 }
 
 // ── Tab Departamentos ─────────────────────────────────────────────────────────
-function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, totalGroupMatches }) {
+function TrendArrow({ trend, size = 10 }) {
+  if (trend === 'up')   return <span style={{ color: '#34d399', fontSize: size, fontWeight: 900 }}>▲</span>;
+  if (trend === 'down') return <span style={{ color: '#f87171', fontSize: size, fontWeight: 900 }}>▼</span>;
+  if (trend === 'same') return <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: size - 1 }}>–</span>;
+  return null;
+}
+
+function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, totalGroupMatches, snapMap }) {
   const [open, setOpen] = useState(false);
   const color     = DEPT_COLORS[deptColorMap[dept.department] % DEPT_COLORS.length];
   const isMyDept  = user && dept.department === user.department;
   const noPartic  = dept.active_members === 0;
 
-  // Miembros ordenados: participantes primero (mayor pts), luego sin participar
+  // Miembros ordenados por puntos actuales
   const sortedMembers = [...dept.members].sort((a, b) => {
     const pa = pointsMap[a.username]?.total_points ?? 0;
     const pb = pointsMap[b.username]?.total_points ?? 0;
     return pb - pa;
   });
+
+  // Rank anterior de cada miembro dentro del departamento (por puntos del snapshot)
+  const prevMemberRankMap = useMemo(() => {
+    if (!snapMap || Object.keys(snapMap).length === 0) return {};
+    const prevSorted = [...dept.members].sort((a, b) =>
+      (snapMap[b.username]?.points ?? 0) - (snapMap[a.username]?.points ?? 0)
+    );
+    const map = {};
+    prevSorted.forEach((m, i) => { map[m.username] = i + 1; });
+    return map;
+  }, [dept.members, snapMap]);
 
   return (
     <div style={{
@@ -202,12 +220,13 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
       <div
         onClick={() => setOpen((o) => !o)}
         className="grid grid-cols-12 px-4 py-3 items-center cursor-pointer transition-all hover:bg-white/5 select-none">
-        {/* Rank */}
-        <div className="col-span-1">
+        {/* Rank + flecha dept */}
+        <div className="col-span-1 flex items-center gap-0.5">
           {dept.rank === 1 ? <span className="text-base">🥇</span>
            : dept.rank === 2 ? <span className="text-base">🥈</span>
            : dept.rank === 3 ? <span className="text-base">🥉</span>
            : <span className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>#{dept.rank}</span>}
+          <TrendArrow trend={dept.dept_trend} size={9} />
         </div>
         {/* Nombre */}
         <div className="col-span-5 flex items-center gap-2 min-w-0">
@@ -260,7 +279,7 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
             <div className="col-span-2 text-center">Exactos</div>
             <div className="col-span-3 text-center">Estado</div>
           </div>
-          {sortedMembers.map((m) => {
+          {sortedMembers.map((m, memberIdx) => {
             const entry   = pointsMap[m.username];
             const pts     = entry?.total_points  ?? 0;
             const exact   = entry?.exact_scores  ?? 0;
@@ -268,6 +287,13 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
             const participated = pts > 0 || (entry?.total_predictions ?? 0) > 0;
             const colorIdx = m.username.charCodeAt(0) % AVATAR_COLORS.length;
             const isMe = user && m.username === user.username;
+            // Flecha dentro del departamento
+            const currentMemberRank = memberIdx + 1;
+            const prevMemberRank = prevMemberRankMap[m.username];
+            const memberTrend = prevMemberRank == null ? null
+              : prevMemberRank > currentMemberRank ? 'up'
+              : prevMemberRank < currentMemberRank ? 'down'
+              : 'same';
             return (
               <div key={m.username} className="grid grid-cols-12 py-1.5 items-center rounded-lg px-1"
                 style={{ background: isMe ? 'rgba(245,158,11,0.06)' : 'transparent' }}>
@@ -278,6 +304,7 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                   <span className="text-xs truncate" style={{ color: isMe ? '#F59E0B' : participated ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)', fontWeight: isMe ? 700 : 400 }}>
                     {m.display_name}
                   </span>
+                  <TrendArrow trend={memberTrend} size={9} />
                 </div>
                 <div className="col-span-2 text-center">
                   <span className="text-xs font-black" style={{ color: pts > 0 ? '#F59E0B' : 'rgba(255,255,255,0.2)' }}>{pts}</span>
@@ -311,7 +338,7 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
   );
 }
 
-function TabDepartamentos({ leaderboard, allUsers, user, totalGroupMatches }) {
+function TabDepartamentos({ leaderboard, allUsers, user, totalGroupMatches, snapMap }) {
   // Calcular promedio por departamento incluyendo usuarios sin predicciones
   const deptData = useMemo(() => {
     // Mapa username → puntos del leaderboard
@@ -344,7 +371,35 @@ function TabDepartamentos({ leaderboard, allUsers, user, totalGroupMatches }) {
     return map;
   }, [leaderboard]);
 
-  const ranked = assignDeptRanks(deptData);
+  // Rank anterior de cada departamento usando snapshot
+  const prevDeptRankMap = useMemo(() => {
+    if (!snapMap || Object.keys(snapMap).length === 0) return {};
+    const byDept = {};
+    for (const u of allUsers) {
+      const dept = u.department || 'Sin área';
+      if (!byDept[dept]) byDept[dept] = [];
+      byDept[dept].push(u);
+    }
+    const prevAvgs = Object.entries(byDept).map(([dept, members]) => ({
+      dept,
+      prevAvg: members.length > 0
+        ? members.reduce((s, m) => s + (snapMap[m.username]?.points ?? 0), 0) / members.length
+        : 0,
+    })).sort((a, b) => b.prevAvg - a.prevAvg);
+    const map = {};
+    let rank = 1;
+    prevAvgs.forEach((d, i) => {
+      if (i > 0 && Math.abs(d.prevAvg - prevAvgs[i - 1].prevAvg) >= 0.001) rank = i + 1;
+      map[d.dept] = rank;
+    });
+    return map;
+  }, [allUsers, snapMap]);
+
+  const ranked = assignDeptRanks(deptData).map((dept) => {
+    const prev = prevDeptRankMap[dept.department];
+    const trend = prev == null ? null : prev > dept.rank ? 'up' : prev < dept.rank ? 'down' : 'same';
+    return { ...dept, dept_trend: trend };
+  });
 
   const podium = [1, 2, 3].map((r) => ({
     config: PODIUM_CONFIG.find((c) => c.rank === r),
@@ -448,6 +503,7 @@ function TabDepartamentos({ leaderboard, allUsers, user, totalGroupMatches }) {
               deptColorMap={deptColorMap}
               pointsMap={pointsMap}
               totalGroupMatches={totalGroupMatches}
+              snapMap={snapMap}
             />
           ))}
         </div>
@@ -462,6 +518,7 @@ export default function Leaderboard() {
   const [leaderboard,        setLeaderboard]        = useState([]);
   const [allUsers,           setAllUsers]           = useState([]);
   const [totalGroupMatches,  setTotalGroupMatches]  = useState(48);
+  const [snapMap,            setSnapMap]            = useState({});
   const [loading,            setLoading]            = useState(true);
   const [tab,                setTab]                = useState('personas');
 
@@ -473,18 +530,18 @@ export default function Leaderboard() {
       api.get('/leaderboard/snapshot'),
     ]).then(([lbRes, usersRes, matchesRes, snapRes]) => {
       const ranked = assignRanks(lbRes.data);
-      // Construir mapa snapshot: username → rank anterior
+      // snapMap: username → { rank, points } del último snapshot
       const snapMap = {};
-      for (const s of (snapRes.data ?? [])) snapMap[s.username] = s.rank;
-      // Anotar cada entrada con la flecha
+      for (const s of (snapRes.data ?? [])) snapMap[s.username] = { rank: s.rank, points: s.total_points };
       const withTrend = ranked.map((e) => {
-        const prev = snapMap[e.username];
+        const prev = snapMap[e.username]?.rank;
         const trend = prev == null ? null : prev > e.rank ? 'up' : prev < e.rank ? 'down' : 'same';
         return { ...e, prev_rank: prev ?? null, trend };
       });
       setLeaderboard(withTrend);
       setAllUsers(usersRes.data);
       setTotalGroupMatches(matchesRes.data?.length ?? 48);
+      setSnapMap(snapMap);
     }).catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -536,7 +593,7 @@ export default function Leaderboard() {
         {/* Contenido */}
         {tab === 'personas'
           ? <TabPersonas data={leaderboard} user={user} />
-          : <TabDepartamentos leaderboard={leaderboard} allUsers={allUsers} user={user} totalGroupMatches={totalGroupMatches} />
+          : <TabDepartamentos leaderboard={leaderboard} allUsers={allUsers} user={user} totalGroupMatches={totalGroupMatches} snapMap={snapMap} />
         }
       </div>
     </div>
