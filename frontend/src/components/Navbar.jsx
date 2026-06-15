@@ -24,7 +24,7 @@ export default function Navbar() {
     { to: '/dashboard',   label: 'Inicio',     icon: <LayoutDashboard size={14} /> },
     { to: '/matches',     label: 'Partidos',   icon: <Calendar size={14} /> },
     { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
-    { to: '/vs',          label: 'Vs 🥊',      icon: null },
+    { to: '/vs',          label: 'Vs 🥊🥊',    icon: null },
     ...(user?.isAdmin ? [
       { to: '/bracket', label: 'Llaves', icon: <Network size={14} /> },
       { to: '/admin',   label: 'Admin',  icon: <ShieldCheck size={14} /> },

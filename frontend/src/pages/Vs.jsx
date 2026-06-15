@@ -228,7 +228,11 @@ export default function Vs() {
 
         {/* Header */}
         <div className="text-center">
-          <p className="text-4xl mb-1">🥊</p>
+          <div className="flex items-center justify-center gap-0 mb-1 select-none">
+            <span className="text-5xl" style={{ transform: 'scaleX(-1) rotate(-15deg)', display: 'inline-block' }}>🥊</span>
+            <span className="text-2xl font-black mx-1" style={{ color: '#ef4444', textShadow: '0 0 10px #ef444488' }}>⚡</span>
+            <span className="text-5xl" style={{ transform: 'rotate(15deg)', display: 'inline-block' }}>🥊</span>
+          </div>
           <h1 className="text-2xl font-black text-white">Cara a Cara</h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Compara tus predicciones con otro participante</p>
         </div>
