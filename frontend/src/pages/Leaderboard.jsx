@@ -644,6 +644,21 @@ function TabDepartamentos({ leaderboard, allUsers, user, totalGroupMatches, snap
         </div>
       )}
 
+      {/* Banner motivacional */}
+      <div className="rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="flex items-center gap-4 px-5 py-4">
+          <div className="text-4xl flex-shrink-0 select-none" style={{ filter: 'grayscale(0.2)' }}>⛓️</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Trabajo en equipo</p>
+            <p className="font-black leading-tight" style={{ color: 'white', fontSize: 15 }}>
+              Una cadena es tan fuerte como su{' '}
+              <span style={{ color: '#f59e0b' }}>eslabón más débil</span>
+            </p>
+            <p className="text-xs mt-1 font-semibold italic" style={{ color: 'rgba(255,255,255,0.4)' }}>¿Qué eslabón eres tú?</p>
+          </div>
+        </div>
+      </div>
+
       {/* Tabla departamentos */}
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
