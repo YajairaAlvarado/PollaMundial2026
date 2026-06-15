@@ -236,7 +236,15 @@ function LeaderboardTableExpandable({ data }) {
                       {entry.display_name}
                       {isCurrentUser && <span className="ml-1 text-xs" style={{ color: 'rgba(245,158,11,0.6)' }}>(tú)</span>}
                     </p>
-                    <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{entry.department}</p>
+                    {(() => {
+                      const isSameDept = user && entry.department === user.department;
+                      const [emoji, label, color] = isCurrentUser
+                        ? ['🐸', '¡Sapeate a ti mismo!', '#a78bfa']
+                        : isSameDept
+                        ? ['🐊', '¡Sapea a tu compañero!', '#34d399']
+                        : ['🦎', '¡Sapea a tu competencia!', '#f472b6'];
+                      return <p className="text-[9px] font-bold" style={{ color }}>{emoji} {label}</p>;
+                    })()}
                   </div>
                   {isOpen ? <ChevronUp size={13} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={13} style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />}
                 </div>
@@ -461,9 +469,24 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0 ${AVATAR_COLORS[colorIdx]} text-white`}>
                       {m.avatar_initials}
                     </div>
-                    <span className="text-xs truncate" style={{ color: isMe ? '#F59E0B' : participated ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)', fontWeight: isMe ? 700 : 400 }}>
-                      {m.display_name}
-                    </span>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs truncate block" style={{ color: isMe ? '#F59E0B' : participated ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)', fontWeight: isMe ? 700 : 400 }}>
+                        {m.display_name}
+                      </span>
+                      {(() => {
+                        const isSameDept = user && m.department === user.department;
+                        const [emoji, label, color] = isMe
+                          ? ['🐸', '¡Sapeate a ti mismo!', '#a78bfa']
+                          : isSameDept
+                          ? ['🐊', '¡Sapea a tu compañero!', '#34d399']
+                          : ['🦎', '¡Sapea a tu competencia!', '#f472b6'];
+                        return (
+                          <span className="text-[9px] font-bold" style={{ color }}>
+                            {emoji} {label}
+                          </span>
+                        );
+                      })()}
+                    </div>
                     <TrendArrow trend={memberTrend} size={9} />
                     {isMemberOpen ? <ChevronUp size={11} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={11} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />}
                   </div>
