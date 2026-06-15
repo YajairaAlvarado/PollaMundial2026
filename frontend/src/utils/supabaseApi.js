@@ -151,19 +151,19 @@ async function get(url) {
     return { data };
   }
 
-  // GET /leaderboard/snapshot — penúltimo snapshot (para comparar contra estado actual)
+  // GET /leaderboard/snapshot — último snapshot (captura el estado PRE-resultado)
   if (path === '/leaderboard/snapshot') {
     const { data: dates } = await supabase
       .from('leaderboard_snapshots')
       .select('snapshot_date')
       .order('snapshot_date', { ascending: false })
-      .limit(2);
-    if (!dates || dates.length < 2) return { data: [] }; // sin penúltimo, no hay comparación
-    const prevDate = dates[1].snapshot_date; // el penúltimo
+      .limit(1);
+    if (!dates || dates.length === 0) return { data: [] };
+    const lastDate = dates[0].snapshot_date;
     const { data, error } = await supabase
       .from('leaderboard_snapshots')
       .select('username, rank, total_points, exact_scores, snapshot_date')
-      .eq('snapshot_date', prevDate);
+      .eq('snapshot_date', lastDate);
     if (error) throw error;
     return { data };
   }

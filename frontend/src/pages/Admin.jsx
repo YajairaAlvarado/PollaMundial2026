@@ -464,15 +464,16 @@ function TabResultados() {
     setMatchState(match.id, 'saving');
     setMatchError(match.id, '');
     try {
-      const { home, away } = scores[match.id];
-      const res = await api.put(`/matches/${match.id}/result`, { homeScore: home, awayScore: away });
-      setDone((p) => ({ ...p, [match.id]: { predictionsUpdated: res.data.predictionsUpdated } }));
-      setMatches((prev) => prev.filter((m) => m.id !== match.id));
-      // Guardar snapshot automáticamente después de cada resultado
+      // 1. Guardar snapshot ANTES del resultado (captura estado previo)
       try {
         const { data: lb } = await api.get('/leaderboard');
         await api.post('/leaderboard/snapshot', { entries: lb });
       } catch { /* snapshot falla silenciosamente, no bloquea */ }
+      // 2. Guardar el resultado (recalcula puntos)
+      const { home, away } = scores[match.id];
+      const res = await api.put(`/matches/${match.id}/result`, { homeScore: home, awayScore: away });
+      setDone((p) => ({ ...p, [match.id]: { predictionsUpdated: res.data.predictionsUpdated } }));
+      setMatches((prev) => prev.filter((m) => m.id !== match.id));
     } catch {
       setMatchError(match.id, 'Error guardando resultado');
       setMatchState(match.id, 'fetched');
