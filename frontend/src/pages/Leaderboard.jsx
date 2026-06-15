@@ -241,8 +241,8 @@ function LeaderboardTableExpandable({ data }) {
                       const [emoji, label, color] = isCurrentUser
                         ? ['🐸', '¡Sapeate a ti mismo!', '#a78bfa']
                         : isSameDept
-                        ? ['🐊', '¡Sapea a tu compañero!', '#34d399']
-                        : ['🦎', '¡Sapea a tu competencia!', '#f472b6'];
+                        ? ['🐸', '¡Sapea a tu compañero!', '#34d399']
+                        : ['🐸', '¡Sapea a tu competencia!', '#f472b6'];
                       return <p className="text-[9px] font-bold" style={{ color }}>{emoji} {label}</p>;
                     })()}
                   </div>
@@ -478,8 +478,8 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                         const [emoji, label, color] = isMe
                           ? ['🐸', '¡Sapeate a ti mismo!', '#a78bfa']
                           : isSameDept
-                          ? ['🐊', '¡Sapea a tu compañero!', '#34d399']
-                          : ['🦎', '¡Sapea a tu competencia!', '#f472b6'];
+                          ? ['🐸', '¡Sapea a tu compañero!', '#34d399']
+                          : ['🐸', '¡Sapea a tu competencia!', '#f472b6'];
                         return (
                           <span className="text-[9px] font-bold" style={{ color }}>
                             {emoji} {label}

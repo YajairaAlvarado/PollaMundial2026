@@ -5,3 +5,5 @@ frontend/.env
 frontend/.env.local
 frontend/dist/
 .DS_Store
+scripts/
+package-lock.json
