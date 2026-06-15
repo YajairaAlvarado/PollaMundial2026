@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
+import { supabase } from '../utils/supabase';
 import LeaderboardTable from '../components/LeaderboardTable';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { Trophy, User, Building2 } from 'lucide-react';
+import { Trophy, User, Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const AVATAR_COLORS = [
   'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
@@ -109,6 +112,158 @@ function DeptPodiumCard({ dept, config, colorIdx }) {
   );
 }
 
+// ── Panel de predicciones de un usuario ──────────────────────────────────────
+function UserPredictionsPanel({ userId }) {
+  const [preds,   setPreds]   = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('predictions')
+      .select('home_score, away_score, points_earned, match:matches(home_team, away_team, home_code, away_code, home_score, away_score, status, match_date)')
+      .eq('user_id', userId)
+      .eq('matches.status', 'finished')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setPreds((data || []).filter((p) => p.match?.status === 'finished'));
+        setLoading(false);
+      });
+  }, [userId]);
+
+  if (loading) return <div className="py-3 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>;
+  if (!preds || preds.length === 0) return <div className="py-3 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Sin predicciones en partidos finalizados.</div>;
+
+  return (
+    <div className="mt-1 rounded-xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* Header */}
+      <div className="grid grid-cols-12 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.25)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="col-span-5">Partido</div>
+        <div className="col-span-3 text-center">Su pred.</div>
+        <div className="col-span-2 text-center">Real</div>
+        <div className="col-span-2 text-center">Pts</div>
+      </div>
+      <div className="max-h-64 overflow-y-auto">
+        {preds.map((p, i) => {
+          const m       = p.match;
+          const pts     = p.points_earned;
+          const ptsColor = pts === 3 ? '#34d399' : pts === 2 ? '#60a5fa' : pts === 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
+          const ptsLabel = pts === 3 ? '✓✓ +3' : pts === 2 ? '✓ +2' : pts === 0 ? '✗ +0' : '–';
+          return (
+            <div key={i} className="grid grid-cols-12 px-3 py-2 items-center text-xs" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              {/* Partido */}
+              <div className="col-span-5 flex items-center gap-1 min-w-0">
+                {m.home_code && <img src={`https://flagcdn.com/16x12/${m.home_code}.png`} alt="" className="rounded flex-shrink-0" />}
+                <span className="text-white/50 truncate hidden sm:inline text-[10px]">{m.home_team}</span>
+                <span className="text-white/30 text-[10px] flex-shrink-0">vs</span>
+                <span className="text-white/50 truncate hidden sm:inline text-[10px]">{m.away_team}</span>
+                {m.away_code && <img src={`https://flagcdn.com/16x12/${m.away_code}.png`} alt="" className="rounded flex-shrink-0" />}
+              </div>
+              {/* Su predicción */}
+              <div className="col-span-3 text-center">
+                <span className="font-black text-sm text-white">{p.home_score}–{p.away_score}</span>
+              </div>
+              {/* Resultado real */}
+              <div className="col-span-2 text-center">
+                <span className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>{m.home_score}–{m.away_score}</span>
+              </div>
+              {/* Puntos */}
+              <div className="col-span-2 text-center">
+                <span className="text-xs font-black" style={{ color: ptsColor }}>{ptsLabel}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Tabla de personas expandible ─────────────────────────────────────────────
+const RANK_COLORS = { 1: '#F59E0B', 2: '#94a3b8', 3: '#cd7f32' };
+
+function LeaderboardTableExpandable({ data }) {
+  const { user } = useAuth();
+  const [expanded, setExpanded] = useState(null);
+
+  if (!data || data.length === 0) return (
+    <div className="rounded-xl p-8 text-center" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <p style={{ color: 'rgba(255,255,255,0.4)' }}>No hay datos en la tabla aún</p>
+    </div>
+  );
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+        style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)' }}>
+        <div className="col-span-1 text-center">#</div>
+        <div className="col-span-5">Jugador</div>
+        <div className="col-span-2 text-center">Pts</div>
+        <div className="col-span-2 text-center">Exactos</div>
+        <div className="col-span-2 text-center">Correctos</div>
+      </div>
+      <div>
+        {data.map((entry, idx) => {
+          const isCurrentUser = user && entry.username === user.username;
+          const colorIdx      = entry.username.charCodeAt(0) % AVATAR_COLORS.length;
+          const rankColor     = RANK_COLORS[entry.rank] || 'white';
+          const isOpen        = expanded === entry.id;
+
+          return (
+            <div key={entry.id} style={{ borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+              {/* Fila principal — clickeable */}
+              <div
+                onClick={() => setExpanded(isOpen ? null : entry.id)}
+                className="grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-white/5"
+                style={{
+                  background: isOpen ? 'rgba(245,158,11,0.05)' : isCurrentUser ? 'rgba(245,158,11,0.06)' : 'transparent',
+                  borderLeft: isCurrentUser ? '3px solid #F59E0B' : '3px solid transparent',
+                }}>
+                <div className="col-span-1 flex justify-center items-center gap-1">
+                  {entry.rank === 1 ? <span className="text-xl">🥇</span>
+                   : entry.rank === 2 ? <span className="text-xl">🥈</span>
+                   : entry.rank === 3 ? <span className="text-xl">🥉</span>
+                   : <span className="text-sm font-bold w-7 text-center block" style={{ color: 'rgba(255,255,255,0.4)' }}>#{entry.rank}</span>}
+                  {entry.trend === 'up'   && <span style={{ color: '#34d399', fontSize: 11, fontWeight: 900 }}>▲</span>}
+                  {entry.trend === 'down' && <span style={{ color: '#f87171', fontSize: 11, fontWeight: 900 }}>▼</span>}
+                  {entry.trend === 'same' && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>–</span>}
+                </div>
+                <div className="col-span-5 flex items-center gap-2.5 min-w-0">
+                  <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-xs flex-shrink-0`} style={{ width: 30, height: 30 }}>
+                    {entry.avatar_initials || entry.display_name?.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate" style={{ color: isCurrentUser ? '#F59E0B' : 'white' }}>
+                      {entry.display_name}
+                      {isCurrentUser && <span className="ml-1 text-xs" style={{ color: 'rgba(245,158,11,0.6)' }}>(tú)</span>}
+                    </p>
+                    <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{entry.department}</p>
+                  </div>
+                  {isOpen ? <ChevronUp size={13} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={13} style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />}
+                </div>
+                <div className="col-span-2 text-center">
+                  <span className="font-black text-base" style={{ color: rankColor }}>{entry.total_points}</span>
+                </div>
+                <div className="col-span-2 text-center">
+                  <span className="text-sm font-semibold" style={{ color: '#34d399' }}>{entry.exact_scores}</span>
+                </div>
+                <div className="col-span-2 text-center">
+                  <span className="text-sm font-semibold" style={{ color: '#60a5fa' }}>{entry.correct_results}</span>
+                </div>
+              </div>
+              {/* Panel expandido */}
+              {isOpen && (
+                <div className="px-4 pb-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <UserPredictionsPanel userId={entry.id} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Tab Personas ──────────────────────────────────────────────────────────────
 function TabPersonas({ data, user }) {
   const myEntry = user ? data.find((e) => e.username === user.username) : null;
@@ -172,7 +327,7 @@ function TabPersonas({ data, user }) {
         <h2 className="text-white font-bold text-sm uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
           Clasificación Completa
         </h2>
-        <LeaderboardTable data={data} />
+        <LeaderboardTableExpandable data={data} />
       </div>
     </div>
   );
@@ -187,7 +342,8 @@ function TrendArrow({ trend, size = 10 }) {
 }
 
 function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, totalGroupMatches, snapMap }) {
-  const [open, setOpen] = useState(false);
+  const [open,         setOpen]         = useState(false);
+  const [expandedUser, setExpandedUser] = useState(null);
   const color     = DEPT_COLORS[deptColorMap[dept.department] % DEPT_COLORS.length];
   const isMyDept  = user && dept.department === user.department;
   const noPartic  = dept.active_members === 0;
@@ -294,33 +450,44 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
               : prevMemberRank > currentMemberRank ? 'up'
               : prevMemberRank < currentMemberRank ? 'down'
               : 'same';
+            const isMemberOpen = expandedUser === m.id;
             return (
-              <div key={m.username} className="grid grid-cols-12 py-1.5 items-center rounded-lg px-1"
-                style={{ background: isMe ? 'rgba(245,158,11,0.06)' : 'transparent' }}>
-                <div className="col-span-5 flex items-center gap-2 min-w-0">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0 ${AVATAR_COLORS[colorIdx]} text-white`}>
-                    {m.avatar_initials}
+              <div key={m.username}>
+                <div
+                  onClick={() => setExpandedUser(isMemberOpen ? null : m.id)}
+                  className="grid grid-cols-12 py-1.5 items-center rounded-lg px-1 cursor-pointer transition-colors hover:bg-white/5"
+                  style={{ background: isMe ? 'rgba(245,158,11,0.06)' : 'transparent' }}>
+                  <div className="col-span-5 flex items-center gap-2 min-w-0">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0 ${AVATAR_COLORS[colorIdx]} text-white`}>
+                      {m.avatar_initials}
+                    </div>
+                    <span className="text-xs truncate" style={{ color: isMe ? '#F59E0B' : participated ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)', fontWeight: isMe ? 700 : 400 }}>
+                      {m.display_name}
+                    </span>
+                    <TrendArrow trend={memberTrend} size={9} />
+                    {isMemberOpen ? <ChevronUp size={11} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={11} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />}
                   </div>
-                  <span className="text-xs truncate" style={{ color: isMe ? '#F59E0B' : participated ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)', fontWeight: isMe ? 700 : 400 }}>
-                    {m.display_name}
-                  </span>
-                  <TrendArrow trend={memberTrend} size={9} />
+                  <div className="col-span-2 text-center">
+                    <span className="text-xs font-black" style={{ color: pts > 0 ? '#F59E0B' : 'rgba(255,255,255,0.2)' }}>{pts}</span>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <span className="text-xs font-semibold" style={{ color: exact > 0 ? '#34d399' : 'rgba(255,255,255,0.2)' }}>{exact}</span>
+                  </div>
+                  <div className="col-span-3 text-center">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={{
+                        background: participated ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.06)',
+                        color: participated ? '#34d399' : 'rgba(255,255,255,0.3)',
+                      }}>
+                      {entry?.total_predictions ?? 0}/{totalGroupMatches} pred.
+                    </span>
+                  </div>
                 </div>
-                <div className="col-span-2 text-center">
-                  <span className="text-xs font-black" style={{ color: pts > 0 ? '#F59E0B' : 'rgba(255,255,255,0.2)' }}>{pts}</span>
-                </div>
-                <div className="col-span-2 text-center">
-                  <span className="text-xs font-semibold" style={{ color: exact > 0 ? '#34d399' : 'rgba(255,255,255,0.2)' }}>{exact}</span>
-                </div>
-                <div className="col-span-3 text-center">
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                    style={{
-                      background: participated ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.06)',
-                      color: participated ? '#34d399' : 'rgba(255,255,255,0.3)',
-                    }}>
-                    {entry?.total_predictions ?? 0}/{totalGroupMatches} pred.
-                  </span>
-                </div>
+                {isMemberOpen && (
+                  <div className="px-2 pb-2">
+                    <UserPredictionsPanel userId={m.id} />
+                  </div>
+                )}
               </div>
             );
           })}
