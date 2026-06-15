@@ -13,6 +13,7 @@ import Matches from './pages/Matches';
 import Leaderboard from './pages/Leaderboard';
 import Bracket from './pages/Bracket';
 import Profile from './pages/Profile';
+import Vs from './pages/Vs';
 
 function ProtectedLayout() {
   const { isAuthenticated, loading } = useAuth();
@@ -61,6 +62,7 @@ function AppRoutes() {
         <Route path="/matches" element={<Matches />} />
         <Route path="/bracket" element={<Bracket />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/vs" element={<Vs />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
       </Route>
