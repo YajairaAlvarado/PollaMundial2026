@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
+import { trackPage } from '../utils/trackPage';
 import WorldCupBanner from '../components/WorldCupBanner';
 import MatchCard from '../components/MatchCard';
 import PredictionModal from '../components/PredictionModal';
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => {
+    if (user?.id) trackPage(user.id, 'inicio');
     fetchData();
   }, []);
 

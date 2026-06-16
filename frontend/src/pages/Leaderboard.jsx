@@ -2,11 +2,19 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 import { supabase } from '../utils/supabase';
+import { trackPage } from '../utils/trackPage';
 import LeaderboardTable from '../components/LeaderboardTable';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Trophy, User, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { toZonedTime, format as formatTz } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
+
+const TZ = 'America/Guayaquil';
+// Fecha yyyy-MM-dd en hora de Ecuador
+function ecuadorDateStr(dateInput) {
+  return formatTz(toZonedTime(dateInput, TZ), 'yyyy-MM-dd', { timeZone: TZ });
+}
 
 const AVATAR_COLORS = [
   'bg-purple-600', 'bg-blue-600', 'bg-emerald-600', 'bg-rose-600',
@@ -184,6 +192,13 @@ const RANK_COLORS = { 1: '#F59E0B', 2: '#94a3b8', 3: '#cd7f32' };
 function LeaderboardTableExpandable({ data }) {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(null);
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return data;
+    const q = search.toLowerCase();
+    return data.filter((e) => e.display_name?.toLowerCase().includes(q));
+  }, [data, search]);
 
   if (!data || data.length === 0) return (
     <div className="rounded-xl p-8 text-center" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -193,6 +208,20 @@ function LeaderboardTableExpandable({ data }) {
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Búsqueda */}
+      <div className="px-4 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>🔍</span>
+          <input
+            type="text"
+            placeholder="Buscar jugador por nombre..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent outline-none text-white text-xs w-full placeholder:text-white/25"
+          />
+          {search && <button onClick={() => setSearch('')} style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, lineHeight: 1 }}>×</button>}
+        </div>
+      </div>
       <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
         style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)' }}>
         <div className="col-span-1 text-center">#</div>
@@ -202,7 +231,9 @@ function LeaderboardTableExpandable({ data }) {
         <div className="col-span-2 text-center">Correctos</div>
       </div>
       <div>
-        {data.map((entry, idx) => {
+        {filtered.length === 0
+          ? <p className="text-center py-6 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No se encontró "{search}"</p>
+          : filtered.map((entry, idx) => {
           const isCurrentUser = user && entry.username === user.username;
           const colorIdx      = entry.username.charCodeAt(0) % AVATAR_COLORS.length;
           const rankColor     = RANK_COLORS[entry.rank] || 'white';
@@ -349,12 +380,77 @@ function TrendArrow({ trend, size = 10 }) {
   return null;
 }
 
+function useTodayMatches() {
+  const [todayMatches, setTodayMatches] = useState([]);
+  useEffect(() => {
+    supabase
+      .from('matches')
+      .select('id, match_date, home_team, away_team')
+      .eq('status', 'scheduled')
+      .then(({ data }) => {
+        if (!data) return;
+        const now   = new Date();
+        // "Hoy" en hora de Ecuador (no UTC), para que partidos de 23:00 ECU cuenten hoy
+        const today = ecuadorDateStr(now);
+        const upcoming = data.filter((m) => {
+          const d = new Date(m.match_date);
+          return ecuadorDateStr(d) === today && d > now;
+        });
+        setTodayMatches(upcoming);
+      });
+  }, []);
+  return todayMatches;
+}
+
+function timeUntil(dateStr) {
+  const diff = new Date(dateStr) - new Date();
+  if (diff <= 0) return null;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function LiveCountdown({ dateStr }) {
+  const [label, setLabel] = useState(() => timeUntil(dateStr));
+  useEffect(() => {
+    const id = setInterval(() => setLabel(timeUntil(dateStr)), 1000);
+    return () => clearInterval(id);
+  }, [dateStr]);
+  return <span>{label ?? '¡Ya cerró!'}</span>;
+}
+
 function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, totalGroupMatches, snapMap }) {
   const [open,         setOpen]         = useState(false);
   const [expandedUser, setExpandedUser] = useState(null);
+  const [todayPredMap, setTodayPredMap] = useState({});
+  const todayMatches = useTodayMatches();
   const color     = DEPT_COLORS[deptColorMap[dept.department] % DEPT_COLORS.length];
   const isMyDept  = user && dept.department === user.department;
   const noPartic  = dept.active_members === 0;
+  const hasTodayMatches = todayMatches.length > 0;
+
+  // Cuando se abre el acordeón, carga qué usuarios ya pronosticaron hoy
+  useEffect(() => {
+    if (!open || !hasTodayMatches) return;
+    const matchIds = todayMatches.map((m) => m.id);
+    const userIds  = dept.members.map((m) => m.id);
+    supabase
+      .from('predictions')
+      .select('user_id, match_id')
+      .in('match_id', matchIds)
+      .in('user_id', userIds)
+      .then(({ data }) => {
+        const map = {};
+        for (const p of (data ?? [])) {
+          if (!map[p.user_id]) map[p.user_id] = new Set();
+          map[p.user_id].add(p.match_id);
+        }
+        setTodayPredMap(map);
+      });
+  }, [open, todayMatches, dept.members, hasTodayMatches]);
 
   // Miembros ordenados por puntos actuales
   const sortedMembers = [...dept.members].sort((a, b) => {
@@ -441,7 +537,9 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
             <div className="col-span-5">Miembro</div>
             <div className="col-span-2 text-center">Pts</div>
             <div className="col-span-2 text-center">Exactos</div>
-            <div className="col-span-3 text-center">Estado</div>
+            {hasTodayMatches
+              ? <><div className="col-span-2 text-center">Pronóstico hoy</div><div className="col-span-1 text-center">Estado</div></>
+              : <div className="col-span-3 text-center">Estado</div>}
           </div>
           {sortedMembers.map((m, memberIdx) => {
             const entry   = pointsMap[m.username];
@@ -496,13 +594,58 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                   <div className="col-span-2 text-center">
                     <span className="text-xs font-semibold" style={{ color: exact > 0 ? '#34d399' : 'rgba(255,255,255,0.2)' }}>{exact}</span>
                   </div>
-                  <div className="col-span-3 text-center">
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                  {hasTodayMatches && (() => {
+                    const preds    = todayPredMap[m.id];
+                    const done     = preds ? todayMatches.every((tm) => preds.has(tm.id)) : false;
+                    const pending  = todayMatches.filter((tm) => !preds?.has(tm.id));
+                    const nearest  = pending[0];
+                    const timeLeft = nearest ? timeUntil(nearest.match_date) : null;
+                    return done ? (
+                      <div className="col-span-2 text-center">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
+                          style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }}>
+                          ✓ Al día
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="col-span-2 text-center relative" onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedUser(expandedUser === `today_${m.id}` ? null : `today_${m.id}`);
+                        }}>
+                        <span className="inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
+                          style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.5)' }}>
+                          ⚠ {pending.length === 1 ? 'Falta 1 partido' : `Faltan ${pending.length} partidos`}
+                          {nearest && <span style={{ fontSize: 9, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>⏱ <LiveCountdown dateStr={nearest.match_date} /></span>}
+                        </span>
+                        {expandedUser === `today_${m.id}` && (
+                          <div className="absolute z-50 left-1/2 mt-1 text-left shadow-2xl"
+                            style={{ transform: 'translateX(-50%)', minWidth: 210, top: '100%' }}>
+                            <div className="rounded-lg px-3 py-2"
+                              style={{ background: '#0f172a', border: '1px solid rgba(245,158,11,0.4)' }}>
+                              <p className="text-[10px] font-bold mb-1.5" style={{ color: '#F59E0B' }}>⚽ Partidos sin pronosticar hoy:</p>
+                              {pending.map((tm) => (
+                                <div key={tm.id} className="flex items-center justify-between gap-3 mb-1">
+                                  <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                                    {tm.home_team} vs {tm.away_team}
+                                  </p>
+                                  <span className="text-[9px] font-bold flex-shrink-0 font-mono" style={{ color: '#F59E0B' }}>
+                                    <LiveCountdown dateStr={tm.match_date} />
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <div className={hasTodayMatches ? 'col-span-1 text-center' : 'col-span-3 text-center'}>
+                    <span className="text-[9px] font-semibold px-1 py-0.5 rounded-full"
                       style={{
                         background: participated ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.06)',
                         color: participated ? '#34d399' : 'rgba(255,255,255,0.3)',
                       }}>
-                      {entry?.total_predictions ?? 0}/{totalGroupMatches} pred.
+                      {entry?.total_predictions ?? 0}/{totalGroupMatches}
                     </span>
                   </div>
                 </div>
@@ -728,6 +871,7 @@ export default function Leaderboard() {
   const [tab,                setTab]                = useState('personas');
 
   useEffect(() => {
+    if (user?.id) trackPage(user.id, 'posiciones');
     Promise.all([
       api.get('/leaderboard'),
       api.get('/users'),

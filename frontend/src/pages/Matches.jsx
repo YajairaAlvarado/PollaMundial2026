@@ -44,13 +44,30 @@ function LivePredictionsPanel({ match }) {
   const [loading,  setLoading]    = useState(true);
   const [search,   setSearch]     = useState('');
   const [view,     setView]       = useState('grouped'); // 'grouped' | 'person'
+  const [rankMap,  setRankMap]    = useState({});
 
   useEffect(() => {
     setLoading(true);
-    api.get(`/predictions/match/${match.id}/all`)
-      .then((r) => setAllPreds(r.data))
-      .catch(() => setAllPreds([]))
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.get(`/predictions/match/${match.id}/all`),
+      api.get('/leaderboard'),
+    ]).then(([predRes, lbRes]) => {
+      setAllPreds(predRes.data);
+      const map = {};
+      let rank = 1;
+      const lb = lbRes.data ?? [];
+      lb.forEach((e, i) => {
+        if (i > 0) {
+          const prev = lb[i - 1];
+          const tied = e.total_points === prev.total_points && e.exact_scores === prev.exact_scores;
+          if (!tied) rank = i + 1;
+        }
+        map[e.username] = rank;
+      });
+      setRankMap(map);
+    })
+    .catch(() => setAllPreds([]))
+    .finally(() => setLoading(false));
   }, [match.id]);
 
   const filtered = useMemo(() => {
@@ -67,6 +84,10 @@ function LivePredictionsPanel({ match }) {
       const key = `${p.home_score}-${p.away_score}`;
       if (!map[key]) map[key] = { home: p.home_score, away: p.away_score, users: [] };
       map[key].users.push(p.user);
+    }
+    // ordenar usuarios dentro de cada grupo por ranking
+    for (const g of Object.values(map)) {
+      g.users.sort((a, b) => (rankMap[a.username] ?? 999) - (rankMap[b.username] ?? 999));
     }
     return Object.values(map).sort((a, b) => b.users.length - a.users.length);
   }, [filtered]);
@@ -129,6 +150,9 @@ function LivePredictionsPanel({ match }) {
                 <div className="flex flex-wrap gap-1.5">
                   {g.users.map((u) => u && (
                     <div key={u.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      {rankMap[u.username] && (
+                        <span className="text-[9px] font-black flex-shrink-0" style={{ color: '#F59E0B' }}>#{rankMap[u.username]}</span>
+                      )}
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white flex-shrink-0 ${AVATAR_COLORS[u.username?.charCodeAt(0) % AVATAR_COLORS.length]}`}>
                         {u.avatar_initials}
                       </div>
@@ -141,9 +165,12 @@ function LivePredictionsPanel({ match }) {
         ) : (
           filtered.length === 0
             ? <p className="text-white/30 text-xs text-center">Sin resultados</p>
-            : filtered.map((p) => p.user && (
+            : [...filtered].sort((a, b) => (rankMap[a.user?.username] ?? 999) - (rankMap[b.user?.username] ?? 999)).map((p) => p.user && (
               <div key={p.user.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
                 <div className="flex items-center gap-2">
+                  {rankMap[p.user.username] && (
+                    <span className="text-xs font-black w-6 text-right flex-shrink-0" style={{ color: '#F59E0B' }}>#{rankMap[p.user.username]}</span>
+                  )}
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black text-white ${AVATAR_COLORS[p.user.username?.charCodeAt(0) % AVATAR_COLORS.length]}`}>
                     {p.user.avatar_initials}
                   </div>

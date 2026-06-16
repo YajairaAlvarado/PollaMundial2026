@@ -3,6 +3,8 @@ import { X, Minus, Plus, Save, AlertTriangle, Lock, CheckCircle } from 'lucide-r
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import api from '../utils/api';
+import { supabase } from '../utils/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 function FlagImg({ code, name }) {
   return (
@@ -50,6 +52,7 @@ function ScoreControl({ value, onChange, label }) {
 }
 
 export default function PredictionModal({ match, prediction, onClose, onSaved }) {
+  const { user } = useAuth();
   const [homeScore, setHomeScore] = useState(0);
   const [awayScore, setAwayScore] = useState(0);
   const [step, setStep] = useState('input'); // 'input' | 'confirm'
@@ -77,6 +80,19 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
     setError('');
     try {
       const res = await api.post(`/predictions/${match.id}`, { homeScore, awayScore });
+      // Broadcast a todos los conectados (sin revelar marcador)
+      if (user?.id) {
+        supabase.from('prediction_broadcasts').upsert({
+          user_id:         user.id,
+          display_name:    user.displayName,
+          avatar_initials: user.avatarInitials,
+          match_id:        match.id,
+          home_team:       match.home_team,
+          away_team:       match.away_team,
+          home_code:       match.home_code,
+          away_code:       match.away_code,
+        }, { onConflict: 'match_id,user_id', ignoreDuplicates: false }).then(() => {});
+      }
       onSaved && onSaved(res.data);
       onClose();
     } catch (err) {
@@ -115,7 +131,6 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
             <div className="flex-1 text-center">
               <FlagImg code={match.home_code} name={match.home_team} />
               <p className="text-white font-semibold text-sm mt-2">{match.home_team}</p>
-              <p className="text-white/40 text-xs">Local</p>
             </div>
             <div className="px-4 text-center">
               <p className="text-white/40 text-2xl font-black">VS</p>
@@ -123,7 +138,6 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
             <div className="flex-1 text-center">
               <FlagImg code={match.away_code} name={match.away_team} />
               <p className="text-white font-semibold text-sm mt-2">{match.away_team}</p>
-              <p className="text-white/40 text-xs">Visitante</p>
             </div>
           </div>
 
@@ -161,9 +175,9 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
               {step === 'input' && (
                 <>
                   <div className="flex items-center justify-center gap-8 mb-4">
-                    <ScoreControl value={homeScore} onChange={setHomeScore} label="Local" />
+                    <ScoreControl value={homeScore} onChange={setHomeScore} label={match.home_team} />
                     <div className="text-white/30 text-2xl font-bold self-end pb-1">–</div>
-                    <ScoreControl value={awayScore} onChange={setAwayScore} label="Visita" />
+                    <ScoreControl value={awayScore} onChange={setAwayScore} label={match.away_team} />
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-center mb-4">
                     <p className="text-yellow-400 text-sm font-semibold">

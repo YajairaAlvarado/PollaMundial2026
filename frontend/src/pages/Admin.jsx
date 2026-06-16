@@ -227,19 +227,175 @@ function TabUsuarios({ users }) {
 // ─── Pestaña Accesos ─────────────────────────────────────────────────────────
 
 const PRESETS = [
-  { label: 'Hoy',        days: 0 },
-  { label: 'Últimos 7 días',  days: 7 },
-  { label: 'Últimos 30 días', days: 30 },
-  { label: 'Todo',       days: null },
+  { label: 'Hoy',             days: 0    },
+  { label: 'Últimos 7 días',  days: 7    },
+  { label: 'Últimos 30 días', days: 30   },
+  { label: 'Todo',            days: null },
+];
+
+const PAGE_LABELS = {
+  inicio:          { label: 'Inicio',      icon: '🏠' },
+  partidos:        { label: 'Partidos',    icon: '⚽' },
+  posiciones:      { label: 'Posiciones',  icon: '🏆' },
+  vs:              { label: 'VS (visita)', icon: '👊' },
+  vs_comparacion:  { label: 'VS (comparó)',icon: '⚡' },
+};
+
+function AccesosUserDetail({ userId, desde, hasta, users }) {
+  const [data,    setData]    = useState(null);
+  const [nudges,  setNudges]  = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const nameMap = React.useMemo(() => {
+    const m = {};
+    (users || []).forEach((u) => { m[u.id] = u.display_name; });
+    return m;
+  }, [users]);
+
+  useEffect(() => {
+    const from = startOfDay(new Date(desde + 'T00:00:00')).toISOString();
+    const to   = endOfDay(new Date(hasta + 'T00:00:00')).toISOString();
+    Promise.all([
+      supabase.from('page_views')
+        .select('page, metadata, created_at')
+        .eq('user_id', userId)
+        .gte('created_at', from).lte('created_at', to)
+        .order('created_at', { ascending: false }),
+      supabase.from('nudges')
+        .select('to_user_id, type, message, tone, created_at')
+        .eq('from_user_id', userId)
+        .gte('created_at', from).lte('created_at', to)
+        .order('created_at', { ascending: false }),
+    ]).then(([pvRes, ndRes]) => {
+      if (pvRes.error) { setData(null); setLoading(false); return; }
+      setData(pvRes.data || []);
+      setNudges(ndRes.data || []);
+      setLoading(false);
+    });
+  }, [userId, desde, hasta]);
+
+  if (loading) return <div className="py-3 flex justify-center"><LoadingSpinner size="sm" /></div>;
+  if (!data) return <p className="text-xs py-3 text-center" style={{ color: '#f87171' }}>No se pudo cargar (tabla page_views no existe aún)</p>;
+  if (data.length === 0 && nudges.length === 0) return <p className="text-xs py-3 text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>Sin actividad en este período</p>;
+
+  // Agrupar por página
+  const byPage = {};
+  data.forEach((r) => {
+    if (!byPage[r.page]) byPage[r.page] = [];
+    byPage[r.page].push(r);
+  });
+
+  const vsComps = byPage['vs_comparacion'] || [];
+
+  return (
+    <div className="space-y-2 py-2">
+      {/* Resumen por página */}
+      <div className="grid grid-cols-2 gap-2">
+        {Object.entries(byPage).map(([page, rows]) => {
+          const cfg = PAGE_LABELS[page] || { label: page, icon: '📄' };
+          return (
+            <div key={page} className="rounded-lg px-3 py-2 flex items-center gap-2"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <span className="text-base flex-shrink-0">{cfg.icon}</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-white text-xs font-semibold truncate">{cfg.label}</p>
+                <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  {rows.length} {rows.length === 1 ? 'vez' : 'veces'}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Comparaciones VS */}
+      {vsComps.length > 0 && (
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(245,158,11,0.25)' }}>
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider"
+            style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B' }}>
+            ⚡ Comparaciones VS ({vsComps.length})
+          </div>
+          <div className="max-h-36 overflow-y-auto">
+            {vsComps.map((r, i) => {
+              const meta = r.metadata || {};
+              const dateStr = format(parseISO(r.created_at), "d MMM · HH:mm", { locale: es });
+              return (
+                <div key={i} className="flex items-center justify-between px-3 py-1.5 text-xs"
+                  style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                  <div style={{ color: 'rgba(255,255,255,0.75)' }}>
+                    <span style={{ color: '#60a5fa' }}>{meta.jugador_a || '?'}</span>
+                    <span className="mx-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>vs</span>
+                    <span style={{ color: '#f472b6' }}>{meta.jugador_b || '?'}</span>
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>{dateStr}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Guiños enviados */}
+      {nudges.length > 0 && (
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(167,139,250,0.3)' }}>
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider"
+            style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa' }}>
+            💬 Guiños enviados ({nudges.length})
+          </div>
+          <div className="max-h-40 overflow-y-auto">
+            {nudges.map((n, i) => {
+              const dateStr = format(parseISO(n.created_at), "d MMM · HH:mm", { locale: es });
+              const dest = nameMap[n.to_user_id] || 'usuario';
+              return (
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                  style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                  <span style={{ fontSize: 15 }}>{n.tone || '💬'}</span>
+                  <div className="min-w-0 flex-1">
+                    <p style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      a <span style={{ color: '#c4b5fd', fontWeight: 600 }}>{dest}</span>
+                      {n.type === 'match_wink' && <span style={{ color: 'rgba(255,255,255,0.4)' }}> · guiño de partido</span>}
+                    </p>
+                    {n.message && <p className="truncate" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>"{n.message}"</p>}
+                  </div>
+                  <span className="flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>{dateStr}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ACTION_FILTERS = [
+  { key: 'inicio',         label: '🏠 Inicio' },
+  { key: 'partidos',       label: '⚽ Partidos' },
+  { key: 'posiciones',     label: '🏆 Posiciones' },
+  { key: 'vs',             label: '👊 VS (visita)' },
+  { key: 'vs_comparacion', label: '⚡ VS (comparó)' },
+  { key: 'nudges',         label: '💬 Guiños' },
 ];
 
 function TabAccesos({ users }) {
   const today = format(new Date(), 'yyyy-MM-dd');
-  const [desde,   setDesde]   = useState(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
-  const [hasta,   setHasta]   = useState(today);
-  const [rows,    setRows]    = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [preset,  setPreset]  = useState(1);
+  const [desde,     setDesde]     = useState(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
+  const [hasta,     setHasta]     = useState(today);
+  const [rows,      setRows]      = useState([]);
+  const [loading,   setLoading]   = useState(false);
+  const [preset,    setPreset]    = useState(1);
+  const [expanded,  setExpanded]  = useState(null);
+  const [actFilter, setActFilter] = useState([]); // acciones seleccionadas (OR)
+
+  const toggleAction = (key) =>
+    setActFilter((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
+
+  const rowHasAction = (r, key) =>
+    key === 'nudges' ? r.nudgeCount > 0 : r.pages?.has(key);
+
+  const filteredRows = actFilter.length === 0
+    ? rows
+    : rows.filter((r) => actFilter.some((k) => rowHasAction(r, k)));
 
   const applyPreset = (idx) => {
     setPreset(idx);
@@ -257,33 +413,60 @@ function TabAccesos({ users }) {
   };
 
   useEffect(() => {
+    setExpanded(null);
     async function load() {
       setLoading(true);
       const from = startOfDay(new Date(desde + 'T00:00:00')).toISOString();
       const to   = endOfDay(new Date(hasta + 'T00:00:00')).toISOString();
 
+      // logins
       const { data: logs } = await supabase
         .from('login_logs')
         .select('user_id, logged_in_at')
         .gte('logged_in_at', from)
         .lte('logged_in_at', to);
 
-      // Agrupar por user_id
-      const counts = {};
-      const lastAccess = {};
+      // page_views summary
+      const { data: pvRows } = await supabase
+        .from('page_views')
+        .select('user_id, page, created_at')
+        .gte('created_at', from)
+        .lte('created_at', to);
+
+      // guiños enviados
+      const { data: ndRows } = await supabase
+        .from('nudges')
+        .select('from_user_id, created_at')
+        .gte('created_at', from)
+        .lte('created_at', to);
+
+      const loginCounts = {}, lastAccess = {};
       (logs || []).forEach((l) => {
-        counts[l.user_id] = (counts[l.user_id] || 0) + 1;
-        if (!lastAccess[l.user_id] || l.logged_in_at > lastAccess[l.user_id]) {
-          lastAccess[l.user_id] = l.logged_in_at;
-        }
+        loginCounts[l.user_id] = (loginCounts[l.user_id] || 0) + 1;
+        if (!lastAccess[l.user_id] || l.logged_in_at > lastAccess[l.user_id]) lastAccess[l.user_id] = l.logged_in_at;
       });
 
-      // Combinar con lista de usuarios
+      const pvCounts = {}, pvLast = {}, pagesByUser = {};
+      (pvRows || []).forEach((r) => {
+        pvCounts[r.user_id] = (pvCounts[r.user_id] || 0) + 1;
+        if (!pvLast[r.user_id] || r.created_at > pvLast[r.user_id]) pvLast[r.user_id] = r.created_at;
+        if (!pagesByUser[r.user_id]) pagesByUser[r.user_id] = new Set();
+        pagesByUser[r.user_id].add(r.page);
+      });
+
+      const nudgeCounts = {};
+      (ndRows || []).forEach((n) => {
+        nudgeCounts[n.from_user_id] = (nudgeCounts[n.from_user_id] || 0) + 1;
+      });
+
       const result = users.map((u) => ({
         ...u,
-        count:  counts[u.id] || 0,
-        lastAt: lastAccess[u.id] || null,
-      })).sort((a, b) => b.count - a.count);
+        loginCount: loginCounts[u.id] || 0,
+        pvCount:    pvCounts[u.id]    || 0,
+        nudgeCount: nudgeCounts[u.id] || 0,
+        pages:      pagesByUser[u.id] || new Set(),
+        lastAt:     lastAccess[u.id] || pvLast[u.id] || null,
+      })).sort((a, b) => (b.loginCount + b.pvCount) - (a.loginCount + a.pvCount));
 
       setRows(result);
       setLoading(false);
@@ -291,14 +474,13 @@ function TabAccesos({ users }) {
     load();
   }, [desde, hasta, users]);
 
-  const conAcceso = rows.filter((r) => r.count > 0).length;
-  const sinAcceso = rows.filter((r) => r.count === 0).length;
+  const conAcceso = rows.filter((r) => r.loginCount > 0).length;
+  const sinAcceso = rows.filter((r) => r.loginCount === 0).length;
 
   return (
     <>
       {/* Filtros */}
       <div className="mb-4 space-y-3">
-        {/* Presets */}
         <div className="flex gap-2 flex-wrap">
           {PRESETS.map((p, i) => (
             <button key={i} onClick={() => applyPreset(i)}
@@ -312,8 +494,6 @@ function TabAccesos({ users }) {
             </button>
           ))}
         </div>
-
-        {/* Rango personalizado */}
         <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
             <span className="text-white/40 text-xs">Desde</span>
@@ -328,14 +508,40 @@ function TabAccesos({ users }) {
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', colorScheme: 'dark' }} />
           </div>
         </div>
+
+        {/* Filtro por acción */}
+        <div className="flex gap-2 flex-wrap items-center pt-1">
+          <span className="text-white/40 text-xs mr-1">Acción:</span>
+          {ACTION_FILTERS.map((a) => {
+            const on = actFilter.includes(a.key);
+            return (
+              <button key={a.key} onClick={() => toggleAction(a.key)}
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: on ? 'rgba(96,165,250,0.22)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${on ? 'rgba(96,165,250,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                  color: on ? '#93c5fd' : 'rgba(255,255,255,0.5)',
+                }}>
+                {a.label}
+              </button>
+            );
+          })}
+          {actFilter.length > 0 && (
+            <button onClick={() => setActFilter([])}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold"
+              style={{ color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' }}>
+              ✕ Limpiar
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Resumen */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
-          { label: 'Total usuarios', value: rows.length,  color: 'rgba(255,255,255,0.6)' },
-          { label: 'Con acceso',     value: conAcceso,    color: '#34D399' },
-          { label: 'Sin acceso',     value: sinAcceso,    color: '#F87171' },
+          { label: 'Total usuarios', value: rows.length, color: 'rgba(255,255,255,0.6)' },
+          { label: 'Con acceso',     value: conAcceso,   color: '#34D399' },
+          { label: 'Sin acceso',     value: sinAcceso,   color: '#F87171' },
         ].map((s) => (
           <div key={s.label} className="rounded-xl px-4 py-3 text-center"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -345,63 +551,72 @@ function TabAccesos({ users }) {
         ))}
       </div>
 
-      {/* Tabla */}
+      {/* Tabla con acordeón */}
       {loading ? (
         <div className="py-10 flex justify-center"><LoadingSpinner size="md" text="Cargando accesos..." /></div>
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-          {/* Header */}
           <div className="grid grid-cols-12 px-4 py-2 text-xs font-semibold uppercase tracking-wider"
             style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
             <span className="col-span-1 text-center">#</span>
-            <span className="col-span-5">Usuario</span>
-            <span className="col-span-3 text-center">Ingresos</span>
+            <span className="col-span-4">Usuario</span>
+            <span className="col-span-2 text-center">Logins</span>
+            <span className="col-span-2 text-center">Acciones</span>
             <span className="col-span-3">Último acceso</span>
           </div>
 
-          <div className="divide-y" style={{ divideColor: 'rgba(255,255,255,0.05)' }}>
-            {rows.map((r, idx) => (
-              <div key={r.id}
-                className="grid grid-cols-12 px-4 py-3 items-center"
-                style={{
-                  background: r.count === 0 ? 'rgba(248,113,113,0.04)' : idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
-                }}>
-                <span className="col-span-1 text-center text-white/30 text-xs">{idx + 1}</span>
-                <div className="col-span-5 flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-full bg-red-800 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                    {r.avatar_initials}
+          {filteredRows.length === 0 && (
+            <p className="text-center py-6 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              Nadie usó {actFilter.length > 1 ? 'esas acciones' : 'esa acción'} en este período
+            </p>
+          )}
+          {filteredRows.map((r, idx) => {
+            const isOpen = expanded === r.id;
+            return (
+              <div key={r.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <button
+                  onClick={() => setExpanded(isOpen ? null : r.id)}
+                  className="w-full grid grid-cols-12 px-4 py-3 items-center text-left transition-all hover:bg-white/5"
+                  style={{ background: r.loginCount === 0 ? 'rgba(248,113,113,0.03)' : 'transparent' }}>
+                  <span className="col-span-1 text-center text-white/30 text-xs">{idx + 1}</span>
+                  <div className="col-span-4 flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-red-800 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {r.avatar_initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{r.display_name}</p>
+                      <p className="text-white/30 text-xs truncate">{r.username}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{r.display_name}</p>
-                    <p className="text-white/30 text-xs truncate">{r.username}</p>
+                  <div className="col-span-2 text-center">
+                    {r.loginCount > 0
+                      ? <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
+                          {r.loginCount}×
+                        </span>
+                      : <span className="inline-block px-2 py-0.5 rounded-full text-xs" style={{ background: 'rgba(248,113,113,0.12)', color: '#F87171' }}>0</span>}
                   </div>
-                </div>
-                <div className="col-span-3 text-center">
-                  {r.count > 0 ? (
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold"
-                      style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
-                      {r.count} {r.count === 1 ? 'vez' : 'veces'}
-                    </span>
-                  ) : (
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ background: 'rgba(248,113,113,0.12)', color: '#F87171' }}>
-                      Sin acceso
-                    </span>
-                  )}
-                </div>
-                <div className="col-span-3">
-                  {r.lastAt ? (
-                    <span className="text-white/50 text-xs">
-                      {format(parseISO(r.lastAt), "d MMM · HH:mm", { locale: es })}
-                    </span>
-                  ) : (
-                    <span className="text-white/20 text-xs">—</span>
-                  )}
-                </div>
+                  <div className="col-span-2 text-center">
+                    {r.pvCount > 0
+                      ? <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>
+                          {r.pvCount}×
+                        </span>
+                      : <span className="text-white/20 text-xs">—</span>}
+                  </div>
+                  <div className="col-span-3 flex items-center justify-between">
+                    {r.lastAt
+                      ? <span className="text-white/50 text-xs">{format(parseISO(r.lastAt), "d MMM · HH:mm", { locale: es })}</span>
+                      : <span className="text-white/20 text-xs">—</span>}
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{isOpen ? '▲' : '▼'}</span>
+                  </div>
+                </button>
+                {isOpen && (
+                  <div className="px-4 pb-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
+                    <AccesosUserDetail userId={r.id} desde={desde} hasta={hasta} users={users} />
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
     </>

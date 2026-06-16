@@ -5,13 +5,14 @@ import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, Shie
 import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
 import { currentVersionLabel } from '../hooks/useVersionCheck';
+import BellFeed from './BellFeed';
 
 const AVATAR_COLORS = [
   'bg-red-800', 'bg-rose-700', 'bg-red-700', 'bg-rose-800',
   'bg-red-900', 'bg-rose-900', 'bg-red-600', 'bg-rose-600',
 ];
 
-export default function Navbar() {
+export default function Navbar({ unread = 0, onBellOpen }) {
   const { user, logout } = useAuth();
   const location         = useLocation();
   const navigate         = useNavigate();
@@ -24,9 +25,9 @@ export default function Navbar() {
     { to: '/dashboard',   label: 'Inicio',     icon: <LayoutDashboard size={14} /> },
     { to: '/matches',     label: 'Partidos',   icon: <Calendar size={14} /> },
     { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
-    { to: '/vs',          label: 'Vs 🥊🥊',    icon: null },
+    { to: '/vs',          label: 'Vs 👊⚡👊',   icon: null },
+    { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
     ...(user?.isAdmin ? [
-      { to: '/bracket', label: 'Llaves', icon: <Network size={14} /> },
       { to: '/admin',   label: 'Admin',  icon: <ShieldCheck size={14} /> },
     ] : []),
   ];
@@ -76,7 +77,8 @@ export default function Navbar() {
           </div>
 
           {/* ── User section ── */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <BellFeed unread={unread} onOpen={onBellOpen} />
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}

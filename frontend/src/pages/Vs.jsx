@@ -4,6 +4,15 @@ import { supabase } from '../utils/supabase';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Search, X } from 'lucide-react';
+import { trackPage } from '../utils/trackPage';
+
+function playBoxingBell() {
+  try {
+    const audio = new Audio('/PollaMundial2026/boxing-bell.mp3');
+    audio.volume = 0.8;
+    audio.play();
+  } catch {}
+}
 
 const AVATAR_COLORS = [
   'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
@@ -167,6 +176,7 @@ export default function Vs() {
 
   // Cargar usuarios y partidos finalizados
   useEffect(() => {
+    if (authUser?.id) trackPage(authUser.id, 'vs');
     Promise.all([
       api.get('/users'),
       supabase.from('matches').select('*').eq('status', 'finished').order('match_date'),
@@ -229,9 +239,9 @@ export default function Vs() {
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-0 mb-1 select-none">
-            <span className="text-5xl" style={{ transform: 'scaleX(-1) rotate(-15deg)', display: 'inline-block' }}>🥊</span>
+            <span className="text-5xl" style={{ display: 'inline-block' }}>👊</span>
             <span className="text-2xl font-black mx-1" style={{ color: '#ef4444', textShadow: '0 0 10px #ef444488' }}>⚡</span>
-            <span className="text-5xl" style={{ transform: 'rotate(15deg)', display: 'inline-block' }}>🥊</span>
+            <span className="text-5xl" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>👊</span>
           </div>
           <h1 className="text-2xl font-black text-white">Cara a Cara</h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Compara tus predicciones con otro participante</p>
@@ -277,7 +287,11 @@ export default function Vs() {
           {!playerB && (
             <div className="mt-4 flex flex-col items-center gap-2">
               <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>¿A quién quieres desafiar?</p>
-              <PlayerSearch onSelect={setPlayerB} excludeId={playerA?.id} />
+              <PlayerSearch onSelect={(p) => {
+                setPlayerB(p);
+                playBoxingBell();
+                if (authUser?.id) trackPage(authUser.id, 'vs_comparacion', { jugador_a: playerA?.username ?? null, jugador_b: p.username });
+              }} excludeId={playerA?.id} />
             </div>
           )}
           {playerB && (
@@ -335,7 +349,7 @@ export default function Vs() {
           </div>
         ) : (
           <div className="rounded-xl p-10 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-5xl mb-3">🥊</p>
+            <p className="text-5xl mb-3">👊</p>
             <p className="text-white font-bold text-lg">Elige a tu rival</p>
             <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Busca a alguien por nombre y compara predicción por predicción</p>
           </div>

@@ -9,13 +9,18 @@ import { MapPin, Plus } from 'lucide-react';
 function FlagImg({ code, name, size = 48 }) {
   const h = Math.round(size * 0.75);
   return (
-    <img
-      src={`https://flagcdn.com/${size}x${h}/${code.toLowerCase()}.png`}
-      alt={name}
-      className="rounded shadow-md"
-      style={{ width: size, height: h }}
-      onError={(e) => { e.target.style.display = 'none'; }}
-    />
+    <div style={{ width: size, height: h, overflow: 'hidden', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', display: 'inline-block' }}>
+      <img
+        src={`https://flagcdn.com/${size}x${h}/${code.toLowerCase()}.png`}
+        alt={name}
+        style={{
+          width: size, height: h, display: 'block',
+          animation: 'flagWave 2s ease-in-out infinite',
+          transformOrigin: 'left center',
+        }}
+        onError={(e) => { e.target.parentElement.style.display = 'none'; }}
+      />
+    </div>
   );
 }
 

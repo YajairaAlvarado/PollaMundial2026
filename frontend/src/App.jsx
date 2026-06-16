@@ -3,7 +3,14 @@ import { HashRouter, BrowserRouter, Routes, Route, Navigate, Outlet } from 'reac
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { isStandalone } from './utils/api';
 import { useVersionCheck, currentVersionLabel } from './hooks/useVersionCheck';
+import { usePredictionBroadcast } from './hooks/usePredictionBroadcast';
+import { usePresence } from './hooks/usePresence';
+import { useNudges } from './hooks/useNudges';
 import Navbar from './components/Navbar';
+import PredictionToastContainer from './components/PredictionToast';
+import NudgePopupContainer from './components/NudgePopup';
+import PresenceBar from './components/PresenceBar';
+import ConnectionToastContainer from './components/ConnectionToast';
 import LoadingSpinner from './components/LoadingSpinner';
 import Login from './pages/Login';
 import ForcePasswordChange from './pages/ForcePasswordChange';
@@ -16,7 +23,12 @@ import Profile from './pages/Profile';
 import Vs from './pages/Vs';
 
 function ProtectedLayout() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const { toasts, dismiss, unread, markRead } = usePredictionBroadcast(user?.id);
+  const canNudge    = !!user; // ahora todos pueden mandar/recibir guiños
+  // Todos mandan heartbeat (para aparecer como conectados); todos observan la lista
+  const { onlineUsers, connectionAlerts, dismissAlert } = usePresence(user?.id, canNudge);
+  const { incoming, dismiss: dismissNudge, reply: replyNudge, send: sendNudge } = useNudges(canNudge ? user?.id : null);
 
   if (loading) {
     return (
@@ -30,7 +42,15 @@ function ProtectedLayout() {
 
   return (
     <>
-      <Navbar />
+      <Navbar unread={unread} onBellOpen={markRead} />
+      <PredictionToastContainer toasts={toasts} onDismiss={dismiss} />
+      {canNudge && (
+        <>
+          <PresenceBar currentUser={user} onlineUsers={onlineUsers} onSendNudge={sendNudge} />
+          <NudgePopupContainer nudges={incoming} onDismiss={dismissNudge} onReply={replyNudge} />
+          <ConnectionToastContainer alerts={connectionAlerts} onDismiss={dismissAlert} />
+        </>
+      )}
       <main className="min-h-[calc(100vh-4rem)]">
         <Outlet />
       </main>
