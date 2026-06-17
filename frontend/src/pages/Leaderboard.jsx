@@ -121,24 +121,34 @@ function DeptPodiumCard({ dept, config, colorIdx }) {
 
 // ── Panel de predicciones de un usuario ──────────────────────────────────────
 function UserPredictionsPanel({ userId }) {
-  const [preds,   setPreds]   = useState(null);
+  const [rows,    setRows]    = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('predictions')
-      .select('home_score, away_score, points_earned, match:matches(home_team, away_team, home_code, away_code, home_score, away_score, status, match_date)')
-      .eq('user_id', userId)
-      .eq('matches.status', 'finished')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setPreds((data || []).filter((p) => p.match?.status === 'finished'));
-        setLoading(false);
-      });
+    let cancel = false;
+    (async () => {
+      // Todos los partidos finalizados (orden cronológico) + las predicciones de este usuario
+      const [{ data: matches }, { data: preds }] = await Promise.all([
+        supabase.from('matches')
+          .select('id, home_team, away_team, home_code, away_code, home_score, away_score, match_date')
+          .eq('status', 'finished')
+          .order('match_date', { ascending: true }),
+        supabase.from('predictions')
+          .select('match_id, home_score, away_score, points_earned')
+          .eq('user_id', userId),
+      ]);
+      if (cancel) return;
+      const predMap = {};
+      (preds || []).forEach((p) => { predMap[p.match_id] = p; });
+      const merged = (matches || []).map((m) => ({ m, p: predMap[m.id] || null }));
+      setRows(merged);
+      setLoading(false);
+    })();
+    return () => { cancel = true; };
   }, [userId]);
 
   if (loading) return <div className="py-3 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>;
-  if (!preds || preds.length === 0) return <div className="py-3 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Sin predicciones en partidos finalizados.</div>;
+  if (!rows || rows.length === 0) return <div className="py-3 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Aún no hay partidos finalizados.</div>;
 
   return (
     <div className="mt-1 rounded-xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -150,13 +160,14 @@ function UserPredictionsPanel({ userId }) {
         <div className="col-span-2 text-center">Pts</div>
       </div>
       <div className="max-h-64 overflow-y-auto">
-        {preds.map((p, i) => {
-          const m       = p.match;
-          const pts     = p.points_earned;
-          const ptsColor = pts === 3 ? '#34d399' : pts === 2 ? '#60a5fa' : pts === 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
-          const ptsLabel = pts === 3 ? '✓✓ +3' : pts === 2 ? '✓ +2' : pts === 0 ? '✗ +0' : '–';
+        {rows.map(({ m, p }, i) => {
+          const noPred   = !p;
+          const pts      = p?.points_earned;
+          const ptsColor = noPred ? '#f87171' : pts === 3 ? '#34d399' : pts === 2 ? '#60a5fa' : pts === 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
+          const ptsLabel = noPred ? '✗ +0' : pts === 3 ? '✓✓ +3' : pts === 2 ? '✓ +2' : pts === 0 ? '✗ +0' : '–';
           return (
-            <div key={i} className="grid grid-cols-12 px-3 py-2 items-center text-xs" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div key={i} className="grid grid-cols-12 px-3 py-2 items-center text-xs"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: noPred ? 'rgba(248,113,113,0.06)' : 'transparent' }}>
               {/* Partido */}
               <div className="col-span-5 flex items-center gap-1 min-w-0">
                 {m.home_code && <img src={`https://flagcdn.com/16x12/${m.home_code}.png`} alt="" className="rounded flex-shrink-0" />}
@@ -167,7 +178,9 @@ function UserPredictionsPanel({ userId }) {
               </div>
               {/* Su predicción */}
               <div className="col-span-3 text-center">
-                <span className="font-black text-sm text-white">{p.home_score}–{p.away_score}</span>
+                {noPred
+                  ? <span className="text-[10px] font-bold" style={{ color: '#f87171' }}>No pronosticó</span>
+                  : <span className="font-black text-sm text-white">{p.home_score}–{p.away_score}</span>}
               </div>
               {/* Resultado real */}
               <div className="col-span-2 text-center">

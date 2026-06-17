@@ -315,6 +315,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
               <p className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 🟢 Conectados ahora
               </p>
+              <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
               {count === 0
                 ? <p className="px-4 py-4 text-xs text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>Nadie más conectado</p>
                 : sortedOnline.map((u) => {
@@ -336,6 +337,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
                   );
                 })
               }
+              </div>
             </div>
           )}
         </div>
