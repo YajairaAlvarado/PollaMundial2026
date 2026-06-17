@@ -255,9 +255,7 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
 export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, externalTarget, onExternalTargetConsumed }) {
   const [open,   setOpen]   = useState(false);
   const [target, setTarget] = useState(null);
-  const [pos,    setPos]    = useState(() => {
-    try { const s = localStorage.getItem('presencePos'); return s ? JSON.parse(s) : null; } catch { return null; }
-  });
+  const [pos,    setPos]    = useState(null); // null = centro inferior por defecto (se reinicia al recargar)
   const ref = useRef(null);
   const drag = useRef({ on: false, moved: false, offX: 0, offY: 0 });
 
@@ -288,7 +286,6 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
     drag.current.on = false;
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
-    setPos((p) => { if (p) { try { localStorage.setItem('presencePos', JSON.stringify(p)); } catch {} } return p; });
   };
   const onDown = (e) => {
     const r = ref.current.getBoundingClientRect();
@@ -306,10 +303,11 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
   return (
     <div ref={ref} className="fixed z-[9970]"
       style={pos ? { left: pos.x, top: pos.y } : { bottom: 16, left: '50%', transform: 'translateX(-50%)' }}>
-      {/* Panel flotante */}
+      {/* Panel flotante — se despliega hacia ARRIBA del botón sin moverlo */}
       {open && (
-        <div className="mb-2 rounded-2xl overflow-hidden shadow-2xl"
-          style={{ background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', minWidth: 290 }}>
+        <div className="rounded-2xl overflow-hidden shadow-2xl"
+          style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 10,
+                   background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', minWidth: 290 }}>
           {target ? (
             <NudgeSender target={target} currentUser={currentUser} onSend={onSendNudge} onClose={() => setTarget(null)} />
           ) : (
