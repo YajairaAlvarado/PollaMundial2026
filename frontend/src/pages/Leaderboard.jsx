@@ -380,9 +380,15 @@ function TabPersonas({ data, user }) {
 
       {/* Tabla */}
       <div>
-        <h2 className="text-white font-bold text-sm uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          Clasificación Completa
-        </h2>
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <h2 className="text-white font-bold text-sm uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Clasificación Completa
+          </h2>
+          <span className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full"
+            style={{ background: 'rgba(249,115,22,0.12)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)' }}>
+            🔥 = aciertos seguidos (racha actual)
+          </span>
+        </div>
         <LeaderboardTableExpandable data={data} />
       </div>
     </div>
