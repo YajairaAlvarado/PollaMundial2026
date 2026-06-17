@@ -569,6 +569,7 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                     </div>
                     <div className="min-w-0 flex-1">
                       <span className="text-xs truncate block" style={{ color: isMe ? '#F59E0B' : participated ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)', fontWeight: isMe ? 700 : 400 }}>
+                        {entry?.rank && <span className="font-black mr-1" style={{ color: '#F59E0B' }}>#{entry.rank}</span>}
                         {m.display_name}
                       </span>
                       {(() => {

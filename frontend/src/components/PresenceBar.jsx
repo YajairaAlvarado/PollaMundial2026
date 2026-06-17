@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { Minus, Plus } from 'lucide-react';
-import { CARITAS } from '../utils/caritas';
+import { CARITAS, GIFS } from '../utils/caritas';
 
 const AVATAR_COLORS = [
   'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
@@ -68,7 +68,7 @@ function StepFree({ onSend, onBack }) {
           disabled={!text.trim()}
           className="flex-1 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40"
           style={{ background: 'rgba(167,139,250,0.25)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.4)' }}>
-          Enviar {carita}
+          Enviar {isGifUrl(carita) ? '🎬' : carita}
         </button>
       </div>
     </div>
@@ -136,8 +136,11 @@ function StepMatchPick({ target, onSelect, onBack }) {
   );
 }
 
-// ── Selector de caritas ───────────────────────────────────────────────────────
+// ── Selector de caritas / GIF ─────────────────────────────────────────────────
+const isGifUrl = (v) => typeof v === 'string' && /^https?:\/\//.test(v);
+
 function CaritaSelector({ value, onChange }) {
+  const gif = isGifUrl(value);
   return (
     <div>
       <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
@@ -150,11 +153,28 @@ function CaritaSelector({ value, onChange }) {
             className="flex items-center justify-center rounded-xl transition-all"
             style={{
               fontSize: 22, padding: '6px 0',
-              background: value === c.e ? 'rgba(167,139,250,0.25)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${value === c.e ? 'rgba(167,139,250,0.6)' : 'rgba(255,255,255,0.08)'}`,
-              transform: value === c.e ? 'scale(1.12)' : 'scale(1)',
+              background: !gif && value === c.e ? 'rgba(167,139,250,0.25)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${!gif && value === c.e ? 'rgba(167,139,250,0.6)' : 'rgba(255,255,255,0.08)'}`,
+              transform: !gif && value === c.e ? 'scale(1.12)' : 'scale(1)',
             }}>
             {c.e}
+          </button>
+        ))}
+      </div>
+      {/* Galería de GIFs */}
+      <p className="text-[10px] font-bold uppercase tracking-wider mt-2.5 mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        … o un GIF
+      </p>
+      <div className="grid grid-cols-4 gap-1.5">
+        {GIFS.map((g) => (
+          <button key={g.url} onClick={() => onChange(g.url)} title={g.label}
+            style={{
+              padding: 0, borderRadius: 8, overflow: 'hidden',
+              border: `2px solid ${value === g.url ? '#a78bfa' : 'rgba(255,255,255,0.1)'}`,
+            }}>
+            <img src={g.url} alt={g.label} loading="lazy"
+              style={{ width: '100%', height: 46, objectFit: 'cover', display: 'block' }}
+              onError={(e) => { e.target.parentElement.style.display = 'none'; }} />
           </button>
         ))}
       </div>
@@ -194,7 +214,7 @@ function StepScore({ match, onSend, onBack }) {
         <button onClick={() => onSend({ type: 'match_wink', match_id: match.id, home_team: match.home_team, away_team: match.away_team, home_code: match.home_code, away_code: match.away_code, suggested_home: home, suggested_away: away, tone: carita, message: msg.trim() || null })}
           className="flex-1 py-2 rounded-xl text-xs font-bold"
           style={{ background: 'rgba(167,139,250,0.25)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.4)' }}>
-          Enviar {carita}
+          Enviar {isGifUrl(carita) ? '🎬' : carita}
         </button>
       </div>
     </div>

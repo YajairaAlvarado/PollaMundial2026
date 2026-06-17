@@ -57,6 +57,7 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
   const colorIdx = (nudge.from_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length;
   const isFree   = nudge.type === 'free';
   const emoji    = nudge.tone || '😂';
+  const isGif    = /^https?:\/\//.test(emoji);
   const animName = caritaAnim(emoji);
 
   return (
@@ -91,15 +92,25 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
           <X size={20} />
         </button>
 
-        {/* Carita gigante animada */}
+        {/* Carita / GIF gigante animado */}
         <div style={{ paddingTop: 26, textAlign: 'center' }}>
-          <div style={{
-            fontSize: 110, lineHeight: 1,
-            animation: `${animName} 1s ease-in-out infinite`,
-            filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.5))',
-          }}>
-            {emoji}
-          </div>
+          {isGif ? (
+            <img src={emoji} alt="guiño"
+              style={{
+                maxWidth: '85%', maxHeight: 240, margin: '0 auto', borderRadius: 16,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                animation: 'emojiPulse 1.6s ease-in-out infinite',
+              }}
+              onError={(e) => { e.target.style.display = 'none'; }} />
+          ) : (
+            <div style={{
+              fontSize: 110, lineHeight: 1,
+              animation: `${animName} 1s ease-in-out infinite`,
+              filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.5))',
+            }}>
+              {emoji}
+            </div>
+          )}
         </div>
 
         {/* Header */}
