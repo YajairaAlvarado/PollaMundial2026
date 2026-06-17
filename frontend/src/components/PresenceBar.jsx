@@ -292,7 +292,10 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge }) {
                         <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#0f172a]" />
                       </div>
                       <span className="text-white text-xs font-semibold truncate">{u.display_name}</span>
-                      <span className="ml-auto text-[10px]" style={{ color: 'rgba(167,139,250,0.7)' }}>guiñar →</span>
+                      <span className="ml-auto flex-shrink-0 text-[10px] font-black px-2 py-1 rounded-full"
+                        style={{ background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.5)' }}>
+                        👈 Enviar guiño
+                      </span>
                     </button>
                   );
                 })
@@ -305,18 +308,21 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge }) {
       {/* Botón toggle */}
       <button
         onClick={() => { setOpen((o) => !o); setTarget(null); }}
-        className="flex items-center gap-2 px-4 py-2 rounded-full shadow-2xl transition-all"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-full shadow-2xl transition-all mx-auto"
         style={{
-          background: open ? 'rgba(167,139,250,0.25)' : 'rgba(15,23,42,0.95)',
-          border: `1px solid ${open ? 'rgba(167,139,250,0.5)' : 'rgba(167,139,250,0.2)'}`,
-          color: open ? '#a78bfa' : 'rgba(255,255,255,0.6)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
+          background: open
+            ? 'rgba(167,139,250,0.3)'
+            : 'linear-gradient(135deg, rgba(167,139,250,0.35), rgba(99,102,241,0.3))',
+          border: `1.5px solid ${open ? 'rgba(167,139,250,0.6)' : 'rgba(167,139,250,0.55)'}`,
+          color: '#ffffff',
+          boxShadow: '0 4px 28px rgba(167,139,250,0.45), 0 4px 24px rgba(0,0,0,0.6)',
         }}>
-        <span className="text-xs">🟢</span>
-        <span className="text-xs font-bold">
+        <span className="w-2.5 h-2.5 rounded-full bg-green-400 flex-shrink-0" style={{ boxShadow: '0 0 8px #34d399' }} />
+        <span className="text-sm font-black">
           {count === 0 ? 'Nadie conectado' : `${count} conectado${count > 1 ? 's' : ''}`}
         </span>
-        {open ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+        {count > 0 && <span className="text-sm">👋</span>}
+        {open ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
       </button>
     </div>
   );
