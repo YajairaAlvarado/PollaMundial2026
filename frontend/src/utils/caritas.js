@@ -32,4 +32,5 @@ export const GIFS = [
   { url: 'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjA4Nnh4bzF4M2Y1a3VvbDQyd20xNWpmNHhrb3pmYjFlMW02ajI0dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/p37Fr6zjkavza2DaXW/giphy.gif', label: 'Qué sueño' },
   { url: 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnVmM2RmOXE2MHR0MG1sM2s5M3hudG5icjdvcWx5bTNjZjUyaGEzNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/OgIpz3EJWlhD5xRVhm/giphy.gif', label: 'Ponte a trabajar' },
   { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExenVrNXlyM2N4ZmMxN2MxemgzNDI4MXJiejVuNGtpZzM5eDcxNm15aCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/btbUGSHh3f6eBjbDfh/giphy.gif', label: 'Reacción' },
+  { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExOW5zN2p5bzF5N3N6dWJnazZrcW04MzFoYzQwNXl2N203Zno0dWc4dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9UgsvgsDQALcs/giphy.gif', label: 'Ja ja' },
 ];
