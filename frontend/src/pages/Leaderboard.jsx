@@ -273,17 +273,19 @@ function LeaderboardTableExpandable({ data }) {
                 <div className="col-span-5 flex items-center gap-2.5 min-w-0">
                   <Avatar username={entry.username} initials={entry.avatar_initials} displayName={entry.display_name} size={30} colorClass={AVATAR_COLORS[colorIdx]} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate" style={{ color: isCurrentUser ? '#F59E0B' : 'white' }}>
-                      {entry.display_name}
-                      {isCurrentUser && <span className="ml-1 text-xs" style={{ color: 'rgba(245,158,11,0.6)' }}>(tú)</span>}
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold truncate" style={{ color: isCurrentUser ? '#F59E0B' : 'white' }}>
+                        {entry.display_name}
+                        {isCurrentUser && <span className="ml-1 text-xs" style={{ color: 'rgba(245,158,11,0.6)' }}>(tú)</span>}
+                      </p>
                       {entry.streak >= 2 && (
-                        <span className="ml-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                        <span className="flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full"
                           style={{ background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.4)' }}
                           title={`${entry.streak} aciertos seguidos`}>
                           🔥 {entry.streak}
                         </span>
                       )}
-                    </p>
+                    </div>
                     {(() => {
                       const isSameDept = user && entry.department === user.department;
                       const [emoji, label, color] = isCurrentUser
