@@ -164,7 +164,7 @@ function CaritaSelector({ value, onChange }) {
       <p className="text-[10px] font-bold uppercase tracking-wider mt-2.5 mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
         … o un GIF
       </p>
-      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1" style={{ maxHeight: 280 }}>
+      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1" style={{ maxHeight: 460 }}>
         {GIFS.map((g) => (
           <button key={g.url} onClick={() => onChange(g.url)} title={g.label}
             style={{
@@ -173,7 +173,7 @@ function CaritaSelector({ value, onChange }) {
               boxShadow: value === g.url ? '0 0 12px rgba(167,139,250,0.5)' : 'none',
             }}>
             <img src={g.url} alt={g.label} loading="lazy"
-              style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
               onError={(e) => { e.target.parentElement.style.display = 'none'; }} />
           </button>
         ))}
@@ -239,7 +239,7 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-2xl"
-      style={{ width: 280, background: '#0f172a', border: '1px solid rgba(167,139,250,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.8)' }}>
+      style={{ width: 440, maxWidth: '92vw', background: '#0f172a', border: '1px solid rgba(167,139,250,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.8)' }}>
       {step === 'type'       && <StepType target={target} onSelect={(t) => setStep(t === 'free' ? 'free' : 'match_pick')} onClose={onClose} />}
       {step === 'free'       && <StepFree onSend={handleSend} onBack={() => setStep('type')} />}
       {step === 'match_pick' && <StepMatchPick target={target} onSelect={(m) => { setMatch(m); setStep('score'); }} onBack={() => setStep('type')} />}
