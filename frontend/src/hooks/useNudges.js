@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../utils/supabase';
 
-const RECENT_MS = 2 * 24 * 60 * 60 * 1000; // guiños de las últimas 48h
-
 export function useNudges(userId) {
   const [queue,     setQueue]     = useState([]);   // guiños no mostrados
   const [active,    setActive]    = useState(null);  // el que se está mostrando
@@ -23,13 +21,12 @@ export function useNudges(userId) {
   useEffect(() => {
     if (!userId) return;
 
-    const since = new Date(Date.now() - RECENT_MS).toISOString();
+    // Sin límite de tiempo: trae TODOS los guiños no leídos (aunque sean viejos)
     supabase
       .from('nudges')
       .select('*')
       .eq('to_user_id', userId)
       .is('seen_at', null)
-      .gte('created_at', since)
       .order('created_at', { ascending: true })
       .then(({ data }) => {
         if (data?.length) {
