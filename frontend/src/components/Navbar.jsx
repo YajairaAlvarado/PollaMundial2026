@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck, Bell } from 'lucide-react';
-import { usePush } from '../hooks/usePush';
+import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck } from 'lucide-react';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
 import { currentVersionLabel } from '../hooks/useVersionCheck';
@@ -16,7 +15,6 @@ const AVATAR_COLORS = [
 
 export default function Navbar({ unread = 0, onBellOpen }) {
   const { user, logout } = useAuth();
-  const { status: pushStatus, enable: enablePush, supported: pushSupported } = usePush(user?.id);
   const location         = useLocation();
   const navigate         = useNavigate();
   const [menuOpen,    setMenuOpen]    = useState(false);
@@ -117,18 +115,6 @@ export default function Navbar({ unread = 0, onBellOpen }) {
                       <User size={14} />
                       Mi Perfil
                     </Link>
-                    {pushSupported && pushStatus !== 'granted' && (
-                      <button
-                        onClick={() => { enablePush(); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all"
-                        style={{ color: '#86efac' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(52,211,153,0.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <Bell size={14} />
-                        Activar notificaciones
-                      </button>
-                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all"

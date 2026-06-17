@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { HashRouter, BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AvatarProvider } from './contexts/AvatarContext';
-import { supabase } from './utils/supabase';
-import PredictionModal from './components/PredictionModal';
 import { isStandalone } from './utils/api';
 import { useVersionCheck, currentVersionLabel } from './hooks/useVersionCheck';
 import { usePredictionBroadcast } from './hooks/usePredictionBroadcast';
@@ -30,19 +28,6 @@ function ProtectedLayout() {
   const { toasts, dismiss, unread, markRead } = usePredictionBroadcast(user?.id);
   const canNudge    = !!user; // ahora todos pueden mandar/recibir guiños
   const [nudgeTarget, setNudgeTarget] = useState(null); // abrir envío de guiño desde la notificación
-  const [predictMatch, setPredictMatch] = useState(null); // abrir partido desde notificación push
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const id = new URLSearchParams(window.location.search).get('predict');
-    if (!id) return;
-    supabase.from('matches').select('*').eq('id', id).single().then(({ data }) => {
-      if (data) setPredictMatch(data);
-      const url = new URL(window.location.href);
-      url.searchParams.delete('predict');
-      window.history.replaceState({}, '', url);
-    });
-  }, [isAuthenticated]);
   // Todos mandan heartbeat (para aparecer como conectados); todos observan la lista
   const { onlineUsers, connectionAlerts, dismissAlert } = usePresence(user?.id, canNudge);
   const { incoming, dismiss: dismissNudge, reply: replyNudge, send: sendNudge } = useNudges(canNudge ? user?.id : null);
@@ -73,14 +58,6 @@ function ProtectedLayout() {
       <main className="min-h-[calc(100vh-4rem)]">
         <Outlet />
       </main>
-      {predictMatch && (
-        <PredictionModal
-          match={predictMatch}
-          prediction={null}
-          onClose={() => setPredictMatch(null)}
-          onSaved={() => setPredictMatch(null)}
-        />
-      )}
     </>
   );
 }
