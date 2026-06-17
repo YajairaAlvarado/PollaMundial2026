@@ -36,10 +36,9 @@ function FullScreenNudge({ nudge, onDismiss }) {
     document.body.classList.add('nudge-shaking');
     const tShake = setTimeout(() => document.body.classList.remove('nudge-shaking'), 800);
     const tShow  = setTimeout(() => setVisible(true), 20);
-    // Auto-cierre a los 9s
-    const tAuto  = setTimeout(() => hide(), 9000);
+    // No se cierra solo: queda hasta que la persona le dé "Cerrar"
     return () => {
-      clearTimeout(tShake); clearTimeout(tShow); clearTimeout(tAuto);
+      clearTimeout(tShake); clearTimeout(tShow);
       document.body.classList.remove('nudge-shaking');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -160,10 +159,6 @@ function FullScreenNudge({ nudge, onDismiss }) {
           </button>
         </div>
 
-        {/* Barra de tiempo */}
-        <div style={{ height: 4, background: 'rgba(167,139,250,0.15)' }}>
-          <div style={{ height: '100%', background: '#a78bfa', animation: 'nudgeTimer 9s linear forwards' }} />
-        </div>
       </div>
     </div>
   );
