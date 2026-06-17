@@ -164,15 +164,16 @@ function CaritaSelector({ value, onChange }) {
       <p className="text-[10px] font-bold uppercase tracking-wider mt-2.5 mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
         … o un GIF
       </p>
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1" style={{ maxHeight: 280 }}>
         {GIFS.map((g) => (
           <button key={g.url} onClick={() => onChange(g.url)} title={g.label}
             style={{
-              padding: 0, borderRadius: 8, overflow: 'hidden',
-              border: `2px solid ${value === g.url ? '#a78bfa' : 'rgba(255,255,255,0.1)'}`,
+              padding: 0, borderRadius: 10, overflow: 'hidden',
+              border: `2.5px solid ${value === g.url ? '#a78bfa' : 'rgba(255,255,255,0.12)'}`,
+              boxShadow: value === g.url ? '0 0 12px rgba(167,139,250,0.5)' : 'none',
             }}>
             <img src={g.url} alt={g.label} loading="lazy"
-              style={{ width: '100%', height: 46, objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
               onError={(e) => { e.target.parentElement.style.display = 'none'; }} />
           </button>
         ))}
