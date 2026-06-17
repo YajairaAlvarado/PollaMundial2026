@@ -5,6 +5,7 @@ import { supabase } from '../utils/supabase';
 import { trackPage } from '../utils/trackPage';
 import LeaderboardTable from '../components/LeaderboardTable';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Avatar from '../components/Avatar';
 import { Trophy, User, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toZonedTime, format as formatTz } from 'date-fns-tz';
@@ -70,9 +71,7 @@ function PodiumGroup({ entries, config }) {
           const colorIdx = entry.username.charCodeAt(0) % AVATAR_COLORS.length;
           return (
             <div key={entry.id || entry.username} className="flex flex-col items-center mb-1">
-              <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-xs mx-auto`}>
-                {entry.avatar_initials}
-              </div>
+              <Avatar username={entry.username} initials={entry.avatar_initials} displayName={entry.display_name} size={38} colorClass={AVATAR_COLORS[colorIdx]} className="mx-auto" />
               <p className="text-white font-bold text-xs leading-tight truncate mt-1 max-w-full px-1">
                 {entry.display_name}
               </p>
@@ -259,9 +258,7 @@ function LeaderboardTableExpandable({ data }) {
                   {entry.trend === 'same' && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>–</span>}
                 </div>
                 <div className="col-span-5 flex items-center gap-2.5 min-w-0">
-                  <div className={`avatar-circle ${AVATAR_COLORS[colorIdx]} text-white text-xs flex-shrink-0`} style={{ width: 30, height: 30 }}>
-                    {entry.avatar_initials || entry.display_name?.substring(0, 2).toUpperCase()}
-                  </div>
+                  <Avatar username={entry.username} initials={entry.avatar_initials} displayName={entry.display_name} size={30} colorClass={AVATAR_COLORS[colorIdx]} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate" style={{ color: isCurrentUser ? '#F59E0B' : 'white' }}>
                       {entry.display_name}
@@ -321,9 +318,7 @@ function TabPersonas({ data, user }) {
         <div className="flex items-center justify-between rounded-xl p-4"
           style={{ background: '#0D1B30', border: '1px solid rgba(245,158,11,0.25)', borderLeft: '3px solid #F59E0B' }}>
           <div className="flex items-center gap-3">
-            <div className={`avatar-circle ${AVATAR_COLORS[user.username.charCodeAt(0) % AVATAR_COLORS.length]} text-white text-xs`}>
-              {user.avatarInitials}
-            </div>
+            <Avatar username={user.username} initials={user.avatarInitials} displayName={user.displayName} size={38} colorClass={AVATAR_COLORS[user.username.charCodeAt(0) % AVATAR_COLORS.length]} />
             <div>
               <p className="text-white font-semibold text-sm">{user.displayName}</p>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>{user.department}</p>
@@ -564,9 +559,7 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                   className="grid grid-cols-12 py-1.5 items-center rounded-lg px-1 cursor-pointer transition-colors hover:bg-white/5"
                   style={{ background: isMe ? 'rgba(245,158,11,0.06)' : 'transparent' }}>
                   <div className="col-span-5 flex items-center gap-2 min-w-0">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0 ${AVATAR_COLORS[colorIdx]} text-white`}>
-                      {m.avatar_initials}
-                    </div>
+                    <Avatar username={m.username} initials={m.avatar_initials} displayName={m.display_name} size={24} colorClass={AVATAR_COLORS[colorIdx]} fontSize={9} />
                     <div className="min-w-0 flex-1">
                       <span className="text-xs truncate block" style={{ color: isMe ? '#F59E0B' : participated ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)', fontWeight: isMe ? 700 : 400 }}>
                         {entry?.rank && <span className="font-black mr-1" style={{ color: '#F59E0B' }}>#{entry.rank}</span>}

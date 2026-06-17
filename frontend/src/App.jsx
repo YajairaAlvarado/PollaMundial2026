@@ -1,6 +1,7 @@
 import React from 'react';
 import { HashRouter, BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AvatarProvider } from './contexts/AvatarContext';
 import { isStandalone } from './utils/api';
 import { useVersionCheck, currentVersionLabel } from './hooks/useVersionCheck';
 import { usePredictionBroadcast } from './hooks/usePredictionBroadcast';
@@ -127,7 +128,9 @@ export default function App() {
     <Router basename={import.meta.env.BASE_URL}>
       <UpdateBanner />
       <AuthProvider>
-        <AppRoutes />
+        <AvatarProvider>
+          <AppRoutes />
+        </AvatarProvider>
       </AuthProvider>
     </Router>
   );

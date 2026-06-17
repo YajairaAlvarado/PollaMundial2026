@@ -6,6 +6,7 @@ import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
 import { currentVersionLabel } from '../hooks/useVersionCheck';
 import BellFeed from './BellFeed';
+import Avatar from './Avatar';
 
 const AVATAR_COLORS = [
   'bg-red-800', 'bg-rose-700', 'bg-red-700', 'bg-rose-800',
@@ -87,9 +88,7 @@ export default function Navbar({ unread = 0, onBellOpen }) {
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(228,0,43,0.08)'; }}
                 onMouseLeave={(e) => { if (!profileOpen) e.currentTarget.style.background = 'transparent'; }}
               >
-                <div className={`avatar-circle ${avatarColor} text-white text-xs`}>
-                  {user?.avatarInitials || '??'}
-                </div>
+                <Avatar username={user?.username} initials={user?.avatarInitials || '??'} displayName={user?.displayName} size={30} colorClass={avatarColor} clickable={false} />
                 <span className="hidden sm:block text-[13px] font-medium max-w-[90px] truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>
                   {user?.displayName?.split(' ')[0]}
                 </span>

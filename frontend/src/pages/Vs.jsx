@@ -5,6 +5,7 @@ import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Search, X } from 'lucide-react';
 import { trackPage } from '../utils/trackPage';
+import Avatar from '../components/Avatar';
 
 function playBoxingBell() {
   try {
@@ -29,10 +30,9 @@ function PlayerCard({ player, isLeft, onClear, label, accent }) {
       </p>
       {player ? (
         <div className="flex flex-col items-center gap-1 w-full">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-white ${AVATAR_COLORS[colorIdx]}`}
-            style={{ border: `3px solid ${accent}`, boxShadow: `0 0 20px ${accent}44` }}>
-            {player.avatar_initials}
-          </div>
+          <Avatar username={player.username} initials={player.avatar_initials} displayName={player.display_name} size={64}
+            colorClass={AVATAR_COLORS[colorIdx]} fontSize={24}
+            style={{ border: `3px solid ${accent}`, boxShadow: `0 0 20px ${accent}44` }} />
           <p className="text-white font-black text-sm text-center leading-tight">{player.display_name}</p>
           <p className="text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>{player.department}</p>
           {onClear && (
@@ -93,9 +93,7 @@ function PlayerSearch({ onSelect, excludeId }) {
                 <button key={u.id} onClick={() => { onSelect(u); setQuery(''); }}
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 transition-all hover:bg-white/5 text-left"
                   style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 ${AVATAR_COLORS[ci]}`}>
-                    {u.avatar_initials}
-                  </div>
+                  <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={28} colorClass={AVATAR_COLORS[ci]} />
                   <div>
                     <p className="text-white text-sm font-semibold">{u.display_name}</p>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{u.department}</p>
