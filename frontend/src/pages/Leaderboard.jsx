@@ -888,43 +888,61 @@ export default function Leaderboard() {
 
   useEffect(() => {
     if (user?.id) trackPage(user.id, 'posiciones');
-    Promise.all([
-      api.get('/leaderboard'),
-      api.get('/users'),
-      api.get('/matches?stage=group'),
-      api.get('/leaderboard/snapshot'),
-      supabase.from('matches').select('id, match_date').eq('status', 'finished'),
-      supabase.from('predictions').select('user_id, match_id, points_earned, match:matches!inner(status)').eq('match.status', 'finished'),
-    ]).then(([lbRes, usersRes, matchesRes, snapRes, fmRes, fpRes]) => {
-      const ranked = assignRanks(lbRes.data);
-      // snapMap: username → { rank, points } del último snapshot
-      const snapMap = {};
-      for (const s of (snapRes.data ?? [])) snapMap[s.username] = { rank: s.rank, points: s.total_points };
+    (async () => {
+      try {
+        const [lbRes, usersRes, matchesRes, snapRes] = await Promise.all([
+          api.get('/leaderboard'),
+          api.get('/users'),
+          api.get('/matches?stage=group'),
+          api.get('/leaderboard/snapshot'),
+        ]);
 
-      // Racha de aciertos seguidos (del partido finalizado más reciente hacia atrás)
-      const finishedDesc = (fmRes.data ?? []).slice().sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
-      const ptsByUser = {};
-      for (const p of (fpRes.data ?? [])) { (ptsByUser[p.user_id] ||= {})[p.match_id] = p.points_earned; }
-      const calcStreak = (uid) => {
-        let s = 0;
-        for (const m of finishedDesc) {
-          const pts = ptsByUser[uid]?.[m.id];
-          if (pts >= 2) s++; else break; // 0 o sin pronosticar corta la racha
+        // Partidos finalizados (orden cronológico inverso)
+        const { data: fm } = await supabase.from('matches').select('id, match_date').eq('status', 'finished');
+        const finishedDesc = (fm ?? []).slice().sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+
+        // ACIERTOS (>=2 pts) de TODOS, paginando para no toparnos con el límite de 1000 filas
+        const hitsByUser = {}; // user_id -> Set(match_id)
+        let from = 0; const size = 1000;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data: page } = await supabase
+            .from('predictions')
+            .select('user_id, match_id, match:matches!inner(status)')
+            .eq('match.status', 'finished')
+            .gte('points_earned', 2)
+            .range(from, from + size - 1);
+          if (!page || page.length === 0) break;
+          for (const p of page) { (hitsByUser[p.user_id] ||= new Set()).add(p.match_id); }
+          if (page.length < size) break;
+          from += size;
         }
-        return s;
-      };
+        const calcStreak = (uid) => {
+          let s = 0;
+          for (const m of finishedDesc) {
+            if (hitsByUser[uid]?.has(m.id)) s++; else break; // fallo o sin pronosticar corta la racha
+          }
+          return s;
+        };
 
-      const withTrend = ranked.map((e) => {
-        const prev = snapMap[e.username]?.rank;
-        const trend = prev == null ? null : prev > e.rank ? 'up' : prev < e.rank ? 'down' : 'same';
-        return { ...e, prev_rank: prev ?? null, trend, streak: calcStreak(e.id) };
-      });
-      setLeaderboard(withTrend);
-      setAllUsers(usersRes.data);
-      setTotalGroupMatches(matchesRes.data?.length ?? 48);
-      setSnapMap(snapMap);
-    }).catch(console.error)
-      .finally(() => setLoading(false));
+        const ranked = assignRanks(lbRes.data);
+        const snapMap = {};
+        for (const s of (snapRes.data ?? [])) snapMap[s.username] = { rank: s.rank, points: s.total_points };
+        const withTrend = ranked.map((e) => {
+          const prev = snapMap[e.username]?.rank;
+          const trend = prev == null ? null : prev > e.rank ? 'up' : prev < e.rank ? 'down' : 'same';
+          return { ...e, prev_rank: prev ?? null, trend, streak: calcStreak(e.id) };
+        });
+        setLeaderboard(withTrend);
+        setAllUsers(usersRes.data);
+        setTotalGroupMatches(matchesRes.data?.length ?? 48);
+        setSnapMap(snapMap);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   if (loading) return <LoadingSpinner size="lg" text="Cargando tabla..." />;
