@@ -64,9 +64,8 @@ function StepFree({ onSend, onBack }) {
       <div className="flex gap-2">
         <button onClick={onBack} className="flex-1 py-2 rounded-xl text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>← Atrás</button>
         <button
-          onClick={() => text.trim() && onSend({ type: 'free', message: text.trim(), tone: carita })}
-          disabled={!text.trim()}
-          className="flex-1 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40"
+          onClick={() => onSend({ type: 'free', message: text.trim() || null, tone: carita })}
+          className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
           style={{ background: 'rgba(167,139,250,0.25)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.4)' }}>
           Enviar {isGifUrl(carita) ? '🎬' : carita}
         </button>

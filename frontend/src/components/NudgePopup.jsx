@@ -59,6 +59,7 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
   const emoji    = nudge.tone || '😂';
   const isGif    = /^https?:\/\//.test(emoji);
   const animName = caritaAnim(emoji);
+  const noMsg    = isFree && !nudge.message; // guiño solo con carita/GIF
 
   return (
     <div
@@ -97,14 +98,14 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
           {isGif ? (
             <img src={emoji} alt="guiño"
               style={{
-                maxWidth: '85%', maxHeight: 240, margin: '0 auto', borderRadius: 16,
+                maxWidth: noMsg ? '95%' : '85%', maxHeight: noMsg ? 340 : 240, margin: '0 auto', borderRadius: 16,
                 boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
                 animation: 'emojiPulse 1.6s ease-in-out infinite',
               }}
               onError={(e) => { e.target.style.display = 'none'; }} />
           ) : (
             <div style={{
-              fontSize: 110, lineHeight: 1,
+              fontSize: noMsg ? 170 : 110, lineHeight: 1,
               animation: `${animName} 1s ease-in-out infinite`,
               filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.5))',
             }}>
@@ -128,9 +129,11 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
         {/* Contenido grande */}
         <div style={{ padding: '0 28px 8px', textAlign: 'center' }}>
           {isFree ? (
-            <p className="text-white font-bold" style={{ fontSize: 26, lineHeight: 1.25, padding: '8px 0 14px', wordBreak: 'break-word' }}>
-              "{nudge.message}"
-            </p>
+            nudge.message ? (
+              <p className="text-white font-bold" style={{ fontSize: 26, lineHeight: 1.25, padding: '8px 0 14px', wordBreak: 'break-word' }}>
+                "{nudge.message}"
+              </p>
+            ) : <div style={{ height: 8 }} />
           ) : (
             <div style={{ padding: '6px 0 12px' }}>
               <div className="flex items-center justify-center gap-3 mb-2">
