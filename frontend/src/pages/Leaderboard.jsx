@@ -276,6 +276,13 @@ function LeaderboardTableExpandable({ data }) {
                     <p className="text-sm font-semibold truncate" style={{ color: isCurrentUser ? '#F59E0B' : 'white' }}>
                       {entry.display_name}
                       {isCurrentUser && <span className="ml-1 text-xs" style={{ color: 'rgba(245,158,11,0.6)' }}>(tú)</span>}
+                      {entry.streak >= 2 && (
+                        <span className="ml-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                          style={{ background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.4)' }}
+                          title={`${entry.streak} aciertos seguidos`}>
+                          🔥 {entry.streak}
+                        </span>
+                      )}
                     </p>
                     {(() => {
                       const isSameDept = user && entry.department === user.department;
@@ -884,15 +891,31 @@ export default function Leaderboard() {
       api.get('/users'),
       api.get('/matches?stage=group'),
       api.get('/leaderboard/snapshot'),
-    ]).then(([lbRes, usersRes, matchesRes, snapRes]) => {
+      supabase.from('matches').select('id, match_date').eq('status', 'finished'),
+      supabase.from('predictions').select('user_id, match_id, points_earned, match:matches!inner(status)').eq('match.status', 'finished'),
+    ]).then(([lbRes, usersRes, matchesRes, snapRes, fmRes, fpRes]) => {
       const ranked = assignRanks(lbRes.data);
       // snapMap: username → { rank, points } del último snapshot
       const snapMap = {};
       for (const s of (snapRes.data ?? [])) snapMap[s.username] = { rank: s.rank, points: s.total_points };
+
+      // Racha de aciertos seguidos (del partido finalizado más reciente hacia atrás)
+      const finishedDesc = (fmRes.data ?? []).slice().sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+      const ptsByUser = {};
+      for (const p of (fpRes.data ?? [])) { (ptsByUser[p.user_id] ||= {})[p.match_id] = p.points_earned; }
+      const calcStreak = (uid) => {
+        let s = 0;
+        for (const m of finishedDesc) {
+          const pts = ptsByUser[uid]?.[m.id];
+          if (pts >= 2) s++; else break; // 0 o sin pronosticar corta la racha
+        }
+        return s;
+      };
+
       const withTrend = ranked.map((e) => {
         const prev = snapMap[e.username]?.rank;
         const trend = prev == null ? null : prev > e.rank ? 'up' : prev < e.rank ? 'down' : 'same';
-        return { ...e, prev_rank: prev ?? null, trend };
+        return { ...e, prev_rank: prev ?? null, trend, streak: calcStreak(e.id) };
       });
       setLeaderboard(withTrend);
       setAllUsers(usersRes.data);
