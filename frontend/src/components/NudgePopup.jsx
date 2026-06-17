@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send } from 'lucide-react';
+import { X } from 'lucide-react';
 import { caritaAnim } from '../utils/caritas';
 
 const AVATAR_COLORS = [
@@ -27,10 +27,8 @@ function playNudgeSound() {
   } catch {}
 }
 
-function FullScreenNudge({ nudge, onDismiss, onReply }) {
-  const [visible,   setVisible]   = useState(false);
-  const [replying,  setReplying]  = useState(false);
-  const [replyText, setReplyText] = useState('');
+function FullScreenNudge({ nudge, onDismiss }) {
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     playNudgeSound();
@@ -48,11 +46,6 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
   }, []);
 
   const hide = () => { setVisible(false); setTimeout(onDismiss, 350); };
-
-  const handleReply = () => {
-    if (!replyText.trim()) return;
-    onReply(nudge.id, replyText.trim(), nudge._popupId);
-  };
 
   const colorIdx = (nudge.from_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length;
   const isFree   = nudge.type === 'free';
@@ -158,36 +151,13 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
 
         </div>
 
-        {/* Respuesta */}
+        {/* Cerrar */}
         <div style={{ padding: '0 24px 24px' }}>
-          {!replying ? (
-            <div className="flex gap-2">
-              <button onClick={hide}
-                className="flex-1 py-3 rounded-2xl font-bold transition-all"
-                style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 14 }}>
-                Cerrar
-              </button>
-              <button onClick={() => setReplying(true)}
-                className="flex-1 py-3 rounded-2xl font-black transition-all"
-                style={{ background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.5)', fontSize: 14 }}>
-                💬 Responder
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <input autoFocus value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleReply(); if (e.key === 'Escape') setReplying(false); }}
-                placeholder="Escribe tu respuesta..."
-                className="flex-1 rounded-2xl px-4 text-white outline-none"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(167,139,250,0.4)', fontSize: 15 }} />
-              <button onClick={handleReply}
-                className="px-5 rounded-2xl flex items-center justify-center"
-                style={{ background: 'rgba(167,139,250,0.3)', color: '#c4b5fd' }}>
-                <Send size={18} />
-              </button>
-            </div>
-          )}
+          <button onClick={hide}
+            className="w-full py-3 rounded-2xl font-black transition-all"
+            style={{ background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.5)', fontSize: 14 }}>
+            Cerrar
+          </button>
         </div>
 
         {/* Barra de tiempo */}
@@ -199,7 +169,7 @@ function FullScreenNudge({ nudge, onDismiss, onReply }) {
   );
 }
 
-export default function NudgePopupContainer({ nudges, onDismiss, onReply }) {
+export default function NudgePopupContainer({ nudges, onDismiss }) {
   if (!nudges.length) return null;
   // Mostrar uno a la vez (el más reciente)
   const current = nudges[nudges.length - 1];
@@ -208,7 +178,6 @@ export default function NudgePopupContainer({ nudges, onDismiss, onReply }) {
       key={current._popupId}
       nudge={current}
       onDismiss={() => onDismiss(current._popupId)}
-      onReply={onReply}
     />
   );
 }
