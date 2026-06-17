@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Avatar from './Avatar';
 
 const AVATAR_COLORS = [
   'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
@@ -11,7 +12,7 @@ function SingleConnToast({ alert, onDismiss }) {
 
   useEffect(() => {
     const t1 = setTimeout(() => setVisible(true), 30);
-    const t2 = setTimeout(() => hide(), 5000);
+    const t2 = setTimeout(() => hide(), 6000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -28,25 +29,23 @@ function SingleConnToast({ alert, onDismiss }) {
         opacity:    visible ? 1 : 0,
         transition: 'transform 0.4s cubic-bezier(.22,1,.36,1), opacity 0.3s ease',
         cursor: 'pointer',
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '10px 14px',
-        borderRadius: 14,
+        display: 'flex', alignItems: 'center', gap: 14,
+        padding: '14px 18px',
+        borderRadius: 18,
         background: 'linear-gradient(135deg,#0f2318 0%,#0D1B30 100%)',
-        border: '1px solid rgba(52,211,153,0.4)',
-        boxShadow: '0 8px 28px rgba(0,0,0,0.55)',
-        minWidth: 240, maxWidth: 300,
+        border: '1.5px solid rgba(52,211,153,0.5)',
+        boxShadow: '0 10px 34px rgba(0,0,0,0.6)',
+        minWidth: 300, maxWidth: 360,
       }}
     >
       <div className="relative flex-shrink-0">
-        <div className={`flex items-center justify-center text-xs font-black text-white ${AVATAR_COLORS[colorIdx]}`}
-          style={{ width: 34, height: 34, borderRadius: '50%' }}>
-          {alert.avatar_initials}
-        </div>
-        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400" style={{ border: '2px solid #0D1B30' }} />
+        <Avatar username={alert.username} initials={alert.avatar_initials} displayName={alert.display_name}
+          size={50} colorClass={AVATAR_COLORS[colorIdx]} clickable={false} />
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-400" style={{ border: '2.5px solid #0D1B30' }} />
       </div>
       <div className="min-w-0">
-        <p className="text-white font-bold text-sm leading-tight truncate">{alert.display_name}</p>
-        <p className="text-xs font-semibold" style={{ color: '#34d399' }}>🟢 se acaba de conectar</p>
+        <p className="text-white font-black leading-tight truncate" style={{ fontSize: 17 }}>{alert.display_name}</p>
+        <p className="font-bold" style={{ color: '#34d399', fontSize: 13 }}>🟢 se acaba de conectar</p>
       </div>
     </div>
   );

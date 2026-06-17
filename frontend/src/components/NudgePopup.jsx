@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { caritaAnim } from '../utils/caritas';
+import Avatar from './Avatar';
 
 const AVATAR_COLORS = [
   'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
@@ -108,10 +109,9 @@ function FullScreenNudge({ nudge, onDismiss }) {
 
         {/* Header */}
         <div style={{ padding: '14px 24px 10px', textAlign: 'center' }}>
-          <div className={`mx-auto flex items-center justify-center text-lg font-black text-white ${AVATAR_COLORS[colorIdx]}`}
-            style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid rgba(167,139,250,0.6)', boxShadow: '0 0 20px rgba(167,139,250,0.4)' }}>
-            {nudge.from_initials}
-          </div>
+          <Avatar username={nudge.from_username} initials={nudge.from_initials} displayName={nudge.from_name}
+            size={52} colorClass={AVATAR_COLORS[colorIdx]} clickable={false} className="mx-auto"
+            style={{ border: '2px solid rgba(167,139,250,0.6)', boxShadow: '0 0 20px rgba(167,139,250,0.4)' }} />
           <p className="text-white font-black mt-2" style={{ fontSize: 20, lineHeight: 1.1 }}>{nudge.from_name}</p>
           <p className="font-bold mt-1" style={{ color: '#a78bfa', fontSize: 12, letterSpacing: '0.05em' }}>
             💬 ¡TE MANDÓ UN GUIÑO!

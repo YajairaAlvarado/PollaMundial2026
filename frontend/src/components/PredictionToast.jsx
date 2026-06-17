@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Avatar from './Avatar';
 
 const AVATAR_COLORS = [
   'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
@@ -41,9 +42,7 @@ function SingleToast({ toast, onDismiss }) {
       }}
     >
       {/* Avatar */}
-      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 ${AVATAR_COLORS[colorIdx]}`}>
-        {toast.avatar_initials}
-      </div>
+      <Avatar username={toast.username} initials={toast.avatar_initials} displayName={toast.display_name} size={36} colorClass={AVATAR_COLORS[colorIdx]} clickable={false} />
 
       {/* Texto */}
       <div className="flex-1 min-w-0">

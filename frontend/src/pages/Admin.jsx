@@ -7,6 +7,7 @@ import { format, parseISO, startOfDay, endOfDay, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Users, ChevronDown, ChevronUp, Search, Trophy, Target, CheckCircle, Clock, Activity, Zap, RefreshCw, Save, Minus, Plus } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Avatar from '../components/Avatar';
 import { getMatchResultFromApi } from '../utils/footballApi';
 
 // ─── Pestaña Usuarios ────────────────────────────────────────────────────────
@@ -132,9 +133,7 @@ function TabUsuarios({ users }) {
                 <span className="text-white/20 text-xs w-5 text-right flex-shrink-0">{idx + 1}</span>
 
                 {/* Avatar */}
-                <div className="w-8 h-8 rounded-full bg-red-800 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                  {u.avatar_initials}
-                </div>
+                <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={32} colorClass="bg-red-800" />
 
                 {/* Nombre */}
                 <div className="flex-1 min-w-0">
@@ -592,9 +591,7 @@ function TabAccesos({ users, currentUser }) {
                   style={{ background: r.loginCount === 0 ? 'rgba(248,113,113,0.03)' : 'transparent' }}>
                   <span className="col-span-1 text-center text-white/30 text-xs">{idx + 1}</span>
                   <div className="col-span-4 flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-red-800 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                      {r.avatar_initials}
-                    </div>
+                    <Avatar username={r.username} initials={r.avatar_initials} displayName={r.display_name} size={28} colorClass="bg-red-800" />
                     <div className="min-w-0">
                       <p className="text-white text-sm font-medium truncate">{r.display_name}</p>
                       <p className="text-white/30 text-xs truncate">{r.username}</p>

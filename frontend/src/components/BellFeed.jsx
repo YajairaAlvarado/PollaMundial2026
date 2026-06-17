@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import api from '../utils/api';
+import Avatar from './Avatar';
 
 const PAGE = 5;
 
@@ -127,7 +128,7 @@ export default function BellFeed({ unread, onOpen }) {
                 <div key={item.id}
                   className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-white/5"
                   style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                  <span className="text-base flex-shrink-0">⚽</span>
+                  <Avatar username={item.username} initials={item.avatar_initials} displayName={item.display_name} size={30} clickable={false} />
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-xs font-semibold truncate">
                       {rankMap[item.display_name] && (

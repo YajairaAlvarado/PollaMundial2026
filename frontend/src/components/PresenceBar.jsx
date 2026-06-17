@@ -3,6 +3,7 @@ import { X, Send, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { Minus, Plus } from 'lucide-react';
 import { CARITAS, GIFS } from '../utils/caritas';
+import Avatar from './Avatar';
 
 const AVATAR_COLORS = [
   'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
@@ -15,9 +16,7 @@ function StepType({ target, onSelect, onClose }) {
   return (
     <div>
       <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 ${AVATAR_COLORS[(target.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length]}`}>
-          {target.avatar_initials}
-        </div>
+        <Avatar username={target.username} initials={target.avatar_initials} displayName={target.display_name} size={28} colorClass={AVATAR_COLORS[(target.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length]} clickable={false} />
         <p className="text-white text-sm font-bold flex-1 truncate">{target.display_name}</p>
         <button onClick={onClose}><X size={14} style={{ color: 'rgba(255,255,255,0.3)' }} /></button>
       </div>
@@ -232,6 +231,7 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
       to_user_id:     target.id,
       from_name:      currentUser.displayName,
       from_initials:  currentUser.avatarInitials,
+      from_username:  currentUser.username,
       ...payload,
     });
     onClose();
@@ -287,9 +287,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge }) {
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all hover:bg-white/5"
                       style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                       <div className="relative flex-shrink-0">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black text-white ${AVATAR_COLORS[ci]}`}>
-                          {u.avatar_initials}
-                        </div>
+                        <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={28} colorClass={AVATAR_COLORS[ci]} clickable={false} />
                         <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#0f172a]" />
                       </div>
                       <span className="text-white text-xs font-semibold truncate">{u.display_name}</span>

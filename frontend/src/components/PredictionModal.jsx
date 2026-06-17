@@ -84,6 +84,7 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
       if (user?.id) {
         supabase.from('prediction_broadcasts').upsert({
           user_id:         user.id,
+          username:        user.username,
           display_name:    user.displayName,
           avatar_initials: user.avatarInitials,
           match_id:        match.id,
