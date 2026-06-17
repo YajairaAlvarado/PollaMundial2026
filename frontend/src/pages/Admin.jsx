@@ -241,7 +241,9 @@ const PAGE_LABELS = {
   vs_comparacion:  { label: 'VS (comparó)',icon: '⚡' },
 };
 
-function AccesosUserDetail({ userId, desde, hasta, users }) {
+const isGif = (v) => typeof v === 'string' && /^https?:\/\//.test(v);
+
+function AccesosUserDetail({ userId, desde, hasta, users, canSeeNudgeDetail }) {
   const [data,    setData]    = useState(null);
   const [nudges,  setNudges]  = useState([]);
   const [loading, setLoading] = useState(true);
@@ -342,26 +344,35 @@ function AccesosUserDetail({ userId, desde, hasta, users }) {
             style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa' }}>
             💬 Guiños enviados ({nudges.length})
           </div>
-          <div className="max-h-40 overflow-y-auto">
-            {nudges.map((n, i) => {
-              const dateStr = format(parseISO(n.created_at), "d MMM · HH:mm", { locale: es });
-              const dest = nameMap[n.to_user_id] || 'usuario';
-              return (
-                <div key={i} className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                  <span style={{ fontSize: 15 }}>{n.tone || '💬'}</span>
-                  <div className="min-w-0 flex-1">
-                    <p style={{ color: 'rgba(255,255,255,0.8)' }}>
-                      a <span style={{ color: '#c4b5fd', fontWeight: 600 }}>{dest}</span>
-                      {n.type === 'match_wink' && <span style={{ color: 'rgba(255,255,255,0.4)' }}> · guiño de partido</span>}
-                    </p>
-                    {n.message && <p className="truncate" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>"{n.message}"</p>}
+          {!canSeeNudgeDetail ? (
+            <p className="px-3 py-2 text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              🔒 Detalle privado
+            </p>
+          ) : (
+            <div className="max-h-48 overflow-y-auto">
+              {nudges.map((n, i) => {
+                const dateStr = format(parseISO(n.created_at), "d MMM · HH:mm", { locale: es });
+                const dest = nameMap[n.to_user_id] || 'usuario';
+                const gif = isGif(n.tone);
+                return (
+                  <div key={i} className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                    style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                    {gif
+                      ? <img src={n.tone} alt="gif" style={{ height: 34, width: 44, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} onError={(e) => { e.target.style.display = 'none'; }} />
+                      : <span style={{ fontSize: 15 }}>{n.tone || '💬'}</span>}
+                    <div className="min-w-0 flex-1">
+                      <p style={{ color: 'rgba(255,255,255,0.8)' }}>
+                        a <span style={{ color: '#c4b5fd', fontWeight: 600 }}>{dest}</span>
+                        {n.type === 'match_wink' && <span style={{ color: 'rgba(255,255,255,0.4)' }}> · guiño de partido</span>}
+                      </p>
+                      {n.message && <p className="truncate" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>"{n.message}"</p>}
+                    </div>
+                    <span className="flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>{dateStr}</span>
                   </div>
-                  <span className="flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>{dateStr}</span>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -377,7 +388,8 @@ const ACTION_FILTERS = [
   { key: 'nudges',         label: '💬 Guiños' },
 ];
 
-function TabAccesos({ users }) {
+function TabAccesos({ users, currentUser }) {
+  const canSeeNudgeDetail = currentUser?.username === 'daniel.leon';
   const today = format(new Date(), 'yyyy-MM-dd');
   const [desde,     setDesde]     = useState(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
   const [hasta,     setHasta]     = useState(today);
@@ -611,7 +623,7 @@ function TabAccesos({ users }) {
                 </button>
                 {isOpen && (
                   <div className="px-4 pb-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
-                    <AccesosUserDetail userId={r.id} desde={desde} hasta={hasta} users={users} />
+                    <AccesosUserDetail userId={r.id} desde={desde} hasta={hasta} users={users} canSeeNudgeDetail={canSeeNudgeDetail} />
                   </div>
                 )}
               </div>
@@ -957,7 +969,7 @@ export default function Admin() {
 
       {tab === 'usuarios'   && <TabUsuarios users={users} />}
       {tab === 'resultados' && <TabResultados />}
-      {tab === 'accesos'    && <TabAccesos  users={users} />}
+      {tab === 'accesos'    && <TabAccesos  users={users} currentUser={user} />}
     </div>
   );
 }
