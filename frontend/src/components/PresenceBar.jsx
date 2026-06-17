@@ -270,7 +270,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge }) {
       {/* Panel flotante */}
       {open && (
         <div className="mb-2 rounded-2xl overflow-hidden shadow-2xl"
-          style={{ background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', minWidth: 220 }}>
+          style={{ background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', minWidth: 290 }}>
           {target ? (
             <NudgeSender target={target} currentUser={currentUser} onSend={onSendNudge} onClose={() => setTarget(null)} />
           ) : (
@@ -284,14 +284,14 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge }) {
                   const ci = (u.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length;
                   return (
                     <button key={u.id} onClick={() => setTarget(u)}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all hover:bg-white/5"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5"
                       style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                       <div className="relative flex-shrink-0">
-                        <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={28} colorClass={AVATAR_COLORS[ci]} clickable={false} />
-                        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#0f172a]" />
+                        <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={42} colorClass={AVATAR_COLORS[ci]} clickable={true} />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-[#0f172a]" />
                       </div>
-                      <span className="text-white text-xs font-semibold truncate">{u.display_name}</span>
-                      <span className="ml-auto flex-shrink-0 text-[10px] font-black px-2 py-1 rounded-full"
+                      <span className="text-white text-sm font-bold truncate">{u.display_name}</span>
+                      <span className="ml-auto flex-shrink-0 text-[11px] font-black px-2.5 py-1.5 rounded-full"
                         style={{ background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.5)' }}>
                         👈 Enviar guiño
                       </span>
