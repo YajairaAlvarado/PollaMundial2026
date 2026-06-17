@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { HashRouter, BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AvatarProvider } from './contexts/AvatarContext';
@@ -27,6 +27,7 @@ function ProtectedLayout() {
   const { isAuthenticated, loading, user } = useAuth();
   const { toasts, dismiss, unread, markRead } = usePredictionBroadcast(user?.id);
   const canNudge    = !!user; // ahora todos pueden mandar/recibir guiños
+  const [nudgeTarget, setNudgeTarget] = useState(null); // abrir envío de guiño desde la notificación
   // Todos mandan heartbeat (para aparecer como conectados); todos observan la lista
   const { onlineUsers, connectionAlerts, dismissAlert } = usePresence(user?.id, canNudge);
   const { incoming, dismiss: dismissNudge, reply: replyNudge, send: sendNudge } = useNudges(canNudge ? user?.id : null);
@@ -47,9 +48,11 @@ function ProtectedLayout() {
       <PredictionToastContainer toasts={toasts} onDismiss={dismiss} />
       {canNudge && (
         <>
-          <PresenceBar currentUser={user} onlineUsers={onlineUsers} onSendNudge={sendNudge} />
+          <PresenceBar currentUser={user} onlineUsers={onlineUsers} onSendNudge={sendNudge}
+            externalTarget={nudgeTarget} onExternalTargetConsumed={() => setNudgeTarget(null)} />
           <NudgePopupContainer nudges={incoming} onDismiss={dismissNudge} onReply={replyNudge} />
-          <ConnectionToastContainer alerts={connectionAlerts} onDismiss={dismissAlert} />
+          <ConnectionToastContainer alerts={connectionAlerts} onDismiss={dismissAlert}
+            onNudge={(a) => { setNudgeTarget(a); dismissAlert(a._alertId); }} />
         </>
       )}
       <main className="min-h-[calc(100vh-4rem)]">

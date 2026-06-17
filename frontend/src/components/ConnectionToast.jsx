@@ -7,12 +7,12 @@ const AVATAR_COLORS = [
   'bg-cyan-600','bg-amber-600','bg-lime-600','bg-red-600',
 ];
 
-function SingleConnToast({ alert, onDismiss }) {
+function SingleConnToast({ alert, onDismiss, onNudge }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => setVisible(true), 30);
-    const t2 = setTimeout(() => hide(), 6000);
+    const t2 = setTimeout(() => hide(), 8000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -43,21 +43,27 @@ function SingleConnToast({ alert, onDismiss }) {
           size={50} colorClass={AVATAR_COLORS[colorIdx]} clickable={false} />
         <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-400" style={{ border: '2.5px solid #0D1B30' }} />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-white font-black leading-tight truncate" style={{ fontSize: 17 }}>{alert.display_name}</p>
         <p className="font-bold" style={{ color: '#34d399', fontSize: 13 }}>🟢 se acaba de conectar</p>
       </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); onNudge(alert); }}
+        className="flex-shrink-0 text-[11px] font-black px-3 py-2 rounded-xl"
+        style={{ background: 'rgba(167,139,250,0.3)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.6)' }}>
+        👈 Guiño
+      </button>
     </div>
   );
 }
 
-export default function ConnectionToastContainer({ alerts, onDismiss }) {
+export default function ConnectionToastContainer({ alerts, onDismiss, onNudge }) {
   if (!alerts.length) return null;
   return (
     <div className="fixed z-[9985] flex flex-col gap-2" style={{ top: 64, right: 16, pointerEvents: 'none' }}>
       {alerts.map((a) => (
         <div key={a._alertId} style={{ pointerEvents: 'auto' }}>
-          <SingleConnToast alert={a} onDismiss={() => onDismiss(a._alertId)} />
+          <SingleConnToast alert={a} onDismiss={() => onDismiss(a._alertId)} onNudge={onNudge} />
         </div>
       ))}
     </div>

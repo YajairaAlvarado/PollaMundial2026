@@ -249,10 +249,19 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
 }
 
 // ── Barra principal ───────────────────────────────────────────────────────────
-export default function PresenceBar({ currentUser, onlineUsers, onSendNudge }) {
+export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, externalTarget, onExternalTargetConsumed }) {
   const [open,   setOpen]   = useState(false);
   const [target, setTarget] = useState(null);
   const ref = useRef(null);
+
+  // Abrir el envío de guiño cuando llega un target desde la notificación de conexión
+  useEffect(() => {
+    if (externalTarget) {
+      setTarget(externalTarget);
+      setOpen(true);
+      onExternalTargetConsumed?.();
+    }
+  }, [externalTarget, onExternalTargetConsumed]);
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setTarget(null); } };
