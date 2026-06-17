@@ -3,15 +3,22 @@
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
-const APP_URL      = (process.env.APP_URL || 'https://yajairaalvarado.github.io/PollaMundial2026/').replace(/\/?$/, '/');
+// Valores NO sensibles (pueden ir en el código): URL pública, llave pública VAPID, etc.
+const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://sumnuonoaysauakylokf.supabase.co';
+const APP_URL       = (process.env.APP_URL || 'https://yajairaalvarado.github.io/PollaMundial2026/').replace(/\/?$/, '/');
+const VAPID_PUBLIC  = process.env.VAPID_PUBLIC  || 'BDTrjy8Jx9rSFHiciUa9Lew5zJ9Ag6mz0_cVrj0UzyOjqKOe9WVYJm_WmtPzkxhcC9jKMD7DmktGXYtDaWu9Ll0';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:daniel.leon@ec.andersen.com';
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:daniel.leon@ec.andersen.com',
-  process.env.VAPID_PUBLIC,
-  process.env.VAPID_PRIVATE
-);
+// SECRETOS (van como GitHub Secrets, NUNCA en el código): la llave maestra y la VAPID privada
+const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY;
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE;
+
+if (!SERVICE_KEY || !VAPID_PRIVATE) {
+  console.error('Faltan secrets: SUPABASE_SERVICE_KEY y/o VAPID_PRIVATE');
+  process.exit(1);
+}
+
+webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
