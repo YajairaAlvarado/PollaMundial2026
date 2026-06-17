@@ -255,7 +255,11 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
 export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, externalTarget, onExternalTargetConsumed }) {
   const [open,   setOpen]   = useState(false);
   const [target, setTarget] = useState(null);
+  const [pos,    setPos]    = useState(() => {
+    try { const s = localStorage.getItem('presencePos'); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
   const ref = useRef(null);
+  const drag = useRef({ on: false, moved: false, offX: 0, offY: 0 });
 
   // Abrir el envío de guiño cuando llega un target desde la notificación de conexión
   useEffect(() => {
@@ -272,13 +276,36 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // ── Arrastrar la barra ──
+  const onMove = (e) => {
+    if (!drag.current.on) return;
+    drag.current.moved = true;
+    const x = Math.max(4, Math.min(window.innerWidth  - 80, e.clientX - drag.current.offX));
+    const y = Math.max(4, Math.min(window.innerHeight - 44, e.clientY - drag.current.offY));
+    setPos({ x, y });
+  };
+  const onUp = () => {
+    drag.current.on = false;
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    setPos((p) => { if (p) { try { localStorage.setItem('presencePos', JSON.stringify(p)); } catch {} } return p; });
+  };
+  const onDown = (e) => {
+    const r = ref.current.getBoundingClientRect();
+    drag.current = { on: true, moved: false, offX: e.clientX - r.left, offY: e.clientY - r.top };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+  const handleToggle = () => { if (!drag.current.moved) { setOpen((o) => !o); setTarget(null); } };
+
   const count = onlineUsers.length;
   const sortedOnline = [...onlineUsers].sort((a, b) =>
     (a.display_name || '').localeCompare(b.display_name || '', 'es', { sensitivity: 'base' })
   );
 
   return (
-    <div ref={ref} className="fixed bottom-4 left-1/2 z-[9970]" style={{ transform: 'translateX(-50%)' }}>
+    <div ref={ref} className="fixed z-[9970]"
+      style={pos ? { left: pos.x, top: pos.y } : { bottom: 16, left: '50%', transform: 'translateX(-50%)' }}>
       {/* Panel flotante */}
       {open && (
         <div className="mb-2 rounded-2xl overflow-hidden shadow-2xl"
@@ -316,16 +343,20 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
         </div>
       )}
 
-      {/* Botón toggle */}
+      {/* Botón toggle (arrastrable) */}
       <button
-        onClick={() => { setOpen((o) => !o); setTarget(null); }}
-        className="flex items-center gap-2.5 px-6 py-3 rounded-full shadow-2xl transition-all mx-auto"
+        onPointerDown={onDown}
+        onClick={handleToggle}
+        title="Arrástrame para moverme"
+        className="flex items-center gap-2.5 px-6 py-3 rounded-full shadow-2xl transition-all mx-auto select-none"
         style={{
           background: open ? '#2e2566' : '#241c52',
           border: '2px solid rgba(167,139,250,0.7)',
           color: '#ffffff',
           boxShadow: '0 6px 30px rgba(167,139,250,0.5), 0 6px 26px rgba(0,0,0,0.7)',
+          touchAction: 'none', cursor: 'grab',
         }}>
+        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginRight: -2 }}>⠿</span>
         <span className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0" style={{ boxShadow: '0 0 8px #34d399' }} />
         <span className="text-[15px] font-black">
           {count === 0 ? 'Nadie conectado' : `Personas conectadas: ${count}`}

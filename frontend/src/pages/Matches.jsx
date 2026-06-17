@@ -273,10 +273,21 @@ export default function Matches() {
     if (filter === 'group') {
       return { [selectedGroup]: matches };
     }
-    // Próximos: agrupar por fecha local (Hoy / Mañana / dd de mes)
+    // Próximos: agrupar por fecha local (Hoy / Mañana / dd de mes), ascendente
     if (filter === 'scheduled') {
       const grouped = {};
       for (const m of matches) {
+        const key = dateLabel(m.match_date);
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(m);
+      }
+      return grouped;
+    }
+    // Finalizados: agrupar por día, los más recientes arriba
+    if (filter === 'finished') {
+      const sorted = [...matches].sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+      const grouped = {};
+      for (const m of sorted) {
         const key = dateLabel(m.match_date);
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(m);
@@ -376,7 +387,7 @@ export default function Matches() {
           ) : (
             Object.entries(groupedMatches).map(([groupName, groupMatches]) => (
               <div key={groupName}>
-                {filter === 'scheduled' ? (
+                {filter === 'scheduled' || filter === 'finished' ? (
                   <div className="flex items-center gap-3 mb-3">
                     <div className="px-3 py-1 rounded-lg border"
                       style={{ background: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.3)' }}>
