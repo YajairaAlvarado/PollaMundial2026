@@ -220,11 +220,8 @@ function StepScore({ match, onSend, onBack }) {
   );
 }
 
-// ── Panel de envío ────────────────────────────────────────────────────────────
+// ── Panel de envío (directo: escribir mensaje + carita/GIF) ────────────────────
 function NudgeSender({ target, currentUser, onSend, onClose }) {
-  const [step,  setStep]  = useState('type');   // 'type' | 'free' | 'match_pick' | 'score'
-  const [match, setMatch] = useState(null);
-
   const handleSend = async (payload) => {
     await onSend({
       from_user_id:   currentUser.id,
@@ -240,10 +237,16 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
   return (
     <div className="rounded-2xl overflow-hidden shadow-2xl"
       style={{ width: 440, maxWidth: '92vw', background: '#0f172a', border: '1px solid rgba(167,139,250,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.8)' }}>
-      {step === 'type'       && <StepType target={target} onSelect={(t) => setStep(t === 'free' ? 'free' : 'match_pick')} onClose={onClose} />}
-      {step === 'free'       && <StepFree onSend={handleSend} onBack={() => setStep('type')} />}
-      {step === 'match_pick' && <StepMatchPick target={target} onSelect={(m) => { setMatch(m); setStep('score'); }} onBack={() => setStep('type')} />}
-      {step === 'score'      && match && <StepScore match={match} onSend={handleSend} onBack={() => setStep('match_pick')} />}
+      {/* Cabecera con el destinatario */}
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <Avatar username={target.username} initials={target.avatar_initials} displayName={target.display_name} size={32} colorClass={AVATAR_COLORS[(target.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length]} clickable={false} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>Guiño para</p>
+          <p className="text-white text-sm font-bold truncate">{target.display_name}</p>
+        </div>
+        <button onClick={onClose}><X size={16} style={{ color: 'rgba(255,255,255,0.4)' }} /></button>
+      </div>
+      <StepFree onSend={handleSend} onBack={onClose} />
     </div>
   );
 }

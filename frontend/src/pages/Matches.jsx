@@ -3,6 +3,7 @@ import api from '../utils/api';
 import MatchCard from '../components/MatchCard';
 import PredictionModal from '../components/PredictionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Avatar from '../components/Avatar';
 import { RefreshCw, Users, Search } from 'lucide-react';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -153,9 +154,7 @@ function LivePredictionsPanel({ match }) {
                       {rankMap[u.username] && (
                         <span className="text-[9px] font-black flex-shrink-0" style={{ color: '#F59E0B' }}>#{rankMap[u.username]}</span>
                       )}
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white flex-shrink-0 ${AVATAR_COLORS[u.username?.charCodeAt(0) % AVATAR_COLORS.length]}`}>
-                        {u.avatar_initials}
-                      </div>
+                      <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={20} colorClass={AVATAR_COLORS[u.username?.charCodeAt(0) % AVATAR_COLORS.length]} fontSize={8} />
                       <span className="text-xs text-white/80">{u.display_name}</span>
                     </div>
                   ))}
@@ -171,9 +170,7 @@ function LivePredictionsPanel({ match }) {
                   {rankMap[p.user.username] && (
                     <span className="text-xs font-black w-6 text-right flex-shrink-0" style={{ color: '#F59E0B' }}>#{rankMap[p.user.username]}</span>
                   )}
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black text-white ${AVATAR_COLORS[p.user.username?.charCodeAt(0) % AVATAR_COLORS.length]}`}>
-                    {p.user.avatar_initials}
-                  </div>
+                  <Avatar username={p.user.username} initials={p.user.avatar_initials} displayName={p.user.display_name} size={28} colorClass={AVATAR_COLORS[p.user.username?.charCodeAt(0) % AVATAR_COLORS.length]} fontSize={9} />
                   <div>
                     <p className="text-white text-xs font-semibold">{p.user.display_name}</p>
                     <p className="text-white/30 text-[10px]">{p.user.department}</p>
