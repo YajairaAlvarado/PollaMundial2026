@@ -132,7 +132,7 @@ function UserPredictionsPanel({ userId }) {
         supabase.from('matches')
           .select('id, home_team, away_team, home_code, away_code, home_score, away_score, match_date')
           .eq('status', 'finished')
-          .order('match_date', { ascending: true }),
+          .order('match_date', { ascending: false }),
         supabase.from('predictions')
           .select('match_id, home_score, away_score, points_earned')
           .eq('user_id', userId),
