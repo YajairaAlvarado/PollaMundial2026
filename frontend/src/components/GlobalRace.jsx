@@ -56,7 +56,7 @@ export default function GlobalRace() {
   useEffect(() => {
     if (loading || !playing) return;
     if (step >= matches.length) { setPlaying(false); return; }
-    const t = setTimeout(() => setStep((s) => s + 1), 1400);
+    const t = setTimeout(() => setStep((s) => s + 1), 2300);
     return () => clearTimeout(t);
   }, [playing, step, matches.length, loading]);
 
@@ -116,7 +116,7 @@ export default function GlobalRace() {
               style={{ position: 'absolute', left: 0, right: 0, height: ROWH - 8, display: 'flex', alignItems: 'center', gap: 7,
                        transform: `translateY(${rank * ROWH}px)`, opacity: visible ? 1 : 0,
                        pointerEvents: visible ? 'auto' : 'none',
-                       transition: 'transform 0.7s cubic-bezier(.4,0,.2,1), opacity 0.5s ease' }}>
+                       transition: 'transform 1.4s cubic-bezier(.4,0,.2,1), opacity 0.7s ease' }}>
               <span style={{ width: 18, textAlign: 'center', fontSize: 12, fontWeight: 900, color: rank === 0 ? '#FFD700' : rank === 1 ? '#C7CDD6' : rank === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
                 {rank + 1}
               </span>
@@ -124,7 +124,7 @@ export default function GlobalRace() {
                 style={isExact ? { animation: 'raceFlash 0.7s ease' } : undefined} />
               <span className="text-xs font-semibold text-white truncate" style={{ width: 78, flexShrink: 0 }}>{s.u.display_name?.split(' ')[0]}</span>
               <div style={{ flex: 1, height: 22, background: 'rgba(255,255,255,0.05)', borderRadius: 6, overflow: 'hidden', minWidth: 20 }}>
-                <div style={{ height: '100%', width: `${(s.pts / maxFinal) * 100}%`, background: barColor, borderRadius: 6, transition: 'width 0.7s cubic-bezier(.4,0,.2,1)' }} />
+                <div style={{ height: '100%', width: `${(s.pts / maxFinal) * 100}%`, background: barColor, borderRadius: 6, transition: 'width 1.4s cubic-bezier(.4,0,.2,1)' }} />
               </div>
               <span className="font-black text-sm" style={{ color: barColor, width: 26, textAlign: 'right', flexShrink: 0 }}>{s.pts}</span>
               <div style={{ width: 34, flexShrink: 0, position: 'relative', height: 18 }}>
