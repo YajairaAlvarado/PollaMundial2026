@@ -300,16 +300,22 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
     (a.display_name || '').localeCompare(b.display_name || '', 'es', { sensitivity: 'base' })
   );
 
+  const closeAll = () => { setOpen(false); setTarget(null); };
+
   return (
+    <>
+    {/* Fondo para cerrar tocando fuera (sobre todo en móvil) */}
+    {open && <div onClick={closeAll} style={{ position: 'fixed', inset: 0, zIndex: 9969 }} />}
     <div ref={ref} className="fixed z-[9970]"
       style={pos ? { left: pos.x, top: pos.y } : { bottom: 16, left: '50%', transform: 'translateX(-50%)' }}>
       {/* Panel flotante — se despliega hacia ARRIBA del botón sin moverlo */}
       {open && (
         <div className="rounded-2xl overflow-hidden shadow-2xl"
           style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 10,
-                   background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', minWidth: 290 }}>
+                   background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', minWidth: 290,
+                   maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
           {target ? (
-            <NudgeSender target={target} currentUser={currentUser} onSend={onSendNudge} onClose={() => setTarget(null)} />
+            <NudgeSender target={target} currentUser={currentUser} onSend={onSendNudge} onClose={closeAll} />
           ) : (
             <div>
               <p className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -365,5 +371,6 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
         {open ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
       </button>
     </div>
+    </>
   );
 }

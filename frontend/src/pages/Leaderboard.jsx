@@ -205,12 +205,19 @@ function LeaderboardTableExpandable({ data }) {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(null);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('puntos'); // 'puntos' | 'racha'
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return data;
-    const q = search.toLowerCase();
-    return data.filter((e) => e.display_name?.toLowerCase().includes(q));
-  }, [data, search]);
+    let list = data;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((e) => e.display_name?.toLowerCase().includes(q));
+    }
+    if (sortBy === 'racha') {
+      list = [...list].sort((a, b) => (b.streak || 0) - (a.streak || 0) || (b.total_points || 0) - (a.total_points || 0));
+    }
+    return list;
+  }, [data, search, sortBy]);
 
   if (!data || data.length === 0) return (
     <div className="rounded-xl p-8 text-center" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -232,6 +239,21 @@ function LeaderboardTableExpandable({ data }) {
             className="bg-transparent outline-none text-white text-xs w-full placeholder:text-white/25"
           />
           {search && <button onClick={() => setSearch('')} style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, lineHeight: 1 }}>×</button>}
+        </div>
+        {/* Ordenar por */}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Ordenar:</span>
+          {[{ k: 'puntos', l: '🏆 Puntos' }, { k: 'racha', l: '🔥 Racha' }].map((o) => (
+            <button key={o.k} onClick={() => setSortBy(o.k)}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all"
+              style={{
+                background: sortBy === o.k ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${sortBy === o.k ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                color: sortBy === o.k ? '#F59E0B' : 'rgba(255,255,255,0.5)',
+              }}>
+              {o.l}
+            </button>
+          ))}
         </div>
       </div>
       <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
