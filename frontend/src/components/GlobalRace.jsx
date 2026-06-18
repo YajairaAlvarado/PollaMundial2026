@@ -76,6 +76,14 @@ export default function GlobalRace() {
 
   return (
     <div className="rounded-2xl p-4" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Título */}
+      <div className="text-center mb-3">
+        <h3 className="text-white font-black text-lg leading-tight">🏁 Carrera de Puntos</h3>
+        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          Mira cómo cada jugador sube y baja en el ranking partido a partido
+        </p>
+      </div>
+
       {/* Controles + partido */}
       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <div className="flex items-center gap-1.5">
