@@ -7,6 +7,7 @@ import WorldCupBanner from '../components/WorldCupBanner';
 import MatchCard from '../components/MatchCard';
 import PredictionModal from '../components/PredictionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import GlobalRace from '../components/GlobalRace';
 import { Trophy, Target, CheckCircle, Calendar, ArrowRight } from 'lucide-react';
 import canchaBg from '../assets/andersen-cancha.jpg';
 
@@ -47,6 +48,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ total: 0, exact: 0, correct: 0, made: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [homeTab, setHomeTab] = useState('carrera'); // 'carrera' | 'partidos'
 
   useEffect(() => {
     if (user?.id) trackPage(user.id, 'inicio');
@@ -126,38 +128,42 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Upcoming matches */}
+      {/* Tabs: Carrera (default) / Próximos partidos */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-bold text-base">Próximos Partidos</h3>
-          <Link
-            to="/matches"
-            className="flex items-center gap-1 text-sm font-medium transition-colors"
-            style={{ color: 'rgba(245,158,11,0.7)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#F59E0B'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,158,11,0.7)'; }}
-          >
-            Ver todos <ArrowRight size={14} />
-          </Link>
+        <div className="flex rounded-xl overflow-hidden mb-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <button onClick={() => setHomeTab('carrera')}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold transition-all"
+            style={{ background: homeTab === 'carrera' ? 'rgba(245,158,11,0.15)' : 'transparent', color: homeTab === 'carrera' ? '#F59E0B' : 'rgba(255,255,255,0.4)', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+            🏁 La Carrera
+          </button>
+          <button onClick={() => setHomeTab('partidos')}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold transition-all"
+            style={{ background: homeTab === 'partidos' ? 'rgba(96,165,250,0.15)' : 'transparent', color: homeTab === 'partidos' ? '#93c5fd' : 'rgba(255,255,255,0.4)' }}>
+            <Calendar size={14} /> Próximos
+          </button>
         </div>
 
-        {upcomingMatches.length === 0 ? (
-          <div
-            className="rounded-xl p-8 text-center"
-            style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <p style={{ color: 'rgba(255,255,255,0.4)' }}>No hay partidos programados próximamente</p>
-          </div>
+        {homeTab === 'carrera' ? (
+          <GlobalRace />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {upcomingMatches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                prediction={myPredictions[match.id]}
-                onPredict={(m) => setSelectedMatch(m)}
-              />
-            ))}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-base">Próximos Partidos</h3>
+              <Link to="/matches" className="flex items-center gap-1 text-sm font-medium" style={{ color: 'rgba(245,158,11,0.7)' }}>
+                Ver todos <ArrowRight size={14} />
+              </Link>
+            </div>
+            {upcomingMatches.length === 0 ? (
+              <div className="rounded-xl p-8 text-center" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <p style={{ color: 'rgba(255,255,255,0.4)' }}>No hay partidos programados próximamente</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {upcomingMatches.map((match) => (
+                  <MatchCard key={match.id} match={match} prediction={myPredictions[match.id]} onPredict={(m) => setSelectedMatch(m)} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
