@@ -206,12 +206,16 @@ async function post(url, body = {}) {
     return { data };
   }
 
-  // POST /leaderboard/snapshot — guarda snapshot del ranking actual
+  // POST /leaderboard/snapshot — guarda la "foto" del ranking UNA sola vez al día.
+  // Así las flechas comparan contra el estado del día anterior (no contra el último resultado).
   if (url === '/leaderboard/snapshot') {
     const today = new Date().toISOString().slice(0, 10);
-    // Borrar snapshot del mismo día si existe
-    await supabase.from('leaderboard_snapshots').delete().eq('snapshot_date', today);
-    // Insertar filas nuevas
+    // Si ya hay foto de hoy, no la sobreescribas (conserva el estado previo del día)
+    const { data: existing } = await supabase
+      .from('leaderboard_snapshots').select('id').eq('snapshot_date', today).limit(1);
+    if (existing && existing.length > 0) {
+      return { data: { skipped: true, date: today } };
+    }
     const rows = body.entries.map((e) => ({
       username:     e.username,
       rank:         e.rank,
