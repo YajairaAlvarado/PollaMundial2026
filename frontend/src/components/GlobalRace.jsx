@@ -53,6 +53,13 @@ export default function GlobalRace() {
     return mx;
   }, [cum, users]);
 
+  // Color fijo por jugador (no por posición) → el movimiento se ve fluido
+  const colorByUser = useMemo(() => {
+    const m = {};
+    users.forEach((u, i) => { m[u.id] = COLORS[i % COLORS.length]; });
+    return m;
+  }, [users]);
+
   useEffect(() => {
     if (loading || !playing) return;
     if (step >= matches.length) { setPlaying(false); return; }
@@ -118,7 +125,7 @@ export default function GlobalRace() {
           const visible = showAll || rank < 10;
           const last = cur ? pointsMap[s.u.id]?.[cur.id] : undefined;
           const isExact = last === 3;
-          const barColor = COLORS[rank % COLORS.length];
+          const barColor = colorByUser[s.u.id];
           return (
             <div key={s.u.id}
               style={{ position: 'absolute', left: 0, right: 0, height: ROWH - 8, display: 'flex', alignItems: 'center', gap: 7,
