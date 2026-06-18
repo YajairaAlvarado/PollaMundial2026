@@ -235,6 +235,23 @@ body {
   to   { width: 0%; }
 }
 
+/* Carrera de puntos (VS) */
+@keyframes racePop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  25%  { opacity: 1; transform: translateY(0) scale(1.1); }
+  75%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(1); }
+}
+@keyframes raceStar {
+  0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+  40%  { transform: scale(1.4) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes raceFlash {
+  0%,100% { box-shadow: 0 0 0 rgba(52,211,153,0); }
+  50%     { box-shadow: 0 0 16px 3px rgba(52,211,153,0.7); }
+}
+
 /* Sacudida de pantalla estilo zumbido MSN */
 @keyframes screenShake {
   0%,100% { transform: translate(0, 0); }

@@ -108,6 +108,103 @@ function PlayerSearch({ onSelect, excludeId }) {
   );
 }
 
+function PointsRace({ playerA, playerB, predsA, predsB, matches }) {
+  const data = useMemo(() => {
+    let a = 0, b = 0; const rows = [];
+    for (const m of matches) {
+      const pa = predsA[m.id]?.points_earned;
+      const pb = predsB[m.id]?.points_earned;
+      a += (pa ?? 0); b += (pb ?? 0);
+      rows.push({ m, a, b, pa: pa ?? null, pb: pb ?? null });
+    }
+    return rows;
+  }, [matches, predsA, predsB]);
+
+  const [step, setStep]       = useState(0);     // partidos revelados (0..N)
+  const [playing, setPlaying] = useState(true);
+
+  useEffect(() => { setStep(0); setPlaying(true); }, [playerB?.id, data.length]);
+  useEffect(() => {
+    if (!playing) return;
+    if (step >= data.length) { setPlaying(false); return; }
+    const t = setTimeout(() => setStep((s) => s + 1), 1300); // más lento
+    return () => clearTimeout(t);
+  }, [playing, step, data.length]);
+
+  if (!data.length) return null;
+
+  const cur = step > 0 ? data[step - 1] : null;
+  const maxFinal = Math.max(data[data.length - 1].a, data[data.length - 1].b, 1);
+  const ROWH = 58;
+
+  const ptsLabel = (p) => p === 3 ? '+3 ⭐' : p === 2 ? '+2' : p === 0 ? '+0' : '';
+  const ptsColor = (p) => p === 3 ? '#34d399' : p === 2 ? '#60a5fa' : '#f87171';
+
+  const players = [
+    { key: 'A', name: playerA.display_name, username: playerA.username, initials: playerA.avatar_initials, color: '#60a5fa', pts: cur ? cur.a : 0, last: cur?.pa },
+    { key: 'B', name: playerB.display_name, username: playerB.username, initials: playerB.avatar_initials, color: '#f472b6', pts: cur ? cur.b : 0, last: cur?.pb },
+  ];
+  const ranked = [...players].sort((x, y) => y.pts - x.pts);
+  const rankOf = (k) => ranked.findIndex((p) => p.key === k);
+
+  return (
+    <div className="rounded-2xl p-4" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.45)' }}>🏁 Carrera de puntos</p>
+        <button onClick={() => { setStep(0); setPlaying(true); }}
+          className="text-[11px] font-bold px-2.5 py-1 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)' }}>
+          ▶ Repetir
+        </button>
+      </div>
+
+      {/* Partido actual con banderitas */}
+      <div className="text-center mb-3" style={{ minHeight: 22 }}>
+        {cur ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-bold text-white">
+            {cur.m.home_code && <img src={`https://flagcdn.com/20x15/${cur.m.home_code}.png`} alt="" className="rounded" />}
+            {cur.m.home_team}
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>vs</span>
+            {cur.m.away_team}
+            {cur.m.away_code && <img src={`https://flagcdn.com/20x15/${cur.m.away_code}.png`} alt="" className="rounded" />}
+          </span>
+        ) : (
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Partido {Math.min(step + 1, data.length)} de {data.length}</span>
+        )}
+      </div>
+
+      {/* Pista */}
+      <div style={{ position: 'relative', height: 2 * ROWH }}>
+        {players.map((p) => {
+          const rank = rankOf(p.key);
+          const isExact = cur && p.last === 3;
+          return (
+            <div key={p.key}
+              style={{ position: 'absolute', left: 0, right: 0, height: ROWH - 10, display: 'flex', alignItems: 'center', gap: 8,
+                       transform: `translateY(${rank * ROWH}px)`, transition: 'transform 0.7s cubic-bezier(.4,0,.2,1)' }}>
+              <Avatar username={p.username} initials={p.initials} displayName={p.name} size={40} colorClass="bg-rose-700" clickable={false}
+                style={isExact ? { animation: 'raceFlash 0.7s ease' } : undefined} />
+              <span className="text-xs font-semibold text-white truncate" style={{ width: 80, flexShrink: 0 }}>{p.name.split(' ')[0]}</span>
+              <div style={{ flex: 1, height: 26, background: 'rgba(255,255,255,0.05)', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
+                <div style={{ height: '100%', width: `${(p.pts / maxFinal) * 100}%`, background: p.color, borderRadius: 6, transition: 'width 0.7s cubic-bezier(.4,0,.2,1)' }} />
+              </div>
+              <span className="font-black text-base" style={{ color: p.color, width: 28, textAlign: 'right' }}>{p.pts}</span>
+              {/* +pts del partido actual */}
+              <div style={{ width: 40, flexShrink: 0, position: 'relative', height: 20 }}>
+                {cur && p.last !== null && (
+                  <span key={step + p.key} style={{ position: 'absolute', right: 0, fontSize: 12, fontWeight: 900, color: ptsColor(p.last), animation: 'racePop 1.2s ease forwards' }}>
+                    {ptsLabel(p.last)}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function MatchRow({ match, predA, predB, playerA, playerB }) {
   const ptsA = predA?.points_earned ?? null;
   const ptsB = predB?.points_earned ?? null;
@@ -313,6 +410,11 @@ export default function Vs() {
               ? <p className="font-black text-sm" style={{ color: '#f472b6' }}>🏆 {playerB?.display_name} va ganando el duelo</p>
               : <p className="font-black text-sm" style={{ color: '#fbbf24' }}>⚖️ ¡Están empatados! Duelo parejo</p>}
           </div>
+        )}
+
+        {/* Carrera de puntos */}
+        {hasB && matches.length > 0 && (
+          <PointsRace playerA={playerA} playerB={playerB} predsA={predsA} predsB={predsB} matches={matches} />
         )}
 
         {/* Tabla de partidos */}
