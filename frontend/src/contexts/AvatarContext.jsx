@@ -164,42 +164,44 @@ function PlayerCard({ card, onClose }) {
         )}
 
         {/* Banda superior */}
-        <div style={{ height: 10, background: t.band }} />
+        <div style={{ height: 8, background: t.band }} />
 
         {/* Cabecera */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px',
-                      background: `linear-gradient(180deg, ${t.glow}, transparent)` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {card.rank != null && (
-              <div style={{ background: t.accent, color: '#0a1730', fontWeight: 900, fontSize: 16, borderRadius: 8, padding: '2px 8px', lineHeight: 1.1, textAlign: 'center' }}>
-                #{card.rank}
-                <div style={{ fontSize: 6.5, fontWeight: 800, letterSpacing: '0.08em' }}>POS</div>
-              </div>
-            )}
-            {medal && <span style={{ fontSize: 22 }}>{medal}</span>}
-          </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: t.accent, letterSpacing: '0.05em' }}>🇪🇨 MUNDIAL 2026</span>
-          <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.55)', fontSize: 18, lineHeight: 1 }}>×</button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 12px',
+                      background: `${t.accent}22` }}>
+          <span style={{ fontSize: 11, fontWeight: 900, color: t.accent, letterSpacing: '0.05em' }}>🇪🇨 MUNDIAL 2026</span>
+          <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.6)', fontSize: 18, lineHeight: 1 }}>×</button>
         </div>
 
-        {/* Foto */}
-        <div style={{ position: 'relative', padding: '4px 0 0',
-                      background: 'radial-gradient(circle at 50% 30%, rgba(0,114,206,0.35), transparent 70%)' }}>
+        {/* Escenario: foto + número gigante de fondo (estilo cromo) */}
+        <div style={{ position: 'relative', overflow: 'hidden',
+                      background: `linear-gradient(160deg, ${t.accent}40 0%, rgba(0,114,206,0.22) 55%, #0a1730 100%)` }}>
+          {card.rank != null && (
+            <span style={{ position: 'absolute', top: -22, right: -8, fontSize: 150, fontWeight: 900, fontStyle: 'italic',
+                           lineHeight: 1, color: 'rgba(255,255,255,0.10)', zIndex: 0, pointerEvents: 'none' }}>
+              {card.rank}
+            </span>
+          )}
+          {medal && <span style={{ position: 'absolute', top: 8, left: 10, fontSize: 30, zIndex: 2 }}>{medal}</span>}
           {card.loading ? (
-            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>Cargando…</div>
+            <div style={{ height: 230, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)', position: 'relative', zIndex: 1 }}>Cargando…</div>
           ) : card.url ? (
-            <img src={card.url} alt={card.name} style={{ width: '100%', height: 240, objectFit: 'cover', display: 'block' }} />
+            <img src={card.url} alt={card.name} style={{ width: '100%', height: 240, objectFit: 'cover', display: 'block', position: 'relative', zIndex: 1 }} />
           ) : (
-            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56, fontWeight: 900, color: 'rgba(255,255,255,0.85)' }}>
+            <div style={{ height: 230, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56, fontWeight: 900, color: 'rgba(255,255,255,0.85)', position: 'relative', zIndex: 1 }}>
               {card.initials || '?'}
             </div>
           )}
         </div>
 
-        {/* Nombre + departamento */}
-        <div style={{ padding: '10px 14px 8px', background: 'linear-gradient(180deg, #0072CE, #0a1730)', textAlign: 'center' }}>
-          <div style={{ color: 'white', fontWeight: 900, fontSize: 18, lineHeight: 1.1 }}>{card.name}</div>
-          {card.dept && <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10.5, fontWeight: 600, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.dept}</div>}
+        {/* Banda del nombre (marco de color + interior oscuro) */}
+        <div style={{ background: t.band, padding: 2 }}>
+          <div style={{ background: '#0a1730', padding: '9px 14px', textAlign: 'center' }}>
+            <div style={{ color: 'white', fontWeight: 900, fontSize: 18, lineHeight: 1.1 }}>{card.name}</div>
+            <div style={{ color: t.accent, fontSize: 10.5, fontWeight: 800, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {card.dept}{card.rank != null ? ` · #${card.rank}` : ''}
+            </div>
+          </div>
         </div>
 
         {/* Stats */}

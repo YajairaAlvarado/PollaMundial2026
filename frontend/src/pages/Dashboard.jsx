@@ -50,6 +50,17 @@ export default function Dashboard() {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [homeTab, setHomeTab] = useState('carrera'); // 'carrera' | 'partidos'
 
+  // ¿Hay partidos próximos (≈2 días) sin predecir? → el cuadro va arriba; si todo al día, abajo
+  const hasPending = (() => {
+    const now = new Date();
+    return upcomingMatchesAll.some((m) => {
+      if (m.status !== 'scheduled') return false;
+      const d = new Date(m.match_date);
+      if (d <= now || myPredictions[m.id]) return false;
+      return (d - now) / 3600000 <= 60;
+    });
+  })();
+
   useEffect(() => {
     if (user?.id) trackPage(user.id, 'inicio');
     fetchData();
@@ -105,11 +116,13 @@ export default function Dashboard() {
         style={{ background: 'linear-gradient(180deg, rgba(10,0,0,0.72) 0%, rgba(10,0,0,0.78) 100%)' }} />
 
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 relative z-10">
-      <WorldCupBanner
-        matches={upcomingMatchesAll}
-        predictions={myPredictions}
-        onPredict={(m) => setSelectedMatch(m)}
-      />
+      {hasPending && (
+        <WorldCupBanner
+          matches={upcomingMatchesAll}
+          predictions={myPredictions}
+          onPredict={(m) => setSelectedMatch(m)}
+        />
+      )}
 
       {/* Welcome */}
       <div>
@@ -204,6 +217,14 @@ export default function Dashboard() {
           <ArrowRight size={15} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
         </Link>
       </div>
+
+      {!hasPending && (
+        <WorldCupBanner
+          matches={upcomingMatchesAll}
+          predictions={myPredictions}
+          onPredict={(m) => setSelectedMatch(m)}
+        />
+      )}
 
       {selectedMatch && (
         <PredictionModal
