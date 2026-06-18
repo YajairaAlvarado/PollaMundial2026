@@ -1,0 +1,56 @@
+// Banco de preguntas de trivia mundialista (datos públicos / hechos).
+// type 'flag' muestra una bandera (code = ISO2) y opciones de países.
+// type 'text' es pregunta de texto con opciones.
+// answer = índice de la opción correcta.
+
+export const TRIVIA = [
+  // ── Datos del Mundial ──
+  { type: 'text', q: '¿Qué país ha ganado más Copas del Mundo?', options: ['Alemania', 'Brasil', 'Italia', 'Argentina'], answer: 1 },
+  { type: 'text', q: '¿Quién ganó el Mundial de Qatar 2022?', options: ['Francia', 'Argentina', 'Brasil', 'Croacia'], answer: 1 },
+  { type: 'text', q: '¿Quién ganó el Mundial de Rusia 2018?', options: ['Francia', 'Croacia', 'Bélgica', 'Inglaterra'], answer: 0 },
+  { type: 'text', q: '¿Quién ganó el Mundial de Brasil 2014?', options: ['Brasil', 'Argentina', 'Alemania', 'Países Bajos'], answer: 2 },
+  { type: 'text', q: '¿En qué país se jugó el primer Mundial (1930)?', options: ['Uruguay', 'Brasil', 'Italia', 'Argentina'], answer: 0 },
+  { type: 'text', q: '¿Quién ganó el primer Mundial de la historia?', options: ['Argentina', 'Uruguay', 'Italia', 'Brasil'], answer: 1 },
+  { type: 'text', q: '¿Cuántas selecciones juegan el Mundial 2026?', options: ['32', '40', '48', '64'], answer: 2 },
+  { type: 'text', q: '¿Qué tres países son sede del Mundial 2026?', options: ['USA, Canadá y México', 'México, Brasil y USA', 'Canadá, USA y Costa Rica', 'USA, México y Colombia'], answer: 0 },
+  { type: 'text', q: '¿Quién es el máximo goleador en la historia de los Mundiales?', options: ['Ronaldo', 'Miroslav Klose', 'Pelé', 'Lionel Messi'], answer: 1 },
+  { type: 'text', q: '¿Cuántos Mundiales ganó Italia?', options: ['2', '3', '4', '5'], answer: 2 },
+  { type: 'text', q: '¿En qué Mundial debutó Ecuador por primera vez?', options: ['Corea-Japón 2002', 'Alemania 2006', 'Francia 1998', 'USA 1994'], answer: 0 },
+  { type: 'text', q: '¿Qué país europeo ganó el Mundial 2010 en Sudáfrica?', options: ['Países Bajos', 'España', 'Alemania', 'Italia'], answer: 1 },
+  { type: 'text', q: '¿Cada cuántos años se juega la Copa del Mundo?', options: ['2 años', '3 años', '4 años', '5 años'], answer: 2 },
+  { type: 'text', q: '¿Quién fue campeón en Sudáfrica 2010?', options: ['España', 'Alemania', 'Países Bajos', 'Uruguay'], answer: 0 },
+  { type: 'text', q: '¿En qué país se jugó el Mundial 2014?', options: ['Brasil', 'Sudáfrica', 'Alemania', 'Rusia'], answer: 0 },
+  { type: 'text', q: '¿Qué selección ha jugado TODOS los Mundiales de la historia?', options: ['Alemania', 'Italia', 'Brasil', 'Argentina'], answer: 2 },
+  { type: 'text', q: '¿Con qué selección debutó Lionel Messi en un Mundial?', options: ['Argentina', 'España', 'Uruguay', 'Chile'], answer: 0 },
+  { type: 'text', q: '¿Cuántos jugadores tiene un equipo en el campo?', options: ['10', '11', '12', '9'], answer: 1 },
+  { type: 'text', q: '¿Qué color de tarjeta significa expulsión?', options: ['Amarilla', 'Verde', 'Roja', 'Azul'], answer: 2 },
+  { type: 'text', q: '¿Quién levantó la copa como capitán de Argentina en 2022?', options: ['Lionel Messi', 'Ángel Di María', 'Emiliano Martínez', 'Rodrigo De Paul'], answer: 0 },
+  { type: 'text', q: '¿Qué país ganó el Mundial de 1998 como local?', options: ['Brasil', 'Francia', 'Italia', 'Alemania'], answer: 1 },
+  { type: 'text', q: '¿Qué trofeo levanta el campeón del Mundial?', options: ['La Champions', 'La Copa Jules Rimet', 'El Trofeo de la Copa Mundial de la FIFA', 'La Eurocopa'], answer: 2 },
+
+  // ── Banderas ──
+  { type: 'flag', code: 'br', q: '¿De qué país es esta bandera?', options: ['Brasil', 'Argentina', 'Colombia', 'Portugal'], answer: 0 },
+  { type: 'flag', code: 'ar', q: '¿De qué país es esta bandera?', options: ['Uruguay', 'Argentina', 'Guatemala', 'El Salvador'], answer: 1 },
+  { type: 'flag', code: 'ec', q: '¿De qué país es esta bandera?', options: ['Colombia', 'Venezuela', 'Ecuador', 'Bolivia'], answer: 2 },
+  { type: 'flag', code: 'fr', q: '¿De qué país es esta bandera?', options: ['Países Bajos', 'Francia', 'Rusia', 'Luxemburgo'], answer: 1 },
+  { type: 'flag', code: 'de', q: '¿De qué país es esta bandera?', options: ['Bélgica', 'España', 'Alemania', 'Ghana'], answer: 2 },
+  { type: 'flag', code: 'es', q: '¿De qué país es esta bandera?', options: ['España', 'Portugal', 'Italia', 'Colombia'], answer: 0 },
+  { type: 'flag', code: 'it', q: '¿De qué país es esta bandera?', options: ['Irlanda', 'México', 'Italia', 'Hungría'], answer: 2 },
+  { type: 'flag', code: 'pt', q: '¿De qué país es esta bandera?', options: ['Portugal', 'España', 'Marruecos', 'Senegal'], answer: 0 },
+  { type: 'flag', code: 'uy', q: '¿De qué país es esta bandera?', options: ['Argentina', 'Uruguay', 'Grecia', 'Israel'], answer: 1 },
+  { type: 'flag', code: 'co', q: '¿De qué país es esta bandera?', options: ['Venezuela', 'Ecuador', 'Colombia', 'Rumania'], answer: 2 },
+  { type: 'flag', code: 'mx', q: '¿De qué país es esta bandera?', options: ['México', 'Italia', 'Irán', 'Hungría'], answer: 0 },
+  { type: 'flag', code: 'gb', q: '¿De qué país es esta bandera?', options: ['Reino Unido', 'Australia', 'USA', 'Nueva Zelanda'], answer: 0 },
+  { type: 'flag', code: 'jp', q: '¿De qué país es esta bandera?', options: ['Corea del Sur', 'China', 'Japón', 'Bangladés'], answer: 2 },
+  { type: 'flag', code: 'nl', q: '¿De qué país es esta bandera?', options: ['Francia', 'Rusia', 'Luxemburgo', 'Países Bajos'], answer: 3 },
+  { type: 'flag', code: 'be', q: '¿De qué país es esta bandera?', options: ['Bélgica', 'Alemania', 'Chad', 'Rumania'], answer: 0 },
+  { type: 'flag', code: 'hr', q: '¿De qué país es esta bandera?', options: ['Serbia', 'Croacia', 'Eslovaquia', 'Eslovenia'], answer: 1 },
+  { type: 'flag', code: 'pl', q: '¿De qué país es esta bandera?', options: ['Indonesia', 'Mónaco', 'Polonia', 'Austria'], answer: 2 },
+  { type: 'flag', code: 'ma', q: '¿De qué país es esta bandera?', options: ['Marruecos', 'Turquía', 'Túnez', 'Vietnam'], answer: 0 },
+  { type: 'flag', code: 'sn', q: '¿De qué país es esta bandera?', options: ['Malí', 'Senegal', 'Camerún', 'Guinea'], answer: 1 },
+  { type: 'flag', code: 'kr', q: '¿De qué país es esta bandera?', options: ['Japón', 'China', 'Corea del Sur', 'Taiwán'], answer: 2 },
+  { type: 'flag', code: 'us', q: '¿De qué país es esta bandera?', options: ['Reino Unido', 'USA', 'Liberia', 'Malasia'], answer: 1 },
+  { type: 'flag', code: 'pe', q: '¿De qué país es esta bandera?', options: ['Perú', 'Canadá', 'Austria', 'Líbano'], answer: 0 },
+  { type: 'flag', code: 'cl', q: '¿De qué país es esta bandera?', options: ['Cuba', 'Chile', 'Texas', 'Puerto Rico'], answer: 1 },
+  { type: 'flag', code: 'cr', q: '¿De qué país es esta bandera?', options: ['Tailandia', 'Costa Rica', 'Corea del Norte', 'Cuba'], answer: 1 },
+];
