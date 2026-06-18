@@ -62,7 +62,7 @@ export function AvatarProvider({ children }) {
         for (let i = 0; i < lb.length; i++) {
           if (i > 0) {
             const p = lb[i - 1], c = lb[i];
-            if (c.total_points !== p.total_points || c.exact_scores !== p.exact_scores || c.correct_results !== p.correct_results) r = i + 1;
+            if (c.total_points !== p.total_points || c.exact_scores !== p.exact_scores || c.correct_results !== p.correct_results) r += 1;
           }
           if (lb[i].username === username) {
             rank = r; points = lb[i].total_points; exact = lb[i].exact_scores; correct = lb[i].correct_results; break;
