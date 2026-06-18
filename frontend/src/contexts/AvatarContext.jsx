@@ -73,10 +73,27 @@ export function AvatarProvider({ children }) {
       // Stats de partidos jugados
       const fp = fpRes.data || [];
       const incorrect = fp.filter((p) => p.points_earned === 0).length;
-      const hits = new Set(fp.filter((p) => p.points_earned >= 2).map((p) => p.match?.id));
       const finishedDesc = (fmRes.data || []).slice().sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
-      let streak = 0;
-      for (const m of finishedDesc) { if (hits.has(m.id)) streak++; else break; }
+
+      // Aciertos de TODOS (paginado) para saber quién es el rey de la racha
+      const hitsByUser = {};
+      let fromP = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { data: pg } = await supabase.from('predictions')
+          .select('user_id, match_id, match:matches!inner(status)')
+          .eq('match.status', 'finished').gte('points_earned', 2)
+          .range(fromP, fromP + 999);
+        if (!pg || pg.length === 0) break;
+        for (const p of pg) { (hitsByUser[p.user_id] ||= new Set()).add(p.match_id); }
+        if (pg.length < 1000) break;
+        fromP += 1000;
+      }
+      const streakOf = (uid) => { let s = 0; for (const m of finishedDesc) { if (hitsByUser[uid]?.has(m.id)) s++; else break; } return s; };
+      let maxStreak = 0, kingId = null;
+      for (const uid in hitsByUser) { const st = streakOf(uid); if (st > maxStreak) { maxStreak = st; kingId = uid; } }
+      const streak = u ? streakOf(u.id) : 0;
+      const isKing = !!u && u.id === kingId && maxStreak >= 2;
 
       setCard({
         loading: false,
@@ -86,7 +103,7 @@ export function AvatarProvider({ children }) {
         initials: u?.avatar_initials,
         rank, points, exact, correct, incorrect,
         total: totalRes.count || 0,
-        streak,
+        streak, isKing,
       });
     } catch {
       setCard((c) => ({ ...(c || {}), loading: false }));
@@ -113,31 +130,55 @@ function Stat({ value, label, color }) {
   );
 }
 
+const CARD_THEMES = {
+  king:    { border: '#ff6a00', glow: 'rgba(249,115,22,0.65)', accent: '#fb923c', band: 'linear-gradient(90deg,#fb923c,#ef4444,#fb923c)', ribbon: '🔥 EN LLAMAS 🔥', ribbonBg: 'linear-gradient(90deg,#ef4444,#fb923c)', ribbonColor: '#fff', medal: '🔥' },
+  gold:    { border: '#FFD700', glow: 'rgba(255,215,0,0.55)', accent: '#FFD700', band: 'linear-gradient(90deg,#FFD700,#FFA500,#FFD700)', ribbon: '🥇 LÍDER DE LA POLLA', ribbonBg: 'linear-gradient(90deg,#FFA500,#FFD700)', ribbonColor: '#3a2e00', medal: '🥇' },
+  silver:  { border: '#C7CDD6', glow: 'rgba(199,205,214,0.5)',  accent: '#C7CDD6', band: 'linear-gradient(90deg,#C7CDD6,#9aa3ad,#C7CDD6)', ribbon: '🥈 SUBCAMPEÓN', ribbonBg: 'linear-gradient(90deg,#9aa3ad,#C7CDD6)', ribbonColor: '#2b2f36', medal: '🥈' },
+  bronze:  { border: '#cd7f32', glow: 'rgba(205,127,50,0.5)',  accent: '#e0a060', band: 'linear-gradient(90deg,#cd7f32,#a8642a,#cd7f32)', ribbon: '🥉 TERCER LUGAR', ribbonBg: 'linear-gradient(90deg,#a8642a,#cd7f32)', ribbonColor: '#3a230d', medal: '🥉' },
+  default: { border: '#FFD100', glow: 'rgba(255,209,0,0.35)', accent: '#FFD100', band: 'linear-gradient(90deg,#FFD100 0%,#FFD100 50%,#0072CE 50%,#0072CE 78%,#EF3340 78%)', ribbon: null, medal: null },
+};
+
 function PlayerCard({ card, onClose }) {
+  const t = card.isKing ? CARD_THEMES.king
+    : card.rank === 1 ? CARD_THEMES.gold
+    : card.rank === 2 ? CARD_THEMES.silver
+    : card.rank === 3 ? CARD_THEMES.bronze
+    : CARD_THEMES.default;
+  const medal = card.isKing ? '🔥' : card.rank <= 3 ? CARD_THEMES[['', 'gold', 'silver', 'bronze'][card.rank]].medal : null;
+
   return (
     <div onClick={onClose}
       style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(5px)',
                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{ width: 300, maxWidth: '92vw', borderRadius: 20, overflow: 'hidden', position: 'relative',
-                 background: '#0a1730', border: '3px solid #FFD100',
-                 boxShadow: '0 0 50px rgba(255,209,0,0.35), 0 24px 60px rgba(0,0,0,0.7)' }}>
+                 background: '#0a1730', border: `3px solid ${t.border}`,
+                 boxShadow: `0 0 55px ${t.glow}, 0 24px 60px rgba(0,0,0,0.7)` }}>
 
-        {/* Banda superior tricolor (Ecuador) */}
-        <div style={{ height: 10, background: 'linear-gradient(90deg,#FFD100 0%,#FFD100 50%,#0072CE 50%,#0072CE 78%,#EF3340 78%)' }} />
+        {/* Cinta especial (campeón / en llamas) */}
+        {t.ribbon && (
+          <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 900, letterSpacing: '0.06em',
+                        padding: '5px 0', background: t.ribbonBg, color: t.ribbonColor }}>
+            {t.ribbon}
+          </div>
+        )}
+
+        {/* Banda superior */}
+        <div style={{ height: 10, background: t.band }} />
 
         {/* Cabecera */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px',
-                      background: 'linear-gradient(180deg, rgba(255,209,0,0.18), transparent)' }}>
+                      background: `linear-gradient(180deg, ${t.glow}, transparent)` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {card.rank != null && (
-              <div style={{ background: '#FFD100', color: '#0a1730', fontWeight: 900, fontSize: 16, borderRadius: 8, padding: '2px 8px', lineHeight: 1.1, textAlign: 'center' }}>
+              <div style={{ background: t.accent, color: '#0a1730', fontWeight: 900, fontSize: 16, borderRadius: 8, padding: '2px 8px', lineHeight: 1.1, textAlign: 'center' }}>
                 #{card.rank}
                 <div style={{ fontSize: 6.5, fontWeight: 800, letterSpacing: '0.08em' }}>POS</div>
               </div>
             )}
+            {medal && <span style={{ fontSize: 22 }}>{medal}</span>}
           </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#FFD100', letterSpacing: '0.05em' }}>🇪🇨 MUNDIAL 2026</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: t.accent, letterSpacing: '0.05em' }}>🇪🇨 MUNDIAL 2026</span>
           <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.55)', fontSize: 18, lineHeight: 1 }}>×</button>
         </div>
 
@@ -177,8 +218,8 @@ function PlayerCard({ card, onClose }) {
             </div>
           </>
         )}
-        {/* Banda inferior tricolor */}
-        <div style={{ height: 8, background: 'linear-gradient(90deg,#FFD100 0%,#FFD100 50%,#0072CE 50%,#0072CE 78%,#EF3340 78%)' }} />
+        {/* Banda inferior */}
+        <div style={{ height: 8, background: t.band }} />
       </div>
     </div>
   );
