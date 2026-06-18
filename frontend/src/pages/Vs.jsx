@@ -127,7 +127,7 @@ function PointsRace({ playerA, playerB, predsA, predsB, matches }) {
   useEffect(() => {
     if (!playing) return;
     if (step >= data.length) { setPlaying(false); return; }
-    const t = setTimeout(() => setStep((s) => s + 1), 1300); // más lento
+    const t = setTimeout(() => setStep((s) => s + 1), 2300); // ritmo suave (como la carrera global)
     return () => clearTimeout(t);
   }, [playing, step, data.length]);
 
@@ -136,6 +136,7 @@ function PointsRace({ playerA, playerB, predsA, predsB, matches }) {
   const cur = step > 0 ? data[step - 1] : null;
   const maxFinal = Math.max(data[data.length - 1].a, data[data.length - 1].b, 1);
   const ROWH = 58;
+  const fechaLabel = cur ? new Date(cur.m.match_date).toLocaleDateString('es-EC', { day: 'numeric', month: 'short', timeZone: 'America/Guayaquil' }) : '';
 
   const ptsLabel = (p) => p === 3 ? '+3 ⭐' : p === 2 ? '+2' : p === 0 ? '+0' : '';
   const ptsColor = (p) => p === 3 ? '#34d399' : p === 2 ? '#60a5fa' : '#f87171';
@@ -158,18 +159,25 @@ function PointsRace({ playerA, playerB, predsA, predsB, matches }) {
         </button>
       </div>
 
-      {/* Partido actual con banderitas */}
-      <div className="text-center mb-3" style={{ minHeight: 22 }}>
+      {/* Partido actual con banderitas + fecha */}
+      <div className="text-center mb-3" style={{ minHeight: 40 }}>
         {cur ? (
-          <span className="inline-flex items-center gap-1.5 text-sm font-bold text-white">
-            {cur.m.home_code && <img src={`https://flagcdn.com/20x15/${cur.m.home_code}.png`} alt="" className="rounded" />}
-            {cur.m.home_team}
-            <span style={{ color: 'rgba(255,255,255,0.3)' }}>vs</span>
-            {cur.m.away_team}
-            {cur.m.away_code && <img src={`https://flagcdn.com/20x15/${cur.m.away_code}.png`} alt="" className="rounded" />}
-          </span>
+          <>
+            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-white">
+              {cur.m.home_code && <img src={`https://flagcdn.com/20x15/${cur.m.home_code}.png`} alt="" className="rounded" />}
+              {cur.m.home_team}
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>vs</span>
+              {cur.m.away_team}
+              {cur.m.away_code && <img src={`https://flagcdn.com/20x15/${cur.m.away_code}.png`} alt="" className="rounded" />}
+            </span>
+            <div className="mt-1">
+              <span className="text-[11px] font-black px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.18)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.4)' }}>
+                📅 {fechaLabel} · Partido {step} de {data.length}
+              </span>
+            </div>
+          </>
         ) : (
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Partido {Math.min(step + 1, data.length)} de {data.length}</span>
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>¡Listo para arrancar!</span>
         )}
       </div>
 
@@ -181,12 +189,12 @@ function PointsRace({ playerA, playerB, predsA, predsB, matches }) {
           return (
             <div key={p.key}
               style={{ position: 'absolute', left: 0, right: 0, height: ROWH - 10, display: 'flex', alignItems: 'center', gap: 8,
-                       transform: `translateY(${rank * ROWH}px)`, transition: 'transform 0.7s cubic-bezier(.4,0,.2,1)' }}>
+                       transform: `translateY(${rank * ROWH}px)`, transition: 'transform 1.4s cubic-bezier(.4,0,.2,1)' }}>
               <Avatar username={p.username} initials={p.initials} displayName={p.name} size={40} colorClass="bg-rose-700" clickable={false}
                 style={isExact ? { animation: 'raceFlash 0.7s ease' } : undefined} />
               <span className="text-xs font-semibold text-white truncate" style={{ width: 80, flexShrink: 0 }}>{p.name.split(' ')[0]}</span>
               <div style={{ flex: 1, height: 26, background: 'rgba(255,255,255,0.05)', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
-                <div style={{ height: '100%', width: `${(p.pts / maxFinal) * 100}%`, background: p.color, borderRadius: 6, transition: 'width 0.7s cubic-bezier(.4,0,.2,1)' }} />
+                <div style={{ height: '100%', width: `${(p.pts / maxFinal) * 100}%`, background: p.color, borderRadius: 6, transition: 'width 1.4s cubic-bezier(.4,0,.2,1)' }} />
               </div>
               <span className="font-black text-base" style={{ color: p.color, width: 28, textAlign: 'right' }}>{p.pts}</span>
               {/* +pts del partido actual */}
