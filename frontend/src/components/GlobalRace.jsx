@@ -119,39 +119,45 @@ export default function GlobalRace() {
         </button>
       </div>
 
-      {/* Pista */}
+      {/* Pista — el orden del DOM es FIJO; solo se anima la posición (sube y baja igual de suave) */}
       <div style={{ position: 'relative', height: visibleCount * ROWH, transition: 'height 0.4s ease', overflow: 'hidden' }}>
-        {standings.map((s, rank) => {
-          const visible = showAll || rank < 10;
-          const last = cur ? pointsMap[s.u.id]?.[cur.id] : undefined;
-          const isExact = last === 3;
-          const barColor = colorByUser[s.u.id];
-          return (
-            <div key={s.u.id}
-              style={{ position: 'absolute', left: 0, right: 0, height: ROWH - 8, display: 'flex', alignItems: 'center', gap: 7,
-                       transform: `translateY(${rank * ROWH}px)`, opacity: visible ? 1 : 0,
-                       pointerEvents: visible ? 'auto' : 'none',
-                       transition: 'transform 1.4s cubic-bezier(.4,0,.2,1), opacity 0.7s ease' }}>
-              <span style={{ width: 18, textAlign: 'center', fontSize: 12, fontWeight: 900, color: rank === 0 ? '#FFD700' : rank === 1 ? '#C7CDD6' : rank === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
-                {rank + 1}
-              </span>
-              <Avatar username={s.u.username} initials={s.u.avatar_initials} displayName={s.u.display_name} size={30} colorClass="bg-rose-700" clickable={false}
-                style={isExact ? { animation: 'raceFlash 0.7s ease' } : undefined} />
-              <span className="text-xs font-semibold text-white truncate" style={{ width: 78, flexShrink: 0 }}>{s.u.display_name?.split(' ')[0]}</span>
-              <div style={{ flex: 1, height: 22, background: 'rgba(255,255,255,0.05)', borderRadius: 6, overflow: 'hidden', minWidth: 20 }}>
-                <div style={{ height: '100%', width: `${(s.pts / maxFinal) * 100}%`, background: barColor, borderRadius: 6, transition: 'width 1.4s cubic-bezier(.4,0,.2,1)' }} />
+        {(() => {
+          const rankByUser = {}, ptsNow = {};
+          standings.forEach((s, rank) => { rankByUser[s.u.id] = rank; ptsNow[s.u.id] = s.pts; });
+          return users.map((u) => {
+            const rank = rankByUser[u.id] ?? 999;
+            const pts = ptsNow[u.id] ?? 0;
+            const visible = showAll || rank < 10;
+            const last = cur ? pointsMap[u.id]?.[cur.id] : undefined;
+            const isExact = last === 3;
+            const barColor = colorByUser[u.id];
+            return (
+              <div key={u.id}
+                style={{ position: 'absolute', left: 0, right: 0, height: ROWH - 8, display: 'flex', alignItems: 'center', gap: 7,
+                         transform: `translateY(${rank * ROWH}px)`, opacity: visible ? 1 : 0,
+                         pointerEvents: visible ? 'auto' : 'none', zIndex: visible ? 1 : 0,
+                         transition: 'transform 1.4s cubic-bezier(.4,0,.2,1), opacity 0.7s ease' }}>
+                <span style={{ width: 18, textAlign: 'center', fontSize: 12, fontWeight: 900, color: rank === 0 ? '#FFD700' : rank === 1 ? '#C7CDD6' : rank === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
+                  {rank + 1}
+                </span>
+                <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={30} colorClass="bg-rose-700" clickable={false}
+                  style={isExact ? { animation: 'raceFlash 0.7s ease' } : undefined} />
+                <span className="text-xs font-semibold text-white truncate" style={{ width: 78, flexShrink: 0 }}>{u.display_name?.split(' ')[0]}</span>
+                <div style={{ flex: 1, height: 22, background: 'rgba(255,255,255,0.05)', borderRadius: 6, overflow: 'hidden', minWidth: 20 }}>
+                  <div style={{ height: '100%', width: `${(pts / maxFinal) * 100}%`, background: barColor, borderRadius: 6, transition: 'width 1.4s cubic-bezier(.4,0,.2,1)' }} />
+                </div>
+                <span className="font-black text-sm" style={{ color: barColor, width: 26, textAlign: 'right', flexShrink: 0 }}>{pts}</span>
+                <div style={{ width: 34, flexShrink: 0, position: 'relative', height: 18 }}>
+                  {cur && last !== undefined && (
+                    <span key={step} style={{ position: 'absolute', right: 0, fontSize: 11, fontWeight: 900, color: ptsColor(last), animation: 'racePop 1.3s ease forwards' }}>
+                      {ptsLabel(last)}
+                    </span>
+                  )}
+                </div>
               </div>
-              <span className="font-black text-sm" style={{ color: barColor, width: 26, textAlign: 'right', flexShrink: 0 }}>{s.pts}</span>
-              <div style={{ width: 34, flexShrink: 0, position: 'relative', height: 18 }}>
-                {cur && last !== undefined && (
-                  <span key={step + s.u.id} style={{ position: 'absolute', right: 0, fontSize: 11, fontWeight: 900, color: ptsColor(last), animation: 'racePop 1.3s ease forwards' }}>
-                    {ptsLabel(last)}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
       </div>
     </div>
   );
