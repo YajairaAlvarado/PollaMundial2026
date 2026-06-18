@@ -40,8 +40,8 @@ function SingleConnToast({ alert, onDismiss, onNudge }) {
     >
       <div className="relative flex-shrink-0">
         <Avatar username={alert.username} initials={alert.avatar_initials} displayName={alert.display_name}
-          size={50} colorClass={AVATAR_COLORS[colorIdx]} clickable={false} />
-        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-400" style={{ border: '2.5px solid #0D1B30' }} />
+          size={50} colorClass={AVATAR_COLORS[colorIdx]} clickable={true} />
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-400" style={{ border: '2.5px solid #0D1B30', pointerEvents: 'none' }} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-white font-black leading-tight truncate" style={{ fontSize: 17 }}>{alert.display_name}</p>

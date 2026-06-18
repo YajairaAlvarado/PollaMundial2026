@@ -132,9 +132,9 @@ function Stat({ value, label, color }) {
 
 const CARD_THEMES = {
   king:    { border: '#ff6a00', glow: 'rgba(249,115,22,0.65)', accent: '#fb923c', band: 'linear-gradient(90deg,#fb923c,#ef4444,#fb923c)', ribbon: '🔥 EN LLAMAS 🔥', ribbonBg: 'linear-gradient(90deg,#ef4444,#fb923c)', ribbonColor: '#fff', medal: '🔥' },
-  gold:    { border: '#FFD700', glow: 'rgba(255,215,0,0.55)', accent: '#FFD700', band: 'linear-gradient(90deg,#FFD700,#FFA500,#FFD700)', ribbon: '🥇 LÍDER DE LA POLLA', ribbonBg: 'linear-gradient(90deg,#FFA500,#FFD700)', ribbonColor: '#3a2e00', medal: '🥇' },
-  silver:  { border: '#C7CDD6', glow: 'rgba(199,205,214,0.5)',  accent: '#C7CDD6', band: 'linear-gradient(90deg,#C7CDD6,#9aa3ad,#C7CDD6)', ribbon: '🥈 SUBCAMPEÓN', ribbonBg: 'linear-gradient(90deg,#9aa3ad,#C7CDD6)', ribbonColor: '#2b2f36', medal: '🥈' },
-  bronze:  { border: '#cd7f32', glow: 'rgba(205,127,50,0.5)',  accent: '#e0a060', band: 'linear-gradient(90deg,#cd7f32,#a8642a,#cd7f32)', ribbon: '🥉 TERCER LUGAR', ribbonBg: 'linear-gradient(90deg,#a8642a,#cd7f32)', ribbonColor: '#3a230d', medal: '🥉' },
+  gold:    { border: '#FFD700', glow: 'rgba(255,215,0,0.55)', accent: '#FFD700', band: 'linear-gradient(90deg,#FFD700,#FFA500,#FFD700)', ribbon: '🥇 LÍDER ACTUAL · ORO TEMPORAL', ribbonBg: 'linear-gradient(90deg,#FFA500,#FFD700)', ribbonColor: '#3a2e00', medal: '🥇' },
+  silver:  { border: '#C7CDD6', glow: 'rgba(199,205,214,0.5)',  accent: '#C7CDD6', band: 'linear-gradient(90deg,#C7CDD6,#9aa3ad,#C7CDD6)', ribbon: '🥈 2° LUGAR · PLATA TEMPORAL', ribbonBg: 'linear-gradient(90deg,#9aa3ad,#C7CDD6)', ribbonColor: '#2b2f36', medal: '🥈' },
+  bronze:  { border: '#cd7f32', glow: 'rgba(205,127,50,0.5)',  accent: '#e0a060', band: 'linear-gradient(90deg,#cd7f32,#a8642a,#cd7f32)', ribbon: '🥉 3° LUGAR · BRONCE TEMPORAL', ribbonBg: 'linear-gradient(90deg,#a8642a,#cd7f32)', ribbonColor: '#3a230d', medal: '🥉' },
   default: { border: '#FFD100', glow: 'rgba(255,209,0,0.35)', accent: '#FFD100', band: 'linear-gradient(90deg,#FFD100 0%,#FFD100 50%,#0072CE 50%,#0072CE 78%,#EF3340 78%)', ribbon: null, medal: null },
 };
 
