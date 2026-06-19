@@ -59,6 +59,17 @@ export default function Album() {
     })();
   }, [owned]);
 
+  // Reconciliación optimista: mi propio conteo refleja al instante lo que acabo de ganar
+  const displayRanking = useMemo(() => {
+    if (!ranking) return null;
+    let list = ranking.map((r) => ({ ...r }));
+    const mine = list.find((r) => r.username === me);
+    if (mine) mine.count = Math.max(mine.count, owned);
+    else if (owned > 0 && me) list.push({ username: me, count: owned, displayName: USER_BY_NAME[me]?.displayName || me });
+    list.sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
+    return list.map((r, i) => ({ ...r, rank: i + 1 }));
+  }, [ranking, owned, me]);
+
   if (!beta) return <Navigate to="/dashboard" replace />;
   if (loading) {
     return <div className="min-h-[60vh] flex items-center justify-center"><LoadingSpinner size="lg" text="Abriendo tu álbum…" /></div>;
@@ -115,7 +126,7 @@ export default function Album() {
       </div>
 
       {/* Ranking de coleccionistas */}
-      {ranking && ranking.length > 0 && (
+      {displayRanking && displayRanking.length > 0 && (
         <div className="rounded-2xl p-4 mb-5" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)' }}>
           <h2 className="font-black text-white mb-3 flex items-center gap-2" style={{ fontSize: 15 }}>🏅 Top coleccionistas</h2>
 
@@ -126,7 +137,7 @@ export default function Album() {
 
           {(() => {
             const q = rankQ.trim().toLowerCase();
-            const filtered = q ? ranking.filter((r) => r.displayName.toLowerCase().includes(q)) : ranking;
+            const filtered = q ? displayRanking.filter((r) => r.displayName.toLowerCase().includes(q)) : displayRanking;
             const shown = filtered.slice(0, rankLimit);
             return (
           <div className="space-y-1.5">
