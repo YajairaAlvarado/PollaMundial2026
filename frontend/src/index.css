@@ -245,6 +245,21 @@ body {
   50%     { transform: scale(1.06); }
 }
 
+/* Confeti tipo "papelitos" con vaivén lateral (reemplaza al confeti de emojis) */
+@keyframes confettiSway {
+  0%   { transform: translate(0, -24px) rotate(0deg); opacity: 1; }
+  20%  { transform: translate(var(--sway, 14px), 70px) rotate(80deg); }
+  50%  { transform: translate(calc(var(--sway, 14px) * -1), 180px) rotate(220deg); }
+  80%  { transform: translate(var(--sway, 14px), 290px) rotate(380deg); }
+  100% { transform: translate(0, 380px) rotate(480deg); opacity: 0; }
+}
+@keyframes trophyPop {
+  0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+  55%  { transform: scale(1.25) rotate(8deg); opacity: 1; }
+  75%  { transform: scale(0.95) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
 /* Álbum: revelado de ficha ganada (estilo apertura de sobre) */
 @keyframes albumReveal {
   0%   { transform: scale(0.2) rotate(-25deg); opacity: 0; filter: brightness(2.2); }

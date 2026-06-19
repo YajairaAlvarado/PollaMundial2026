@@ -7,10 +7,23 @@ export const QUESTION_MS = 7000;   // 7 seg por pregunta
 export const COUNTDOWN_MS = 5000;  // cuenta regresiva antes de empezar
 export const CHALLENGE_TIMEOUT_MS = 30000; // tiempo máximo esperando respuesta al reto
 
+function shuffleIdx(idx) {
+  const a = idx.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+// Siempre garantiza 1 pregunta de la firma (cat 'andersen') y el resto de fútbol.
 function pickQuestions(n) {
-  const idx = [...Array(TRIVIA.length).keys()];
-  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
-  return idx.slice(0, n);
+  const andersenIdx = [], footballIdx = [];
+  TRIVIA.forEach((q, i) => (q.cat === 'andersen' ? andersenIdx : footballIdx).push(i));
+
+  const picked = [];
+  if (andersenIdx.length) picked.push(shuffleIdx(andersenIdx)[0]);
+  const footballNeeded = n - picked.length;
+  picked.push(...shuffleIdx(footballIdx).slice(0, footballNeeded));
+
+  return shuffleIdx(picked);
 }
 
 export function useTrivia(userId, currentUser) {

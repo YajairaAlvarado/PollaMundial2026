@@ -257,6 +257,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
   const [target, setTarget] = useState(null);
   const [sentChallenge, setSentChallenge] = useState(null); // id del usuario al que ya le mandé reto (cooldown)
   const [pos,    setPos]    = useState(null); // null = centro inferior por defecto (se reinicia al recargar)
+  const [h2h,    setH2h]    = useState({}); // { otherUserId: { mine, opp } } — historial de trivia
   const ref = useRef(null);
   const drag = useRef({ on: false, moved: false, offX: 0, offY: 0 });
 
@@ -268,6 +269,25 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
       onExternalTargetConsumed?.();
     }
   }, [externalTarget, onExternalTargetConsumed]);
+
+  // Historial de duelos de trivia con cada persona, para mostrar "2-0" y dar revancha.
+  // Se carga al abrir el panel (no falla nada si la tabla aún no tiene datos).
+  useEffect(() => {
+    if (!open || !currentUser?.id) return;
+    (async () => {
+      const { data } = await supabase.from('trivia_results')
+        .select('a_user_id, b_user_id, winner_user_id')
+        .or(`a_user_id.eq.${currentUser.id},b_user_id.eq.${currentUser.id}`);
+      const map = {};
+      for (const r of (data || [])) {
+        const oppId = r.a_user_id === currentUser.id ? r.b_user_id : r.a_user_id;
+        const slot = (map[oppId] ||= { mine: 0, opp: 0 });
+        if (r.winner_user_id === currentUser.id) slot.mine++;
+        else if (r.winner_user_id === oppId) slot.opp++;
+      }
+      setH2h(map);
+    })();
+  }, [open, currentUser?.id]);
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setTarget(null); } };
@@ -313,7 +333,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
       {open && (
         <div className="rounded-2xl overflow-hidden shadow-2xl"
           style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 10,
-                   background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', minWidth: 290,
+                   background: '#0f172a', border: '1px solid rgba(167,139,250,0.25)', width: 400, maxWidth: '92vw',
                    maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
           {target ? (
             <NudgeSender target={target} currentUser={currentUser} onSend={onSendNudge} onClose={closeAll} />
@@ -327,6 +347,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
                 ? <p className="px-4 py-4 text-xs text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>Nadie más conectado</p>
                 : sortedOnline.map((u) => {
                   const ci = (u.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length;
+                  const rec = h2h[u.id]; // historial de trivia con esta persona
                   return (
                     <button key={u.id} onClick={() => setTarget(u)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5"
@@ -335,7 +356,16 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
                         <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={42} colorClass={AVATAR_COLORS[ci]} clickable={true} />
                         <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-[#0f172a]" />
                       </div>
-                      <span className="text-sm font-bold flex-1 text-white" style={{ lineHeight: 1.15, wordBreak: 'break-word' }}>{u.display_name}</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-bold text-white block" style={{ lineHeight: 1.15, wordBreak: 'break-word' }}>{u.display_name}</span>
+                        {rec && (rec.mine + rec.opp > 0) && (
+                          <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ background: rec.mine >= rec.opp ? 'rgba(52,211,153,0.16)' : 'rgba(248,113,113,0.16)',
+                                     color: rec.mine >= rec.opp ? '#34d399' : '#f87171' }}>
+                            🆚 {rec.mine}-{rec.opp} {rec.mine > rec.opp ? '🔥' : rec.mine < rec.opp ? '😤 ¡revancha!' : '🤝'}
+                          </span>
+                        )}
+                      </div>
                       <span className="flex-shrink-0 text-[11px] font-black px-2 py-1.5 rounded-full"
                         style={{ background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.5)' }}>
                         👈 Guiño

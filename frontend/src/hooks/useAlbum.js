@@ -64,16 +64,27 @@ export function useAlbum(user) {
 
   // Registrar resultado del reto: 'win' | 'lose' | 'timeout'.
   // NO cierra el popup (para mostrar la animación); el cierre lo hace dismissChallenge.
+  // Para 'win' usamos un RPC atómico (chequea el límite de 3/día y otorga la
+  // ficha en una sola transacción con bloqueo) para que dos pestañas/sesiones
+  // abiertas a la vez no puedan colarse y superar el límite diario.
   const recordResult = useCallback(async (result, target) => {
     const nowIso = new Date().toISOString();
+    if (result === 'win' && target) {
+      const { data: awarded } = await supabase.rpc('try_award_album_sticker', {
+        p_username: username, p_target: target.username,
+      });
+      if (awarded) {
+        setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]);
+        setOwnedSet((prev) => new Set(prev).add(target.username));
+      } else {
+        // Otra sesión ya alcanzó el límite justo antes — recargamos el estado real.
+        load();
+      }
+      return;
+    }
     setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]); // optimista
     await supabase.from('album_challenges').insert({ username, result, target_username: target?.username || null });
-    if (result === 'win' && target) {
-      setOwnedSet((prev) => new Set(prev).add(target.username));
-      await supabase.from('album_stickers')
-        .upsert({ owner_username: username, sticker_username: target.username }, { onConflict: 'owner_username,sticker_username' });
-    }
-  }, [username]);
+  }, [username, load]);
 
   const dismissChallenge = useCallback(() => setChallenge(null), []);
 

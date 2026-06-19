@@ -67,6 +67,7 @@ export function buildRoster(avatars) {
       initials: u.avatarInitials,
       isDT: isDT(u.username),
       number: stickerNumber(u.username),
+      sex: u.sex || null,
       photo: avatars[u.username.toLowerCase()],
     }));
 }
@@ -114,6 +115,15 @@ export function generateChallenge(roster, ownedSet, self) {
 
   const target = weightedPick(missing);
   const others = roster.filter((p) => p.username !== target.username);
+  // En "foto→nombre" y "nombre→foto" el sexo de la foto/nombre es una pista
+  // visual gratis, así que los distractores deben ser del mismo sexo que el
+  // target (si hay suficientes candidatos; si no, se completa con cualquiera).
+  const sameSex = others.filter((p) => p.sex && p.sex === target.sex);
+  const pickDistractors = (n) => {
+    if (sameSex.length >= n) return sample(sameSex, n);
+    const rest = others.filter((p) => !sameSex.includes(p));
+    return [...sameSex, ...sample(rest, n - sameSex.length)];
+  };
 
   const types = [];
   if (others.length >= 3) types.push('photo-name');
@@ -122,13 +132,13 @@ export function generateChallenge(roster, ownedSet, self) {
   const type = types[Math.floor(Math.random() * types.length)];
 
   if (type === 'photo-name') {
-    const distractors = sample(others, 3);
+    const distractors = pickDistractors(3);
     const options = shuffle([target, ...distractors]).map((p) => ({ username: p.username, label: p.displayName }));
     return { type, target, options, answer: target.username };
   }
 
   if (type === 'name-photo') {
-    const distractors = sample(others, 2);
+    const distractors = pickDistractors(2);
     const options = shuffle([target, ...distractors]); // se renderizan como cromos sin nombre
     return { type, target, options, answer: target.username };
   }

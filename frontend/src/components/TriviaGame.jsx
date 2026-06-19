@@ -19,20 +19,30 @@ const Shell = ({ children }) => (
   </div>
 );
 
-const CONFETTI = ['🎉','⚽','🏆','✨','🥳','🔥','🎊'];
+const CONFETTI_COLORS = ['#FFD100', '#34d399', '#60a5fa', '#f472b6', '#a78bfa', '#fb923c', '#f87171'];
 
+// Confeti de "papelitos" rectangulares con vaivén lateral — se ve mucho más
+// como confeti real que los emojis cayendo en línea recta.
 function Confetti() {
-  const pieces = useMemo(() => Array.from({ length: 28 }, (_, i) => ({
+  const pieces = useMemo(() => Array.from({ length: 46 }, () => ({
     left: Math.random() * 100,
-    delay: Math.random() * 0.8,
-    dur: 1.6 + Math.random() * 1.4,
-    emoji: CONFETTI[i % CONFETTI.length],
+    delay: Math.random() * 0.5,
+    dur: 2 + Math.random() * 1.6,
+    sway: 10 + Math.random() * 26,
+    size: 6 + Math.random() * 6,
+    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+    round: Math.random() > 0.6,
   })), []);
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 2 }}>
       {pieces.map((p, i) => (
-        <span key={i} style={{ position: 'absolute', top: -20, left: `${p.left}%`, fontSize: 22,
-          animation: `confettiFall ${p.dur}s ${p.delay}s ease-in infinite` }}>{p.emoji}</span>
+        <span key={i} style={{
+          position: 'absolute', top: -24, left: `${p.left}%`,
+          width: p.size, height: p.size * 1.6, background: p.color,
+          borderRadius: p.round ? '50%' : 2,
+          animation: `confettiSway ${p.dur}s ${p.delay}s ease-in forwards`,
+          '--sway': `${p.sway}px`,
+        }} />
       ))}
     </div>
   );
@@ -83,6 +93,8 @@ export default function TriviaGame({ match, currentUser, onClose }) {
       const win  = mine > opp;
       const tie  = mine === opp;
       const oppName = amSender ? nameOf(m?.to_username) : nameOf(m?.from_username, m?.from_name);
+      const myId  = currentUser.id;
+      const oppId = amSender ? m.to_user_id : m.from_user_id;
 
       // Guardar récord (solo el retador inserta, para no duplicar)
       if (amSender) {
@@ -94,7 +106,23 @@ export default function TriviaGame({ match, currentUser, onClose }) {
           winner_user_id: winnerId,
         });
       }
-      setResult({ mine, opp, win, tie, oppName });
+
+      // Historial GLOBAL entre estos dos (todas las partidas previas, sin contar esta).
+      // Cada lado lo calcula con lo que ya conoce de esta partida (mine/win/tie) para
+      // que no dependa de si el insert del retador ya llegó a la base (evita carreras).
+      let h2hMine = win ? 1 : 0;
+      let h2hOpp  = (!win && !tie) ? 1 : 0;
+      try {
+        const { data: past } = await supabase.from('trivia_results').select('winner_user_id, match_id')
+          .or(`and(a_user_id.eq.${myId},b_user_id.eq.${oppId}),and(a_user_id.eq.${oppId},b_user_id.eq.${myId})`);
+        for (const r of (past || [])) {
+          if (r.match_id === m.id) continue;
+          if (r.winner_user_id === myId) h2hMine++;
+          else if (r.winner_user_id === oppId) h2hOpp++;
+        }
+      } catch { /* si falla, mostramos solo el resultado de esta partida */ }
+
+      setResult({ mine, opp, win, tie, oppName, h2h: { mine: h2hMine, opp: h2hOpp } });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elapsed, totalMs, finished]);
@@ -115,7 +143,9 @@ export default function TriviaGame({ match, currentUser, onClose }) {
     return <Shell>
       {result?.win && <Confetti />}
       <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <p style={{ fontSize: 56 }}>{result ? (result.tie ? '🤝' : result.win ? '🏆' : '😢') : '⏳'}</p>
+        <p style={{ fontSize: 56, display: 'inline-block', animation: result ? 'trophyPop 0.6s cubic-bezier(.2,.7,.2,1) both' : undefined }}>
+          {result ? (result.tie ? '🤝' : result.win ? '🏆' : '😢') : '⏳'}
+        </p>
         <p className="text-white" style={{ fontSize: 24, fontWeight: 900 }}>
           {result ? (result.tie ? '¡Empate!' : result.win ? '¡GANASTE!' : 'Perdiste') : 'Calculando…'}
         </p>
@@ -126,6 +156,13 @@ export default function TriviaGame({ match, currentUser, onClose }) {
               <div style={{ fontSize: 26, color: 'rgba(255,255,255,0.3)', alignSelf: 'center' }}>–</div>
               <div><div style={{ fontSize: 30, fontWeight: 900, color: '#f87171' }}>{result.opp}</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{result.oppName}</div></div>
             </div>
+            {result.h2h && (result.h2h.mine + result.h2h.opp > 0) && (
+              <div style={{ margin: '4px 0 16px', padding: '8px 14px', borderRadius: 12, display: 'inline-flex',
+                            alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>🆚 Historial total</span>
+                <span style={{ fontSize: 14, fontWeight: 900, color: '#a78bfa' }}>{result.h2h.mine} – {result.h2h.opp}</span>
+              </div>
+            )}
           </>
         )}
         <button onClick={onClose} className="mt-2 w-full py-3 rounded-2xl font-black"
