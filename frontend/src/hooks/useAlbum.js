@@ -45,6 +45,22 @@ export function useAlbum(user) {
 
   useEffect(() => { load(); }, [load]);
 
+  // Sincronizar entre dispositivos/pestañas: si gano una ficha en el celular,
+  // la PC (y cualquier otra sesión abierta) se entera sola sin necesitar F5.
+  useEffect(() => {
+    if (!beta || !username) return;
+    const channel = supabase
+      .channel('album-' + username)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'album_challenges', filter: `username=eq.${username}` }, (p) => {
+        setChallenges((prev) => (prev.some((c) => c.created_at === p.new.created_at) ? prev : [p.new, ...prev]));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'album_stickers', filter: `owner_username=eq.${username}` }, (p) => {
+        setOwnedSet((prev) => new Set(prev).add(p.new.sticker_username));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [beta, username]);
+
   // Abrir un reto si corresponde (respeta 3/día y cooldown). No duplica si ya hay uno.
   const openChallenge = useCallback(() => {
     setChallenge((prev) => {
