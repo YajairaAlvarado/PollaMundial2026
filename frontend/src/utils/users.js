@@ -72,7 +72,7 @@ const EMPLOYEE_DATA = [
   { username: 'grace.lopez', password: '0923194104', department: 'Impuestos' },
   { username: 'jeancarlos.marcillo', password: '0926801606', department: 'Consultoria' },
   { username: 'joao.marcillo', password: '0951981778', department: 'Impuestos' },
-  { username: 'romina.maridueña', password: '0950359562', department: 'Patrocinio' },
+  { username: 'romina.mariduena', password: '0950359562', department: 'Patrocinio' },
   { username: 'karla.matamoros', password: '0952464048', department: 'Capital Humano' },
   { username: 'amy.mendoza', password: '0952829935', department: 'Impuestos' },
   { username: 'alejandro.merchan', password: '0956709836', department: 'Contabilidad/Finanzas' },
