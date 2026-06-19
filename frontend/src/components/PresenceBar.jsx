@@ -335,7 +335,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
                         <Avatar username={u.username} initials={u.avatar_initials} displayName={u.display_name} size={42} colorClass={AVATAR_COLORS[ci]} clickable={true} />
                         <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-[#0f172a]" />
                       </div>
-                      <span className="text-sm font-bold truncate flex-1 text-white">{u.display_name}</span>
+                      <span className="text-sm font-bold flex-1 text-white" style={{ lineHeight: 1.15, wordBreak: 'break-word' }}>{u.display_name}</span>
                       <span className="flex-shrink-0 text-[11px] font-black px-2 py-1.5 rounded-full"
                         style={{ background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.5)' }}>
                         👈 Guiño
