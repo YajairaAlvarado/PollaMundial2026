@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck, BookOpen } from 'lucide-react';
 import { isAlbumBeta } from '../utils/album';
+import { useAlbumCtx } from '../contexts/AlbumContext';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
 import { currentVersionLabel } from '../hooks/useVersionCheck';
@@ -16,6 +17,8 @@ const AVATAR_COLORS = [
 
 export default function Navbar({ unread = 0, onBellOpen }) {
   const { user, logout } = useAuth();
+  const album            = useAlbumCtx();
+  const albumAlert       = !!album?.canPlayNow;
   const location         = useLocation();
   const navigate         = useNavigate();
   const [menuOpen,    setMenuOpen]    = useState(false);
@@ -30,7 +33,7 @@ export default function Navbar({ unread = 0, onBellOpen }) {
     { to: '/vs',          label: 'Vs 👊⚡👊',   icon: null },
     { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
     ...(isAlbumBeta(user?.username) ? [
-      { to: '/album',   label: 'Álbum 📒', icon: <BookOpen size={14} /> },
+      { to: '/album',   label: 'Álbum 📒', icon: <BookOpen size={14} />, alert: albumAlert },
     ] : []),
     ...(user?.isAdmin ? [
       { to: '/admin',   label: 'Admin',  icon: <ShieldCheck size={14} /> },
@@ -74,6 +77,9 @@ export default function Navbar({ unread = 0, onBellOpen }) {
               >
                 {link.icon}
                 {link.label}
+                {link.alert && (
+                  <span className="live-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFD100', boxShadow: '0 0 8px #FFD100', marginLeft: 2 }} />
+                )}
                 {isActive(link.to) && (
                   <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: '#E4002B' }} />
                 )}
@@ -135,11 +141,14 @@ export default function Navbar({ unread = 0, onBellOpen }) {
             </div>
 
             <button
-              className="md:hidden p-2 rounded-lg transition-all"
+              className="md:hidden p-2 rounded-lg transition-all relative"
               style={{ color: 'rgba(255,255,255,0.5)' }}
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? <X size={18} /> : <Menu size={18} />}
+              {albumAlert && !menuOpen && (
+                <span className="live-dot absolute top-1 right-1" style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFD100', boxShadow: '0 0 8px #FFD100' }} />
+              )}
             </button>
           </div>
         </div>
@@ -161,6 +170,9 @@ export default function Navbar({ unread = 0, onBellOpen }) {
               >
                 {link.icon}
                 {link.label}
+                {link.alert && (
+                  <span className="live-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFD100', boxShadow: '0 0 8px #FFD100' }} />
+                )}
               </Link>
             ))}
           </div>

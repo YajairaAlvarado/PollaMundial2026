@@ -20,6 +20,15 @@ export function useAlbum(user) {
   const total  = roster.length;
   const owned  = roster.filter((p) => ownedSet.has(p.username)).length; // solo cuenta fichas vigentes
   const completed = total > 0 && owned >= total;
+  const missing = useMemo(
+    () => roster.filter((p) => p.username !== username && !ownedSet.has(p.username)),
+    [roster, username, ownedSet]
+  );
+
+  // Tick para reevaluar la disponibilidad cuando se vence el cooldown
+  const [, setTick] = useState(0);
+  useEffect(() => { const id = setInterval(() => setTick((t) => t + 1), 10000); return () => clearInterval(id); }, []);
+  const canPlayNow = beta && !loading && ready && canPlay(challenges, missing.length);
 
   // Cargar fichas + intentos
   const load = useCallback(async () => {
@@ -36,16 +45,22 @@ export function useAlbum(user) {
 
   useEffect(() => { load(); }, [load]);
 
-  // Decidir si mostrar un reto al abrir (cuando ya cargó todo)
+  // Abrir un reto si corresponde (respeta 3/día y cooldown). No duplica si ya hay uno.
+  const openChallenge = useCallback(() => {
+    setChallenge((prev) => {
+      if (prev) return prev;
+      if (!canPlay(challenges, missing.length)) return prev;
+      return generateChallenge(roster, ownedSet, username) || prev;
+    });
+  }, [challenges, missing, roster, ownedSet, username]);
+
+  // Trigger 1: al cargar/recargar la página (una sola vez)
   useEffect(() => {
-    if (!beta || loading || !ready || challenge || shownRef.current) return;
-    const missing = roster.filter((p) => p.username !== username && !ownedSet.has(p.username));
-    if (canPlay(challenges, missing.length)) {
-      const c = generateChallenge(roster, ownedSet, username);
-      if (c) { shownRef.current = true; setChallenge(c); }
-    }
+    if (!beta || loading || !ready || shownRef.current) return;
+    shownRef.current = true;
+    openChallenge();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beta, loading, ready, roster, ownedSet, challenges]);
+  }, [beta, loading, ready]);
 
   // Registrar resultado del reto: 'win' | 'lose' | 'timeout'.
   // NO cierra el popup (para mostrar la animación); el cierre lo hace dismissChallenge.
@@ -64,6 +79,6 @@ export function useAlbum(user) {
 
   return {
     beta, loading, ready, roster, ownedSet, total, owned, completed,
-    challenge, challenges, recordResult, dismissChallenge, reload: load,
+    challenge, challenges, canPlayNow, openChallenge, recordResult, dismissChallenge, reload: load,
   };
 }

@@ -20,8 +20,11 @@ function fmt(ms) {
 export default function Album() {
   const { user } = useAuth();
   const me = (user?.username || '').toLowerCase();
-  const { beta, loading, roster, ownedSet, total, owned, completed, challenges } = useAlbumCtx();
+  const { beta, loading, roster, ownedSet, total, owned, completed, challenges, openChallenge } = useAlbumCtx();
   const groups = useMemo(() => rosterByDepartment(roster), [roster]);
+
+  // Trigger 2: al entrar a la sección Álbum, abrir el reto si hay oportunidad
+  useEffect(() => { if (!loading) openChallenge(); }, [loading, openChallenge]);
 
   // ¿Quién tiene MI ficha en su álbum?
   const [holders, setHolders] = useState(null);
