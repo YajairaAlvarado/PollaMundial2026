@@ -6,7 +6,7 @@ export const ALBUM_BETA_USERS = ['daniel.leon', 'kevin.castro'];
 export const isAlbumBeta = (username) => ALBUM_ENABLED || ALBUM_BETA_USERS.includes((username || '').toLowerCase());
 
 // ── Reglas (fáciles de cambiar a futuro) ───────────────────────────────────
-export const DAILY_LIMIT = 3;                   // oportunidades por día
+export const DAILY_LIMIT = 4;                   // oportunidades por día
 export const COOLDOWN_MS  = 60 * 60 * 1000;     // 1 hora entre intentos
 export const ANSWER_MS    = 10000;              // 10 seg para contestar
 export const ALBUM_POINTS = 3;                  // puntos al completar (aún NO oficial)
