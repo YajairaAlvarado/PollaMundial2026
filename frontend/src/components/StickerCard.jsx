@@ -11,16 +11,16 @@ import React from 'react';
 //   onClick
 
 const SIZES = {
-  sm: { w: 96,  nameFs: 10, deptFs: 7.5,  pad: 5 },
-  md: { w: 130, nameFs: 12, deptFs: 8.5,  pad: 6 },
-  lg: { w: 200, nameFs: 16, deptFs: 11,   pad: 8 },
+  sm: { w: 96,  nameFs: 10,   deptFs: 7.5,  pad: 5, nameH: 26 },
+  md: { w: 134, nameFs: 12.5, deptFs: 9,    pad: 7, nameH: 32 },
+  lg: { w: 200, nameFs: 16,   deptFs: 11,   pad: 8, nameH: 40 },
 };
 
 const NORMAL_BAND = 'linear-gradient(90deg,#FFD100 0%,#FFD100 45%,#0072CE 45%,#0072CE 74%,#EF3340 74%)';
 const DT_BAND     = 'linear-gradient(90deg,#FFD700,#FFA500,#FFD700,#FFA500)';
 
 export default function StickerCard({
-  player, owned = true, hideName = false, hideDept = false,
+  player, owned = true, hideName = false, hideDept = false, showNumber = false,
   size = 'md', selectable = false, selected = false, wrong = false,
   onClick, style = {},
 }) {
@@ -62,6 +62,14 @@ export default function StickerCard({
       {/* Foto / silueta */}
       <div style={{ position: 'relative', aspectRatio: '1 / 1', overflow: 'hidden',
                     background: `linear-gradient(160deg, ${dt ? 'rgba(255,215,0,0.25)' : 'rgba(255,209,0,0.18)'} 0%, rgba(0,114,206,0.18) 55%, #0a1730 100%)` }}>
+        {showNumber && player.number != null && (
+          <span style={{ position: 'absolute', top: 5, left: 5, zIndex: 3, fontSize: Math.max(9, s.w * 0.085),
+                         fontWeight: 900, color: dt ? '#3a2e00' : '#0a1730', lineHeight: 1,
+                         background: dt ? 'linear-gradient(90deg,#FFD700,#FFA500)' : '#FFD100',
+                         padding: '2px 5px', borderRadius: 6, boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+            {player.number}
+          </span>
+        )}
         {dt && owned && <span style={{ position: 'absolute', top: 4, right: 6, fontSize: s.w * 0.16, zIndex: 2 }}>⭐</span>}
         {owned || hideName ? (
           <img src={player.photo} alt={hideName ? 'cromo' : player.displayName}
@@ -81,7 +89,9 @@ export default function StickerCard({
         <div style={{ background: '#0a1730', padding: `${s.pad}px ${s.pad + 2}px`, textAlign: 'center', minHeight: hideName && hideDept ? s.pad * 2 + 6 : undefined }}>
           {!hideName && (
             <div style={{ color: owned ? 'white' : 'rgba(255,255,255,0.35)', fontWeight: 900,
-                          fontSize: s.nameFs, lineHeight: 1.05, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          fontSize: s.nameFs, lineHeight: 1.1, minHeight: s.nameH,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          wordBreak: 'break-word', hyphens: 'auto' }}>
               {owned ? player.displayName : '— — —'}
             </div>
           )}

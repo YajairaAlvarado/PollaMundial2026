@@ -34,6 +34,23 @@ export const DEPARTMENT_ORDER = [
 
 export const isDT = (username) => Object.values(DEPARTMENT_DTS).includes((username || '').toLowerCase());
 
+// ── Número de ficha fijo por persona (estilo Panini) ─────────────────────────
+// Basado en TODOS los usuarios (no en quién tiene foto), para que el número
+// nunca cambie aunque después se suban más fotos. Orden: depto → DT → alfabético.
+export const STICKER_NUMBER = (() => {
+  const byDept = {};
+  for (const u of USERS) (byDept[u.department] ||= []).push(u);
+  for (const d in byDept) {
+    byDept[d].sort((a, b) => (isDT(b.username) - isDT(a.username)) || a.displayName.localeCompare(b.displayName));
+  }
+  const order = [...DEPARTMENT_ORDER, ...Object.keys(byDept).filter((d) => !DEPARTMENT_ORDER.includes(d))];
+  const map = {}; let n = 1;
+  for (const d of order) for (const u of (byDept[d] || [])) map[u.username] = n++;
+  return map;
+})();
+export const stickerNumber = (username) => STICKER_NUMBER[(username || '').toLowerCase()] || STICKER_NUMBER[username];
+export const TOTAL_STICKERS = Object.keys(STICKER_NUMBER).length;
+
 // Peso para la rifa de fichas: los DT salen mucho menos seguido
 const DT_WEIGHT = 1;
 const NORMAL_WEIGHT = 12;
@@ -49,6 +66,7 @@ export function buildRoster(avatars) {
       department: u.department,
       initials: u.avatarInitials,
       isDT: isDT(u.username),
+      number: stickerNumber(u.username),
       photo: avatars[u.username.toLowerCase()],
     }));
 }
@@ -123,19 +141,22 @@ export function generateChallenge(roster, ownedSet, self) {
 }
 
 // ── Estado del día desde la lista de intentos ────────────────────────────────
-// challenges: array de { created_at, result } del usuario
+// challenges: array de { created_at, result } del usuario.
+// Los fallos NO cuentan para el límite: el tope es 3 fichas GANADAS por día.
+// El cooldown de 1h aplica tras CUALQUIER intento (acierto o fallo).
 export function dailyState(challenges) {
   const now = Date.now();
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
   const todays = challenges.filter((c) => new Date(c.created_at) >= startOfDay);
+  const winsToday = todays.filter((c) => c.result === 'win').length;
   const attemptsToday = todays.length;
   const last = challenges.reduce((mx, c) => Math.max(mx, new Date(c.created_at).getTime()), 0);
   const cooldownLeft = last ? Math.max(0, COOLDOWN_MS - (now - last)) : 0;
-  return { attemptsToday, cooldownLeft };
+  return { winsToday, attemptsToday, cooldownLeft };
 }
 
 export function canPlay(challenges, missingCount) {
   if (missingCount <= 0) return false;
-  const { attemptsToday, cooldownLeft } = dailyState(challenges);
-  return attemptsToday < DAILY_LIMIT && cooldownLeft <= 0;
+  const { winsToday, cooldownLeft } = dailyState(challenges);
+  return winsToday < DAILY_LIMIT && cooldownLeft <= 0;
 }

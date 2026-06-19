@@ -128,9 +128,15 @@ export default function AlbumChallenge({ challenge, onRecord, onClose }) {
       <p className="text-white" style={{ fontSize: 16, fontWeight: 800, textAlign: 'center', marginBottom: 14 }}>{prompt}</p>
 
       {/* Estímulo */}
-      {(type === 'photo-name' || type === 'photo-dept') && (
+      {type === 'photo-name' && (
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
           <StickerCard player={target} owned={true} hideName hideDept size="lg" />
+        </div>
+      )}
+      {/* En "departamento" SÍ mostramos el nombre (para que conozcan a la persona) */}
+      {type === 'photo-dept' && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <StickerCard player={target} owned={true} hideDept size="lg" />
         </div>
       )}
       {type === 'name-photo' && (

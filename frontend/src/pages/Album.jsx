@@ -45,13 +45,13 @@ export default function Album() {
   }
 
   const pct = total ? Math.round((owned / total) * 100) : 0;
-  const { attemptsToday, cooldownLeft } = dailyState(challenges || []);
-  const remaining = DAILY_LIMIT - attemptsToday;
+  const { winsToday, cooldownLeft } = dailyState(challenges || []);
+  const remaining = DAILY_LIMIT - winsToday;
 
   // estado de la oportunidad
   let oppBox;
   if (remaining <= 0) {
-    oppBox = { txt: '✅ Ya usaste tus 3 oportunidades de hoy · vuelve mañana', bg: 'rgba(255,255,255,0.06)', col: 'rgba(255,255,255,0.55)', bd: 'rgba(255,255,255,0.12)' };
+    oppBox = { txt: '✅ Ya conseguiste tus 3 fichas de hoy · vuelve mañana', bg: 'rgba(255,255,255,0.06)', col: 'rgba(255,255,255,0.55)', bd: 'rgba(255,255,255,0.12)' };
   } else if (cooldownLeft > 0) {
     oppBox = { txt: `⏳ Próxima oportunidad de ficha en ${fmt(cooldownLeft)}`, bg: 'rgba(96,165,250,0.12)', col: '#93c5fd', bd: 'rgba(96,165,250,0.4)' };
   } else {
@@ -83,7 +83,7 @@ export default function Album() {
           </div>
           <div className="rounded-xl px-3 py-2 text-xs font-bold flex items-center gap-1.5" style={{ background: 'rgba(255,255,255,0.06)', color: 'white', border: '1px solid rgba(255,255,255,0.12)' }}>
             Fichas conseguidas hoy:
-            <span style={{ color: '#FFD100' }}>{attemptsToday >= DAILY_LIMIT ? DAILY_LIMIT : attemptsToday} de {DAILY_LIMIT}</span>
+            <span style={{ color: '#FFD100' }}>{winsToday} de {DAILY_LIMIT}</span>
           </div>
         </div>
 
@@ -130,9 +130,9 @@ export default function Album() {
                 {dOwned}/{players.length}{dOwned === players.length ? ' ✓' : ''}
               </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 10, justifyItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(118px, 1fr))', gap: 12, justifyItems: 'center' }}>
               {players.map((p) => (
-                <StickerCard key={p.username} player={p} owned={ownedSet.has(p.username)} size="sm" style={{ width: '100%', maxWidth: 130 }} />
+                <StickerCard key={p.username} player={p} owned={ownedSet.has(p.username)} size="md" showNumber style={{ width: '100%', maxWidth: 150 }} />
               ))}
             </div>
           </div>
