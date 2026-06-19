@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../utils/supabase';
 import { useAvatars } from '../contexts/AvatarContext';
 import {
@@ -14,6 +14,7 @@ export function useAlbum(user) {
   const [challenges, setChallenges] = useState([]);   // intentos del usuario
   const [loading, setLoading]       = useState(true);
   const [challenge, setChallenge]   = useState(null); // reto activo (popup)
+  const shownRef = useRef(false);                     // solo auto-mostrar una vez por carga
 
   const roster = useMemo(() => (ready ? buildRoster(avatars) : []), [avatars, ready]);
   const total  = roster.length;
@@ -37,11 +38,11 @@ export function useAlbum(user) {
 
   // Decidir si mostrar un reto al abrir (cuando ya cargó todo)
   useEffect(() => {
-    if (!beta || loading || !ready || challenge) return;
+    if (!beta || loading || !ready || challenge || shownRef.current) return;
     const missing = roster.filter((p) => p.username !== username && !ownedSet.has(p.username));
     if (canPlay(challenges, missing.length)) {
       const c = generateChallenge(roster, ownedSet, username);
-      if (c) setChallenge(c);
+      if (c) { shownRef.current = true; setChallenge(c); }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [beta, loading, ready, roster, ownedSet, challenges]);

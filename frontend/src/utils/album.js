@@ -6,7 +6,7 @@ export const isAlbumBeta = (username) => ALBUM_BETA_USERS.includes((username || 
 
 // ── Reglas (fáciles de cambiar a futuro) ───────────────────────────────────
 export const DAILY_LIMIT = 3;                  // oportunidades por día
-export const COOLDOWN_MS  = 2 * 60 * 60 * 1000; // 2 horas entre retos
+export const COOLDOWN_MS  = 0;                  // 0 = sin espera; aparece cada refresh hasta agotar los 3 del día
 export const ANSWER_MS    = 10000;              // 10 seg para contestar
 export const ALBUM_POINTS = 3;                  // puntos al completar (aún NO oficial)
 
