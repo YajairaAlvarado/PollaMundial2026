@@ -84,20 +84,18 @@ export function useAlbum(user) {
   // ficha en una sola transacción con bloqueo) para que dos pestañas/sesiones
   // abiertas a la vez no puedan colarse y superar el límite diario.
   const recordResult = useCallback(async (result, target) => {
-    const nowIso = new Date().toISOString();
     if (result === 'win' && target) {
       const { data: awarded } = await supabase.rpc('try_award_album_sticker', {
         p_username: username, p_target: target.username,
       });
-      if (awarded) {
-        setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]);
-        setOwnedSet((prev) => new Set(prev).add(target.username));
-      } else {
-        // Otra sesión ya alcanzó el límite justo antes — recargamos el estado real.
-        load();
-      }
+      // Tras el RPC, recargamos desde la base (única fuente de verdad) en vez de
+      // sumar a mano en local — así evitamos contar dos veces la misma victoria
+      // cuando además llega el aviso en tiempo real con el mismo registro.
+      await load();
+      if (awarded && target) setOwnedSet((prev) => new Set(prev).add(target.username));
       return;
     }
+    const nowIso = new Date().toISOString();
     setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]); // optimista
     await supabase.from('album_challenges').insert({ username, result, target_username: target?.username || null });
   }, [username, load]);
