@@ -265,6 +265,47 @@ body {
 }
 .album-fail { animation: albumFail 0.9s ease-in both; }
 
+/* Texto dorado brillante (ficha legendaria) */
+.shimmer-gold {
+  background: linear-gradient(90deg, #FFD700 0%, #FFF3B0 30%, #FFA500 60%, #FFF3B0 90%);
+  background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2.2s linear infinite;
+}
+
+/* Álbum: revelado LEGENDARIO (fichas DT) */
+@keyframes legendReveal {
+  0%   { transform: scale(0.1) rotate(-40deg); opacity: 0; filter: brightness(3); }
+  40%  { transform: scale(1.25) rotate(8deg);  opacity: 1; filter: brightness(1.6); }
+  60%  { transform: scale(0.92) rotate(-4deg); }
+  78%  { transform: scale(1.06) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); filter: brightness(1.05); }
+}
+.album-legendary { animation: legendReveal 0.95s cubic-bezier(.2,.7,.2,1) both;
+  filter: drop-shadow(0 0 22px rgba(255,215,0,0.85)); }
+
+@keyframes legendRays { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes legendGlow { 0%,100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.95; transform: scale(1.12); } }
+.legend-rays {
+  position: absolute; left: 50%; top: 50%; width: 360px; height: 360px;
+  transform: translate(-50%, -50%); pointer-events: none; z-index: 1; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(255,215,0,0.55), transparent 18deg, rgba(255,215,0,0.55) 36deg,
+              transparent 54deg, rgba(255,165,0,0.5) 72deg, transparent 90deg, rgba(255,215,0,0.55) 108deg,
+              transparent 126deg, rgba(255,165,0,0.5) 144deg, transparent 162deg, rgba(255,215,0,0.55) 180deg,
+              transparent 198deg, rgba(255,215,0,0.55) 216deg, transparent 234deg, rgba(255,165,0,0.5) 252deg,
+              transparent 270deg, rgba(255,215,0,0.55) 288deg, transparent 306deg, rgba(255,165,0,0.5) 324deg, transparent 342deg);
+  animation: legendRays 8s linear infinite;
+  -webkit-mask: radial-gradient(circle, transparent 28%, black 30%, black 70%, transparent 74%);
+          mask: radial-gradient(circle, transparent 28%, black 30%, black 70%, transparent 74%);
+}
+.legend-halo {
+  position: absolute; left: 50%; top: 50%; width: 230px; height: 230px;
+  transform: translate(-50%, -50%); pointer-events: none; z-index: 0; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,215,0,0.5) 0%, rgba(255,165,0,0.18) 45%, transparent 70%);
+  animation: legendGlow 1.8s ease-in-out infinite;
+}
+
 /* Álbum: brillo sutil en las fichas DT */
 @keyframes dtShine {
   0%   { background-position: -150% 0; }

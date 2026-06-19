@@ -70,16 +70,24 @@ export default function AlbumChallenge({ challenge, onRecord, onClose }) {
   // ── Resultado ──
   if (phase === 'result') {
     const win = result === 'win';
+    const legendary = win && target.isDT;
     return (
       <Shell>
         {win && <Confetti />}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 6 }}>
-          <p style={{ fontSize: 13, fontWeight: 900, letterSpacing: '0.08em',
-                      color: win ? '#FFD700' : '#f87171' }}>
-            {win ? '✨ ¡FICHA NUEVA! ✨' : result === 'timeout' ? '⏰ ¡SE ACABÓ EL TIEMPO!' : '😖 ¡CASI!'}
+          <p className={legendary ? 'shimmer-gold' : ''} style={{ fontSize: legendary ? 15 : 13, fontWeight: 900, letterSpacing: '0.08em',
+                      color: legendary ? '#FFD700' : win ? '#FFD700' : '#f87171' }}>
+            {legendary ? '⭐ ¡FICHA LEGENDARIA! ⭐' : win ? '✨ ¡FICHA NUEVA! ✨' : result === 'timeout' ? '⏰ ¡SE ACABÓ EL TIEMPO!' : '😖 ¡CASI!'}
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '14px 0' }}>
-            <div className={win ? 'album-reveal' : 'album-fail'}>
+          {legendary && (
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#FFA500', marginTop: 2 }}>
+              Conseguiste a un DT · ¡súper difícil de sacar!
+            </p>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: legendary ? '28px 0' : '14px 0', position: 'relative', minHeight: legendary ? 220 : undefined }}>
+            {legendary && <span className="legend-halo" />}
+            {legendary && <span className="legend-rays" />}
+            <div className={legendary ? 'album-legendary' : win ? 'album-reveal' : 'album-fail'} style={{ position: 'relative', zIndex: 2 }}>
               <StickerCard player={target} owned={true} size="lg" />
             </div>
           </div>
@@ -87,7 +95,7 @@ export default function AlbumChallenge({ challenge, onRecord, onClose }) {
             {win ? `¡${target.displayName.split(' ')[0]} es tuyo!` : 'No la conseguiste'}
           </p>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4 }}>
-            {win ? 'Pegada en tu álbum 📒' : 'Te aparecerá otra oportunidad en 2 horas'}
+            {win ? (legendary ? '¡Ficha estrella pegada en tu álbum! 🌟' : 'Pegada en tu álbum 📒') : 'Te aparecerá otra oportunidad pronto'}
           </p>
           <button onClick={onClose} className="mt-4 w-full py-3 rounded-2xl font-black"
             style={{ background: win ? 'linear-gradient(135deg,#FFD700,#FFA500)' : 'rgba(255,255,255,0.08)',
