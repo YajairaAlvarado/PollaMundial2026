@@ -8,7 +8,9 @@ import { usePredictionBroadcast } from './hooks/usePredictionBroadcast';
 import { usePresence } from './hooks/usePresence';
 import { useNudges } from './hooks/useNudges';
 import { useTrivia } from './hooks/useTrivia';
+import { useAlbum } from './hooks/useAlbum';
 import TriviaGame from './components/TriviaGame';
+import AlbumChallenge from './components/AlbumChallenge';
 import Navbar from './components/Navbar';
 import PredictionToastContainer from './components/PredictionToast';
 import NudgePopupContainer from './components/NudgePopup';
@@ -24,6 +26,7 @@ import Leaderboard from './pages/Leaderboard';
 import Bracket from './pages/Bracket';
 import Profile from './pages/Profile';
 import Vs from './pages/Vs';
+import Album from './pages/Album';
 
 function ProtectedLayout() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -34,6 +37,7 @@ function ProtectedLayout() {
   const { onlineUsers, connectionAlerts, dismissAlert } = usePresence(user?.id, canNudge);
   const { incoming, dismiss: dismissNudge, reply: replyNudge, send: sendNudge } = useNudges(canNudge ? user?.id : null);
   const trivia = useTrivia(canNudge ? user?.id : null, user);
+  const album  = useAlbum(user);
 
   if (loading) {
     return (
@@ -67,9 +71,26 @@ function ProtectedLayout() {
                 <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: 13, marginTop: 2 }}>te desafió a un DUELO DE TRIVIA</p>
                 <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, marginTop: 8 }}>5 preguntas · 7 segundos c/u · 2 pts por acierto</p>
                 <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-                  <button onClick={trivia.decline} className="flex-1 py-3 rounded-2xl font-bold" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.12)' }}>Rechazar</button>
-                  <button onClick={trivia.accept} className="flex-1 py-3 rounded-2xl font-black" style={{ background: 'rgba(52,211,153,0.25)', color: '#34d399', border: '1px solid rgba(52,211,153,0.5)' }}>¡Aceptar! ⚔️</button>
+                  <button onClick={trivia.decline} className="flex-1 py-3 rounded-2xl font-bold" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.12)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>Rechazar</button>
+                  <button onClick={trivia.accept} className="flex-1 py-3 rounded-2xl font-black" style={{ background: 'rgba(52,211,153,0.25)', color: '#34d399', border: '1px solid rgba(52,211,153,0.5)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>¡Aceptar! ⚔️</button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Esperando que el rival acepte mi reto */}
+          {trivia.outgoing && !trivia.active && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 100001, background: 'rgba(5,2,20,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+              <div style={{ width: 320, maxWidth: '92vw', background: 'linear-gradient(160deg,#15103a,#0a1530)', border: '2px solid rgba(167,139,250,0.5)', borderRadius: 22, padding: 24, textAlign: 'center', boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}>
+                <p style={{ fontSize: 40, animation: 'triviaPulse 1.4s infinite' }}>⚔️</p>
+                <p className="text-white" style={{ fontSize: 15, fontWeight: 800 }}>Esperando que</p>
+                <p style={{ color: '#a78bfa', fontWeight: 900, fontSize: 18, marginTop: 2 }}>{trivia.outgoing.to_name}</p>
+                <p className="text-white" style={{ fontSize: 15, fontWeight: 800, marginTop: 2 }}>acepte el duelo…</p>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 10 }}>Se cancelará solo si no responde a tiempo</p>
+                <button onClick={trivia.cancelOutgoing} className="mt-4 w-full py-3 rounded-2xl font-bold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>
+                  Cancelar reto
+                </button>
               </div>
             </div>
           )}
@@ -84,6 +105,11 @@ function ProtectedLayout() {
             </div>
           )}
         </>
+      )}
+      {/* Reto del álbum (aparece al abrir la app, beta) */}
+      {album.challenge && (
+        <AlbumChallenge challenge={album.challenge}
+          onRecord={album.recordResult} onClose={album.dismissChallenge} />
       )}
       <main className="min-h-[calc(100vh-4rem)]">
         <Outlet />
@@ -117,6 +143,7 @@ function AppRoutes() {
         <Route path="/bracket" element={<Bracket />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/vs" element={<Vs />} />
+        <Route path="/album" element={<Album />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
       </Route>

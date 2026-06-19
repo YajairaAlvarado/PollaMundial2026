@@ -255,6 +255,7 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
 export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, externalTarget, onExternalTargetConsumed, onChallenge }) {
   const [open,   setOpen]   = useState(false);
   const [target, setTarget] = useState(null);
+  const [sentChallenge, setSentChallenge] = useState(null); // id del usuario al que ya le mandé reto (cooldown)
   const [pos,    setPos]    = useState(null); // null = centro inferior por defecto (se reinicia al recargar)
   const ref = useRef(null);
   const drag = useRef({ on: false, moved: false, offX: 0, offY: 0 });
@@ -340,10 +341,22 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
                         👈 Guiño
                       </span>
                       {onChallenge && (
-                        <span onClick={(e) => { e.stopPropagation(); onChallenge(u); setOpen(false); }}
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (sentChallenge === u.id) return; // evita reenvíos accidentales
+                            setSentChallenge(u.id);
+                            onChallenge(u);
+                            setTimeout(() => setSentChallenge((s) => (s === u.id ? null : s)), 8000);
+                          }}
                           className="flex-shrink-0 text-[11px] font-black px-2 py-1.5 rounded-full"
-                          style={{ background: 'rgba(52,211,153,0.2)', color: '#34d399', border: '1px solid rgba(52,211,153,0.5)' }}>
-                          ⚔️ Reto
+                          style={{
+                            background: sentChallenge === u.id ? 'rgba(255,255,255,0.08)' : 'rgba(52,211,153,0.2)',
+                            color: sentChallenge === u.id ? 'rgba(255,255,255,0.4)' : '#34d399',
+                            border: `1px solid ${sentChallenge === u.id ? 'rgba(255,255,255,0.15)' : 'rgba(52,211,153,0.5)'}`,
+                            touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                          }}>
+                          {sentChallenge === u.id ? '✓ Enviado' : '⚔️ Reto'}
                         </span>
                       )}
                     </button>

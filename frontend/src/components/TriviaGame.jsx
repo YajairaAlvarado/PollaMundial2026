@@ -163,7 +163,8 @@ export default function TriviaGame({ match, currentUser, onClose }) {
               style={{ padding: '12px 14px', borderRadius: 12, fontWeight: 700, fontSize: 14, textAlign: 'left',
                        background: chosen ? 'rgba(167,139,250,0.35)' : 'rgba(255,255,255,0.06)',
                        border: `1px solid ${chosen ? 'rgba(167,139,250,0.7)' : 'rgba(255,255,255,0.12)'}`,
-                       color: 'white', opacity: myAns !== undefined && !chosen ? 0.5 : 1, transition: 'all 0.15s' }}>
+                       color: 'white', opacity: myAns !== undefined && !chosen ? 0.5 : 1, transition: 'all 0.15s',
+                       touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none', cursor: 'pointer' }}>
               {opt}
             </button>
           );

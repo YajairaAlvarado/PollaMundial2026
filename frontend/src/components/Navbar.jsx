@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck } from 'lucide-react';
+import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck, BookOpen } from 'lucide-react';
+import { isAlbumBeta } from '../utils/album';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
 import mundialistaLogo from '../assets/mundialista.png';
 import { currentVersionLabel } from '../hooks/useVersionCheck';
@@ -28,6 +29,9 @@ export default function Navbar({ unread = 0, onBellOpen }) {
     { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
     { to: '/vs',          label: 'Vs 👊⚡👊',   icon: null },
     { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
+    ...(isAlbumBeta(user?.username) ? [
+      { to: '/album',   label: 'Álbum 📒', icon: <BookOpen size={14} /> },
+    ] : []),
     ...(user?.isAdmin ? [
       { to: '/admin',   label: 'Admin',  icon: <ShieldCheck size={14} /> },
     ] : []),

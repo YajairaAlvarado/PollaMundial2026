@@ -111,7 +111,14 @@ export default function GlobalRace() {
               {cur.away_code && <img src={`https://flagcdn.com/20x15/${cur.away_code}.png`} alt="" className="rounded" />}
             </span>
           ) : <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>¡Listo para arrancar!</span>}
-          <div className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Partido {Math.min(step, matches.length)} de {matches.length}</div>
+          <div className="text-[10px] mt-0.5 flex items-center justify-center gap-1.5 flex-wrap">
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>Partido {Math.min(step, matches.length)} de {matches.length}</span>
+            {cur && (
+              <span className="font-bold" style={{ color: '#F59E0B' }}>
+                · {new Date(cur.match_date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
+              </span>
+            )}
+          </div>
         </div>
         <button onClick={() => setShowAll((v) => !v)}
           className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)' }}>
