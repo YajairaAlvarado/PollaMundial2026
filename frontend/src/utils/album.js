@@ -32,7 +32,11 @@ export const DEPARTMENT_ORDER = [
   'Economía Y Empresa', 'Consultoria', 'Patrocinio', 'Contabilidad/Finanzas', 'Administracion',
 ];
 
-export const isDT = (username) => Object.values(DEPARTMENT_DTS).includes((username || '').toLowerCase());
+// DTs adicionales (un mismo departamento puede tener más de un socio líder)
+export const EXTRA_DTS = ['vicente.pazmino'];
+
+const ALL_DTS = [...Object.values(DEPARTMENT_DTS), ...EXTRA_DTS];
+export const isDT = (username) => ALL_DTS.includes((username || '').toLowerCase());
 
 // ── Número de ficha fijo por persona (estilo Panini) ─────────────────────────
 // Basado en TODOS los usuarios (no en quién tiene foto), para que el número
