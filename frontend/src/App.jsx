@@ -8,7 +8,7 @@ import { usePredictionBroadcast } from './hooks/usePredictionBroadcast';
 import { usePresence } from './hooks/usePresence';
 import { useNudges } from './hooks/useNudges';
 import { useTrivia } from './hooks/useTrivia';
-import { useAlbum } from './hooks/useAlbum';
+import { AlbumProvider, useAlbumCtx } from './contexts/AlbumContext';
 import TriviaGame from './components/TriviaGame';
 import AlbumChallenge from './components/AlbumChallenge';
 import Navbar from './components/Navbar';
@@ -37,7 +37,7 @@ function ProtectedLayout() {
   const { onlineUsers, connectionAlerts, dismissAlert } = usePresence(user?.id, canNudge);
   const { incoming, dismiss: dismissNudge, reply: replyNudge, send: sendNudge } = useNudges(canNudge ? user?.id : null);
   const trivia = useTrivia(canNudge ? user?.id : null, user);
-  const album  = useAlbum(user);
+  const album  = useAlbumCtx();
 
   if (loading) {
     return (
@@ -189,7 +189,9 @@ export default function App() {
       <UpdateBanner />
       <AuthProvider>
         <AvatarProvider>
-          <AppRoutes />
+          <AlbumProvider>
+            <AppRoutes />
+          </AlbumProvider>
         </AvatarProvider>
       </AuthProvider>
     </Router>

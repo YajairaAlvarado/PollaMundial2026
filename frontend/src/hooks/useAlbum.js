@@ -64,6 +64,6 @@ export function useAlbum(user) {
 
   return {
     beta, loading, ready, roster, ownedSet, total, owned, completed,
-    challenge, recordResult, dismissChallenge, reload: load,
+    challenge, challenges, recordResult, dismissChallenge, reload: load,
   };
 }

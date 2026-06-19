@@ -1,12 +1,13 @@
 import { USERS } from './users';
 
-// ── Quiénes ven el álbum por ahora (beta) ──────────────────────────────────
+// ── Quiénes ven el álbum ────────────────────────────────────────────────────
+export const ALBUM_ENABLED   = true;           // true = abierto a toda la firma
 export const ALBUM_BETA_USERS = ['daniel.leon', 'kevin.castro'];
-export const isAlbumBeta = (username) => ALBUM_BETA_USERS.includes((username || '').toLowerCase());
+export const isAlbumBeta = (username) => ALBUM_ENABLED || ALBUM_BETA_USERS.includes((username || '').toLowerCase());
 
 // ── Reglas (fáciles de cambiar a futuro) ───────────────────────────────────
-export const DAILY_LIMIT = 3;                  // oportunidades por día
-export const COOLDOWN_MS  = 0;                  // 0 = sin espera; aparece cada refresh hasta agotar los 3 del día
+export const DAILY_LIMIT = 3;                   // oportunidades por día
+export const COOLDOWN_MS  = 60 * 60 * 1000;     // 1 hora entre intentos
 export const ANSWER_MS    = 10000;              // 10 seg para contestar
 export const ALBUM_POINTS = 3;                  // puntos al completar (aún NO oficial)
 
