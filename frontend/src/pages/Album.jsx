@@ -4,6 +4,7 @@ import { useAlbumCtx } from '../contexts/AlbumContext';
 import { rosterByDepartment, dailyState, DAILY_LIMIT, ALBUM_POINTS } from '../utils/album';
 import { USERS } from '../utils/users';
 import StickerCard from '../components/StickerCard';
+import AlbumViewerModal from '../components/AlbumViewerModal';
 import Avatar from '../components/Avatar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { supabase } from '../utils/supabase';
@@ -26,18 +27,14 @@ export default function Album() {
   // Trigger 2: al entrar a la sección Álbum, abrir el reto si hay oportunidad
   useEffect(() => { if (!loading) openChallenge(); }, [loading, openChallenge]);
 
-  // ¿Quién tiene MI ficha en su álbum?
-  const [holders, setHolders] = useState(null);
-  const [showHolders, setShowHolders] = useState(false);
+  // ¿Quién tiene MI ficha en su álbum? (set para marcar en el ranking)
+  const [holdersSet, setHoldersSet] = useState(new Set());
+  const [viewer, setViewer] = useState(null); // { username, displayName } del álbum que estoy mirando
   useEffect(() => {
     if (!me) return;
     (async () => {
       const { data } = await supabase.from('album_stickers').select('owner_username').eq('sticker_username', me);
-      const list = (data || [])
-        .map((r) => r.owner_username).filter((u) => u !== me)
-        .map((u) => ({ username: u, displayName: USER_BY_NAME[u]?.displayName || u }))
-        .sort((a, b) => a.displayName.localeCompare(b.displayName));
-      setHolders(list);
+      setHoldersSet(new Set((data || []).map((r) => r.owner_username).filter((u) => u !== me)));
     })();
   }, [me]);
 
@@ -123,6 +120,7 @@ export default function Album() {
             {ranking.map((r, i) => {
               const u = USER_BY_NAME[r.username];
               const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+              const tieneMiFicha = holdersSet.has(r.username);
               return (
                 <div key={r.username} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg" style={{ background: i < 3 ? 'rgba(255,209,0,0.06)' : 'transparent' }}>
                   <span style={{ width: 22, textAlign: 'center', fontWeight: 900, fontSize: 13, color: i === 0 ? '#FFD700' : i === 1 ? '#C7CDD6' : i === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)' }}>
@@ -130,45 +128,27 @@ export default function Album() {
                   </span>
                   <Avatar username={r.username} initials={u?.avatarInitials} displayName={r.displayName} size={30} clickable={false} />
                   <span className="text-sm font-semibold text-white truncate flex-1">{r.displayName}</span>
+
+                  {tieneMiFicha && r.username !== me && (
+                    <span title="Tiene tu ficha" className="text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(52,211,153,0.16)', color: '#34d399' }}>
+                      📸 te tiene
+                    </span>
+                  )}
+
                   <span className="text-xs font-black px-2 py-1 rounded-full" style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100' }}>{r.count} 📒</span>
+
+                  {r.username !== me && (
+                    <button onClick={() => setViewer({ username: r.username, displayName: r.displayName })}
+                      title={`Ver el álbum de ${r.displayName}`}
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.4)', touchAction: 'manipulation' }}>
+                      📖
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
-
-      {/* ¿Quién tiene mi ficha? */}
-      {holders && (
-        <div className="rounded-2xl p-4 mb-5" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <button onClick={() => setShowHolders((v) => !v)} className="w-full flex items-center justify-between" style={{ background: 'transparent' }}>
-            <h2 className="font-black text-white flex items-center gap-2" style={{ fontSize: 15 }}>
-              📸 ¿Quién tiene tu ficha?
-            </h2>
-            <span className="flex items-center gap-2">
-              <span className="text-xs font-black px-2.5 py-1 rounded-full" style={{ background: 'rgba(52,211,153,0.18)', color: '#34d399' }}>
-                {holders.length} {holders.length === 1 ? 'persona' : 'personas'}
-              </span>
-              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>{showHolders ? '▲' : '▼'}</span>
-            </span>
-          </button>
-
-          {showHolders && (
-            holders.length === 0 ? (
-              <p className="text-sm text-center mt-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Todavía nadie tiene tu ficha 😅 ¡a ver quién te consigue primero!
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {holders.map((h) => (
-                  <div key={h.username} className="flex items-center gap-2 px-2 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <Avatar username={h.username} initials={USER_BY_NAME[h.username]?.avatarInitials} displayName={h.displayName} size={26} clickable={false} />
-                    <span className="text-xs font-semibold text-white pr-1">{h.displayName}</span>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
         </div>
       )}
 
@@ -193,6 +173,10 @@ export default function Album() {
           </div>
         );
       })}
+
+      {viewer && (
+        <AlbumViewerModal username={viewer.username} displayName={viewer.displayName} onClose={() => setViewer(null)} />
+      )}
     </div>
   );
 }

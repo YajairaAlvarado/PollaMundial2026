@@ -223,6 +223,88 @@ function TabUsuarios({ users }) {
   );
 }
 
+// ─── Panel admin del Álbum (solo daniel.leon) ────────────────────────────────
+import { USERS } from '../utils/users';
+const ADMIN_NAME = Object.fromEntries(USERS.map((u) => [u.username, u.displayName]));
+const nm = (u) => ADMIN_NAME[u] || u;
+
+function AlbumAdminPanel() {
+  const [stickers, setStickers] = useState(null);
+  const [errors,   setErrors]   = useState([]);
+  const [q,        setQ]        = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: st }, { data: ch }] = await Promise.all([
+        supabase.from('album_stickers').select('owner_username, sticker_username'),
+        supabase.from('album_challenges').select('username, result, target_username'),
+      ]);
+      setStickers(st || []);
+      const map = {};
+      for (const c of (ch || [])) {
+        if (c.result === 'win' || !c.target_username) continue;
+        const k = c.username + '|' + c.target_username;
+        map[k] = (map[k] || 0) + 1;
+      }
+      setErrors(Object.entries(map)
+        .map(([k, count]) => { const [u, t] = k.split('|'); return { u, t, count }; })
+        .sort((a, b) => b.count - a.count));
+    })();
+  }, []);
+
+  if (!stickers) return <div className="py-6 flex justify-center"><LoadingSpinner size="sm" text="Cargando álbum..." /></div>;
+
+  // Quién tiene cada ficha
+  const byFicha = {};
+  for (const s of stickers) (byFicha[s.sticker_username] ||= []).push(s.owner_username);
+  const fichas = Object.entries(byFicha)
+    .map(([ficha, owners]) => ({ ficha, owners }))
+    .filter((f) => !q || nm(f.ficha).toLowerCase().includes(q.toLowerCase()))
+    .sort((a, b) => b.owners.length - a.owners.length || nm(a.ficha).localeCompare(nm(b.ficha)));
+
+  const filteredErr = errors.filter((e) => !q || nm(e.u).toLowerCase().includes(q.toLowerCase()) || nm(e.t).toLowerCase().includes(q.toLowerCase()));
+
+  return (
+    <div className="mb-6 rounded-xl p-4" style={{ background: 'rgba(255,209,0,0.05)', border: '1px solid rgba(255,209,0,0.25)' }}>
+      <h3 className="font-black text-white mb-1 flex items-center gap-2" style={{ fontSize: 15 }}>📒 Álbum — datos (solo tú)</h3>
+      <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>Quién tiene cada ficha y con quién se equivocan.</p>
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filtrar por nombre…"
+        className="w-full rounded-lg px-3 py-2 text-sm outline-none mb-4"
+        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white' }} />
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Errores */}
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#f87171' }}>❌ Errores (con quién fallan)</p>
+          <div style={{ maxHeight: 320, overflowY: 'auto' }} className="space-y-1">
+            {filteredErr.length === 0 && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Sin errores registrados.</p>}
+            {filteredErr.map((e, i) => (
+              <div key={i} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <span className="text-white/80 truncate"><b>{nm(e.u)}</b> falló con <b>{nm(e.t)}</b></span>
+                <span className="flex-shrink-0 font-black px-2 py-0.5 rounded-full" style={{ background: 'rgba(248,113,113,0.18)', color: '#f87171' }}>{e.count}×</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quién tiene cada ficha */}
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#34d399' }}>🃏 Quién tiene cada ficha</p>
+          <div style={{ maxHeight: 320, overflowY: 'auto' }} className="space-y-2">
+            {fichas.length === 0 && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Sin fichas conseguidas aún.</p>}
+            {fichas.map((f) => (
+              <div key={f.ficha} className="px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <p className="text-xs font-bold text-white mb-1">Ficha de {nm(f.ficha)} <span style={{ color: '#FFD100' }}>· {f.owners.length}</span></p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{f.owners.map(nm).join(', ')}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Pestaña Accesos ─────────────────────────────────────────────────────────
 
 const PRESETS = [
@@ -490,6 +572,7 @@ function TabAccesos({ users, currentUser }) {
 
   return (
     <>
+      {canSeeNudgeDetail && <AlbumAdminPanel />}
       {/* Filtros */}
       <div className="mb-4 space-y-3">
         <div className="flex gap-2 flex-wrap">

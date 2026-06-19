@@ -67,7 +67,7 @@ export function useAlbum(user) {
   const recordResult = useCallback(async (result, target) => {
     const nowIso = new Date().toISOString();
     setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]); // optimista
-    await supabase.from('album_challenges').insert({ username, result });
+    await supabase.from('album_challenges').insert({ username, result, target_username: target?.username || null });
     if (result === 'win' && target) {
       setOwnedSet((prev) => new Set(prev).add(target.username));
       await supabase.from('album_stickers')
