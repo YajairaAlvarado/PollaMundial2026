@@ -2,6 +2,22 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../utils/supabase';
 import { TRIVIA } from '../utils/triviaQuestions';
 import { NUM_Q, QUESTION_MS } from '../hooks/useTrivia';
+import { USERS } from '../utils/users';
+
+const NAME_BY_USER = Object.fromEntries(USERS.map((u) => [u.username, u.displayName]));
+const nameOf = (username, fallback) => NAME_BY_USER[username] || fallback || 'rival';
+
+// Shell a nivel de módulo: si se define dentro del componente, cada tick del
+// cronómetro lo recrea y React remonta los botones (se pierden los clics).
+const Shell = ({ children }) => (
+  <div style={{ position: 'fixed', inset: 0, zIndex: 100001, background: 'rgba(5,2,20,0.92)', backdropFilter: 'blur(6px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ width: 380, maxWidth: '94vw', background: 'linear-gradient(160deg,#15103a,#0a1530)', border: '2px solid rgba(167,139,250,0.5)',
+                  borderRadius: 22, padding: 22, position: 'relative', boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}>
+      {children}
+    </div>
+  </div>
+);
 
 const CONFETTI = ['🎉','⚽','🏆','✨','🥳','🔥','🎊'];
 
@@ -66,7 +82,7 @@ export default function TriviaGame({ match, currentUser, onClose }) {
       const opp  = amSender ? toScore : fromScore;
       const win  = mine > opp;
       const tie  = mine === opp;
-      const oppName = amSender ? (m?.to_username || 'rival') : (m?.from_username || 'rival');
+      const oppName = amSender ? nameOf(m?.to_username) : nameOf(m?.from_username, m?.from_name);
 
       // Guardar récord (solo el retador inserta, para no duplicar)
       if (amSender) {
@@ -84,16 +100,6 @@ export default function TriviaGame({ match, currentUser, onClose }) {
   }, [elapsed, totalMs, finished]);
 
   // ── Render ──
-  const Shell = ({ children }) => (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 100001, background: 'rgba(5,2,20,0.92)', backdropFilter: 'blur(6px)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ width: 380, maxWidth: '94vw', background: 'linear-gradient(160deg,#15103a,#0a1530)', border: '2px solid rgba(167,139,250,0.5)',
-                    borderRadius: 22, padding: 22, position: 'relative', boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}>
-        {children}
-      </div>
-    </div>
-  );
-
   if (inCountdown) {
     const secs = Math.ceil(-elapsed / 1000);
     return <Shell>
