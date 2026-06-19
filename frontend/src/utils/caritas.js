@@ -43,4 +43,7 @@ export const GIFS = [
   { url: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbWtscHE0c2o0ZHRjOGIyNzhxcTV3OHBsZWtiOTRncDZiM2Vlamw3NCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/d5mI2F3MxCTJu/giphy.gif', label: 'Tengo sueño' },
   { url: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjZsbmh2cWwzNnhpMDJ6NmN5MmxkdjA2ZnQyaXJjMjE3NjN0eDN3dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LTYT5GTIiAMBa/giphy.gif', label: 'Aburrido' },
   { url: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzk3MXY0YzF3d3IyN3R0c2x5MDBubm80d21pejZxM2Jlc3hxazFvMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/TSVTlZqG4NJAs/giphy.gif', label: 'Me caigo del sueño' },
+  { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWJpMmM5bWZyM2hpOXdkOHE5cXdrMWtxYXQwNDRzODc1dWk0cTkzNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3rgXBxX4myufzT6N2w/giphy.gif', label: 'Qué alegría' },
+  { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExb3QwbWt2enJmbWhtazlqenpoaDgxeG8wczIxa29jMXFyemRxY2V3dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/nDSlfqf0gn5g4/giphy.gif', label: 'Di que sí' },
+  { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDJ6bHI3ZWp1cDE0Z3FkMDh2c2JsZHRoM24zNWIwZTNodHJrZjZrYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Mr5yS9nR4kAda/giphy.gif', label: 'Estamos pensando lo mismo' },
 ];

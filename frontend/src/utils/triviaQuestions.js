@@ -135,6 +135,22 @@ export const TRIVIA = [
   { type: 'flag', code: 'lv', q: '¿De qué país es esta bandera?', options: ['Lituania', 'Letonia', 'Estonia', 'Mónaco'], answer: 1 },
   { type: 'flag', code: 'ee', q: '¿De qué país es esta bandera?', options: ['Letonia', 'Estonia', 'Lituania', 'Finlandia'], answer: 1 },
 
+  // ── Banderas (lote 2) ──
+  { type: 'flag', code: 'ch', q: '¿De qué país es esta bandera?', options: ['Dinamarca', 'Suiza', 'Inglaterra', 'Georgia'], answer: 1 },
+  { type: 'flag', code: 'dk', q: '¿De qué país es esta bandera?', options: ['Suiza', 'Noruega', 'Dinamarca', 'Islandia'], answer: 2 },
+  { type: 'flag', code: 'no', q: '¿De qué país es esta bandera?', options: ['Islandia', 'Noruega', 'Dinamarca', 'Finlandia'], answer: 1 },
+  { type: 'flag', code: 'se', q: '¿De qué país es esta bandera?', options: ['Suecia', 'Finlandia', 'Noruega', 'Ucrania'], answer: 0 },
+  { type: 'flag', code: 'fi', q: '¿De qué país es esta bandera?', options: ['Suecia', 'Finlandia', 'Islandia', 'Grecia'], answer: 1 },
+  { type: 'flag', code: 'is', q: '¿De qué país es esta bandera?', options: ['Noruega', 'Islandia', 'Dinamarca', 'Eslovaquia'], answer: 1 },
+  { type: 'flag', code: 'ua', q: '¿De qué país es esta bandera?', options: ['Suecia', 'Ucrania', 'Kazajistán', 'Rumania'], answer: 1 },
+  { type: 'flag', code: 'ge', q: '¿De qué país es esta bandera?', options: ['Inglaterra', 'Georgia', 'Suiza', 'Dinamarca'], answer: 1 },
+  { type: 'flag', code: 'cn', q: '¿De qué país es esta bandera?', options: ['Vietnam', 'China', 'Turquía', 'Túnez'], answer: 1 },
+  { type: 'flag', code: 'vn', q: '¿De qué país es esta bandera?', options: ['China', 'Vietnam', 'Marruecos', 'Turquía'], answer: 1 },
+  { type: 'flag', code: 'th', q: '¿De qué país es esta bandera?', options: ['Costa Rica', 'Tailandia', 'Países Bajos', 'Croacia'], answer: 1 },
+  { type: 'flag', code: 'ph', q: '¿De qué país es esta bandera?', options: ['Filipinas', 'Cuba', 'Puerto Rico', 'Chile'], answer: 0 },
+  { type: 'flag', code: 'pk', q: '¿De qué país es esta bandera?', options: ['Argelia', 'Pakistán', 'Turquía', 'Mauritania'], answer: 1 },
+  { type: 'flag', code: 'ke', q: '¿De qué país es esta bandera?', options: ['Sudáfrica', 'Kenia', 'Malaui', 'Zimbabue'], answer: 1 },
+
   // ── Jugadores legendarios (type 'player': muestra una foto) ──
   { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg/250px-Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', q: '¿Quién es este jugador?', options: ['Lionel Messi', 'Ángel Di María', 'Sergio Agüero', 'Neymar'], answer: 0 },
   { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Cristiano_Ronaldo_Al-Nassr_2023.jpg/250px-Cristiano_Ronaldo_Al-Nassr_2023.jpg', q: '¿Quién es este jugador?', options: ['Ronaldo Nazário', 'Cristiano Ronaldo', 'Kaká', 'Luís Figo'], answer: 1 },
@@ -144,6 +160,13 @@ export const TRIVIA = [
   { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Zinedine_Zidane_2018.jpg/250px-Zinedine_Zidane_2018.jpg', q: '¿Quién es este jugador (campeón del mundo con Francia en 1998)?', options: ['Thierry Henry', 'Zinedine Zidane', 'Didier Deschamps', 'Franck Ribéry'], answer: 1 },
   { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Neymar_850_1705.jpg/250px-20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Neymar_850_1705.jpg', q: '¿Quién es este jugador?', options: ['Vinícius Júnior', 'Neymar', 'Gabriel Jesus', 'Richarlison'], answer: 1 },
   { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Kylian_Mbappe_2017.jpg/250px-Kylian_Mbappe_2017.jpg', q: '¿Quién es este jugador?', options: ['Antoine Griezmann', 'Ousmane Dembélé', 'Kylian Mbappé', 'Karim Benzema'], answer: 2 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Ronaldinho_in_2019.jpg/250px-Ronaldinho_in_2019.jpg', q: '¿Quién es este jugador (Balón de Oro 2005)?', options: ['Ronaldinho', 'Ronaldo Nazário', 'Kaká', 'Roberto Carlos'], answer: 0 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Andr%C3%A9s_Iniesta_2018.jpg/250px-Andr%C3%A9s_Iniesta_2018.jpg', q: '¿Quién es este jugador (gol del título mundial 2010)?', options: ['Xavi Hernández', 'Andrés Iniesta', 'David Villa', 'Sergio Busquets'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Xavi_Hern%C3%A1ndez_-_002_%28cropped%29.jpg/250px-Xavi_Hern%C3%A1ndez_-_002_%28cropped%29.jpg', q: '¿Quién es este jugador?', options: ['Andrés Iniesta', 'Xavi Hernández', 'Sergio Ramos', 'David Silva'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Iker_Casillas_2018.jpg/250px-Iker_Casillas_2018.jpg', q: '¿Quién es este arquero campeón del mundo 2010?', options: ['Gianluigi Buffon', 'Iker Casillas', 'Manuel Neuer', 'David De Gea'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Sergio_Ramos_10mar2007.jpg/250px-Sergio_Ramos_10mar2007.jpg', q: '¿Quién es este defensa español?', options: ['Gerard Piqué', 'Sergio Ramos', 'Carles Puyol', 'Jordi Alba'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Luka_Modric_2015.jpg/250px-Luka_Modric_2015.jpg', q: '¿Quién es este jugador (Balón de Oro 2018)?', options: ['Ivan Rakitić', 'Luka Modrić', 'Toni Kroos', 'Marcelo'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Robert_Lewandowski_2018.jpg/250px-Robert_Lewandowski_2018.jpg', q: '¿Quién es este delantero polaco?', options: ['Robert Lewandowski', 'Wojciech Szczęsny', 'Arkadiusz Milik', 'Piotr Zieliński'], answer: 0 },
 
   // ── Valores de Andersen (cat: 'andersen' → siempre sale 1 por reto) ──
   { type: 'text', cat: 'andersen', q: 'Andersen — ¿Cuántos valores tiene la firma?', options: ['3', '4', '5', '6'], answer: 2 },
