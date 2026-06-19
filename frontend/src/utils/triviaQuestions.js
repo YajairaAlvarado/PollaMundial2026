@@ -53,4 +53,16 @@ export const TRIVIA = [
   { type: 'flag', code: 'pe', q: '¿De qué país es esta bandera?', options: ['Perú', 'Canadá', 'Austria', 'Líbano'], answer: 0 },
   { type: 'flag', code: 'cl', q: '¿De qué país es esta bandera?', options: ['Cuba', 'Chile', 'Texas', 'Puerto Rico'], answer: 1 },
   { type: 'flag', code: 'cr', q: '¿De qué país es esta bandera?', options: ['Tailandia', 'Costa Rica', 'Corea del Norte', 'Cuba'], answer: 1 },
+
+  // ── Valores de Andersen ──
+  { type: 'text', q: 'Andersen — ¿Cuántos valores tiene la firma?', options: ['3', '4', '5', '6'], answer: 2 },
+  { type: 'text', q: 'Andersen — ¿Cuál de estos NO es un valor de la firma?', options: ['Excelencia', 'Innovación', 'Independencia', 'Transparencia'], answer: 1 },
+  { type: 'text', q: 'Valor de Andersen: "ser un referente de calidad en el sector". ¿Cuál es?', options: ['Compromiso', 'Excelencia', 'Continuidad', 'Transparencia'], answer: 1 },
+  { type: 'text', q: 'Valor de Andersen: "contratar a los mejores e invertir en el equipo para asegurar un legado". ¿Cuál es?', options: ['Compromiso', 'Independencia', 'Excelencia', 'Transparencia'], answer: 0 },
+  { type: 'text', q: 'Valor de Andersen: "representar a los clientes de manera objetiva e independiente". ¿Cuál es?', options: ['Independencia', 'Continuidad', 'Compromiso', 'Excelencia'], answer: 0 },
+  { type: 'text', q: 'Valor de Andersen: "un proyecto global con el máximo nivel de servicio en cualquier lugar". ¿Cuál es?', options: ['Transparencia', 'Continuidad', 'Compromiso', 'Independencia'], answer: 1 },
+  { type: 'text', q: 'Valor de Andersen: "comunicación abierta, intercambio de información y decisiones conjuntas". ¿Cuál es?', options: ['Transparencia', 'Excelencia', 'Independencia', 'Continuidad'], answer: 0 },
+  { type: 'text', q: 'Andersen — ¿Qué valor se relaciona con dar consejos objetivos, sin conflictos de interés?', options: ['Continuidad', 'Independencia', 'Excelencia', 'Compromiso'], answer: 1 },
+  { type: 'text', q: 'Andersen — ¿Qué valor habla de un proyecto global y servicio en cualquier parte del mundo?', options: ['Continuidad', 'Transparencia', 'Compromiso', 'Excelencia'], answer: 0 },
+  { type: 'text', q: 'Andersen — "Valoramos la comunicación abierta y la toma de decisiones conjuntas" describe el valor de…', options: ['Compromiso', 'Transparencia', 'Independencia', 'Continuidad'], answer: 1 },
 ];

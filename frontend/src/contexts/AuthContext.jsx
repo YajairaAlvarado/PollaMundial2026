@@ -42,15 +42,24 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // Supabase: restore session and listen for changes
+    // Supabase: restore session and listen for changes.
+    // Red de seguridad: a veces getSession() no resuelve en la primera carga
+    // (bug del cliente de Supabase) y la app se queda en "Iniciando…".
+    // Liberamos loading por lo que ocurra primero: getSession, el evento de
+    // auth, o un timeout.
+    let done = false;
+    const finish = () => { if (!done) { done = true; setLoading(false); } };
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         const profile = await loadProfile(session.user);
         setToken(session.access_token);
         setUser(profile);
       }
-      setLoading(false);
-    });
+      finish();
+    }).catch(finish);
+
+    const safety = setTimeout(finish, 5000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
@@ -61,9 +70,10 @@ export function AuthProvider({ children }) {
         setToken(null);
         setUser(null);
       }
+      finish();
     });
 
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(safety); subscription.unsubscribe(); };
   }, []);
 
   async function loadProfile(authUser) {
