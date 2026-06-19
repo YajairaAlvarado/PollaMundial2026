@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { calculatePoints } from './scoring';
+import { isExcluded } from './users';
 
 function parseQuery(url) {
   const qs = url.includes('?') ? url.split('?')[1] : '';
@@ -136,8 +137,10 @@ async function get(url) {
     for (const p of (predCounts ?? [])) {
       countMap[p.user_id] = (countMap[p.user_id] ?? 0) + 1;
     }
-    // enriquecer leaderboard con total_predictions
-    const enriched = (data ?? []).map((e) => ({ ...e, total_predictions: countMap[e.id] ?? 0 }));
+    // enriquecer leaderboard con total_predictions (excluyendo ex-empleados)
+    const enriched = (data ?? [])
+      .filter((e) => !isExcluded(e.username))
+      .map((e) => ({ ...e, total_predictions: countMap[e.id] ?? 0 }));
     return { data: enriched };
   }
 
@@ -148,7 +151,7 @@ async function get(url) {
       .select('id, display_name, username, avatar_initials, department')
       .order('display_name', { ascending: true });
     if (error) throw error;
-    return { data };
+    return { data: (data ?? []).filter((u) => !isExcluded(u.username)) };
   }
 
   // GET /leaderboard/snapshot — último snapshot (captura el estado PRE-resultado)
@@ -165,7 +168,7 @@ async function get(url) {
       .select('username, rank, total_points, exact_scores, snapshot_date')
       .eq('snapshot_date', lastDate);
     if (error) throw error;
-    return { data };
+    return { data: (data ?? []).filter((r) => !isExcluded(r.username)) };
   }
 
   // GET /auth/me
