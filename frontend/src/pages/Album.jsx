@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useAlbumCtx } from '../contexts/AlbumContext';
 import { rosterByDepartment, dailyState, DAILY_LIMIT, ALBUM_POINTS } from '../utils/album';
 import { USERS } from '../utils/users';
@@ -17,8 +18,25 @@ function fmt(ms) {
 }
 
 export default function Album() {
+  const { user } = useAuth();
+  const me = (user?.username || '').toLowerCase();
   const { beta, loading, roster, ownedSet, total, owned, completed, challenges } = useAlbumCtx();
   const groups = useMemo(() => rosterByDepartment(roster), [roster]);
+
+  // ¿Quién tiene MI ficha en su álbum?
+  const [holders, setHolders] = useState(null);
+  const [showHolders, setShowHolders] = useState(false);
+  useEffect(() => {
+    if (!me) return;
+    (async () => {
+      const { data } = await supabase.from('album_stickers').select('owner_username').eq('sticker_username', me);
+      const list = (data || [])
+        .map((r) => r.owner_username).filter((u) => u !== me)
+        .map((u) => ({ username: u, displayName: USER_BY_NAME[u]?.displayName || u }))
+        .sort((a, b) => a.displayName.localeCompare(b.displayName));
+      setHolders(list);
+    })();
+  }, [me]);
 
   // reloj para el contador regresivo
   const [, tick] = useState(0);
@@ -114,6 +132,40 @@ export default function Album() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* ¿Quién tiene mi ficha? */}
+      {holders && (
+        <div className="rounded-2xl p-4 mb-5" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <button onClick={() => setShowHolders((v) => !v)} className="w-full flex items-center justify-between" style={{ background: 'transparent' }}>
+            <h2 className="font-black text-white flex items-center gap-2" style={{ fontSize: 15 }}>
+              📸 ¿Quién tiene tu ficha?
+            </h2>
+            <span className="flex items-center gap-2">
+              <span className="text-xs font-black px-2.5 py-1 rounded-full" style={{ background: 'rgba(52,211,153,0.18)', color: '#34d399' }}>
+                {holders.length} {holders.length === 1 ? 'persona' : 'personas'}
+              </span>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>{showHolders ? '▲' : '▼'}</span>
+            </span>
+          </button>
+
+          {showHolders && (
+            holders.length === 0 ? (
+              <p className="text-sm text-center mt-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                Todavía nadie tiene tu ficha 😅 ¡a ver quién te consigue primero!
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {holders.map((h) => (
+                  <div key={h.username} className="flex items-center gap-2 px-2 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <Avatar username={h.username} initials={USER_BY_NAME[h.username]?.avatarInitials} displayName={h.displayName} size={26} clickable={false} />
+                    <span className="text-xs font-semibold text-white pr-1">{h.displayName}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
         </div>
       )}
 
