@@ -46,6 +46,7 @@ export default function Album() {
   const [ranking, setRanking] = useState(null);
   const [rankQ, setRankQ] = useState('');
   const [rankLimit, setRankLimit] = useState(10);
+  const [onlyHolders, setOnlyHolders] = useState(false);
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from('album_stickers').select('owner_username');
@@ -132,12 +133,21 @@ export default function Album() {
 
           <input value={rankQ} onChange={(e) => { setRankQ(e.target.value); setRankLimit(10); }}
             placeholder="🔍 Buscar coleccionista por nombre…"
-            className="w-full rounded-lg px-3 py-2 text-sm outline-none mb-3"
+            className="w-full rounded-lg px-3 py-2 text-sm outline-none mb-2"
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white' }} />
+
+          <button onClick={() => { setOnlyHolders((v) => !v); setRankLimit(10); }}
+            className="mb-3 text-xs font-bold px-3 py-1.5 rounded-full"
+            style={{ background: onlyHolders ? 'rgba(52,211,153,0.22)' : 'rgba(255,255,255,0.06)',
+                     color: onlyHolders ? '#34d399' : 'rgba(255,255,255,0.55)',
+                     border: `1px solid ${onlyHolders ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.12)'}` }}>
+            📸 {onlyHolders ? `Mostrando quienes te tienen (${holdersSet.size})` : `Solo los que te tienen (${holdersSet.size})`}
+          </button>
 
           {(() => {
             const q = rankQ.trim().toLowerCase();
-            const filtered = q ? displayRanking.filter((r) => r.displayName.toLowerCase().includes(q)) : displayRanking;
+            let filtered = onlyHolders ? displayRanking.filter((r) => holdersSet.has(r.username)) : displayRanking;
+            if (q) filtered = filtered.filter((r) => r.displayName.toLowerCase().includes(q));
             const shown = filtered.slice(0, rankLimit);
             return (
           <div className="space-y-1.5">
