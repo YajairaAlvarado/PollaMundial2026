@@ -159,6 +159,11 @@ export default function TriviaGame({ match, currentUser, onClose }) {
           <img src={`https://flagcdn.com/96x72/${q.code}.png`} alt="bandera" style={{ width: 96, height: 72, borderRadius: 6, boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }} />
         </div>
       )}
+      {q.type === 'player' && (
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <img src={q.img} alt="jugador" style={{ width: 110, height: 110, objectFit: 'cover', borderRadius: 14, boxShadow: '0 4px 16px rgba(0,0,0,0.5)', border: '2px solid rgba(167,139,250,0.4)' }} />
+        </div>
+      )}
       <p className="text-white" style={{ fontSize: 17, fontWeight: 800, textAlign: 'center', marginBottom: 16, lineHeight: 1.25 }}>{q.q}</p>
 
       <div style={{ display: 'grid', gap: 8 }}>

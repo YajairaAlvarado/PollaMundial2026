@@ -135,6 +135,16 @@ export const TRIVIA = [
   { type: 'flag', code: 'lv', q: '¿De qué país es esta bandera?', options: ['Lituania', 'Letonia', 'Estonia', 'Mónaco'], answer: 1 },
   { type: 'flag', code: 'ee', q: '¿De qué país es esta bandera?', options: ['Letonia', 'Estonia', 'Lituania', 'Finlandia'], answer: 1 },
 
+  // ── Jugadores legendarios (type 'player': muestra una foto) ──
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg/250px-Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', q: '¿Quién es este jugador?', options: ['Lionel Messi', 'Ángel Di María', 'Sergio Agüero', 'Neymar'], answer: 0 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Cristiano_Ronaldo_Al-Nassr_2023.jpg/250px-Cristiano_Ronaldo_Al-Nassr_2023.jpg', q: '¿Quién es este jugador?', options: ['Ronaldo Nazário', 'Cristiano Ronaldo', 'Kaká', 'Luís Figo'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Ronaldo_Naz%C3%A1rio.jpg/250px-Ronaldo_Naz%C3%A1rio.jpg', q: '¿Quién es este jugador (apodado "El Fenómeno")?', options: ['Cristiano Ronaldo', 'Romário', 'Ronaldo Nazário', 'Ronaldinho'], answer: 2 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Maradona_1986_vs_italy.jpg/250px-Maradona_1986_vs_italy.jpg', q: '¿Quién es este jugador?', options: ['Diego Maradona', 'Mario Kempes', 'Gabriel Batistuta', 'Lionel Messi'], answer: 0 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Pele_celebrating_1970_%28cropped%29.jpg/250px-Pele_celebrating_1970_%28cropped%29.jpg', q: '¿Quién es este jugador?', options: ['Garrincha', 'Pelé', 'Zico', 'Romário'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Zinedine_Zidane_2018.jpg/250px-Zinedine_Zidane_2018.jpg', q: '¿Quién es este jugador (campeón del mundo con Francia en 1998)?', options: ['Thierry Henry', 'Zinedine Zidane', 'Didier Deschamps', 'Franck Ribéry'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Neymar_850_1705.jpg/250px-20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Neymar_850_1705.jpg', q: '¿Quién es este jugador?', options: ['Vinícius Júnior', 'Neymar', 'Gabriel Jesus', 'Richarlison'], answer: 1 },
+  { type: 'player', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Kylian_Mbappe_2017.jpg/250px-Kylian_Mbappe_2017.jpg', q: '¿Quién es este jugador?', options: ['Antoine Griezmann', 'Ousmane Dembélé', 'Kylian Mbappé', 'Karim Benzema'], answer: 2 },
+
   // ── Valores de Andersen ──
   { type: 'text', q: 'Andersen — ¿Cuántos valores tiene la firma?', options: ['3', '4', '5', '6'], answer: 2 },
   { type: 'text', q: 'Andersen — ¿Cuál de estos NO es un valor de la firma?', options: ['Excelencia', 'Innovación', 'Independencia', 'Transparencia'], answer: 1 },
