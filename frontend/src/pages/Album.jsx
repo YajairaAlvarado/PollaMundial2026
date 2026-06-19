@@ -42,8 +42,10 @@ export default function Album() {
   const [, tick] = useState(0);
   useEffect(() => { const id = setInterval(() => tick((t) => t + 1), 1000); return () => clearInterval(id); }, []);
 
-  // ranking de coleccionistas
+  // ranking de coleccionistas (completo, con búsqueda y "ver más")
   const [ranking, setRanking] = useState(null);
+  const [rankQ, setRankQ] = useState('');
+  const [rankLimit, setRankLimit] = useState(10);
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from('album_stickers').select('owner_username');
@@ -52,7 +54,7 @@ export default function Album() {
       const list = Object.entries(counts)
         .map(([username, count]) => ({ username, count, displayName: USER_BY_NAME[username]?.displayName || username }))
         .sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName))
-        .slice(0, 10);
+        .map((r, i) => ({ ...r, rank: i + 1 }));
       setRanking(list);
     })();
   }, [owned]);
@@ -116,15 +118,29 @@ export default function Album() {
       {ranking && ranking.length > 0 && (
         <div className="rounded-2xl p-4 mb-5" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)' }}>
           <h2 className="font-black text-white mb-3 flex items-center gap-2" style={{ fontSize: 15 }}>🏅 Top coleccionistas</h2>
+
+          <input value={rankQ} onChange={(e) => { setRankQ(e.target.value); setRankLimit(10); }}
+            placeholder="🔍 Buscar coleccionista por nombre…"
+            className="w-full rounded-lg px-3 py-2 text-sm outline-none mb-3"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white' }} />
+
+          {(() => {
+            const q = rankQ.trim().toLowerCase();
+            const filtered = q ? ranking.filter((r) => r.displayName.toLowerCase().includes(q)) : ranking;
+            const shown = filtered.slice(0, rankLimit);
+            return (
           <div className="space-y-1.5">
-            {ranking.map((r, i) => {
+            {shown.length === 0 && (
+              <p className="text-sm text-center py-3" style={{ color: 'rgba(255,255,255,0.35)' }}>Sin coincidencias</p>
+            )}
+            {shown.map((r) => {
               const u = USER_BY_NAME[r.username];
-              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+              const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : null;
               const tieneMiFicha = holdersSet.has(r.username);
               return (
-                <div key={r.username} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg" style={{ background: i < 3 ? 'rgba(255,209,0,0.06)' : 'transparent' }}>
-                  <span style={{ width: 22, textAlign: 'center', fontWeight: 900, fontSize: 13, color: i === 0 ? '#FFD700' : i === 1 ? '#C7CDD6' : i === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)' }}>
-                    {medal || i + 1}
+                <div key={r.username} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg" style={{ background: r.rank <= 3 ? 'rgba(255,209,0,0.06)' : 'transparent' }}>
+                  <span style={{ width: 22, textAlign: 'center', fontWeight: 900, fontSize: 13, color: r.rank === 1 ? '#FFD700' : r.rank === 2 ? '#C7CDD6' : r.rank === 3 ? '#cd7f32' : 'rgba(255,255,255,0.4)' }}>
+                    {medal || r.rank}
                   </span>
                   <Avatar username={r.username} initials={u?.avatarInitials} displayName={r.displayName} size={30} clickable={false} />
                   <span className="text-sm font-semibold text-white truncate flex-1">{r.displayName}</span>
@@ -148,7 +164,16 @@ export default function Album() {
                 </div>
               );
             })}
+            {filtered.length > rankLimit && (
+              <button onClick={() => setRankLimit((n) => n + 10)}
+                className="w-full mt-1 py-2 rounded-lg text-xs font-bold"
+                style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                Ver más ({filtered.length - rankLimit} restantes)
+              </button>
+            )}
           </div>
+            );
+          })()}
         </div>
       )}
 
