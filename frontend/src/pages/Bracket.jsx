@@ -59,6 +59,48 @@ function buildPaths() {
 }
 const CONNECTOR_PATHS = buildPaths();
 
+// ── Desempate Mundial 2026: enfrentamiento directo PRIMERO ────────────────────
+// Orden FIFA 2026: 1) puntos · 2) pts entre empatados · 3) dif. goles entre
+// empatados · 4) goles a favor entre empatados · 5) dif. goles general ·
+// 6) goles a favor general · 7) (fair play, no se modela) · alfabético.
+function h2hStats(teamNames, matches) {
+  const set = new Set(teamNames);
+  const st = {};
+  teamNames.forEach((n) => { st[n] = { pts: 0, gd: 0, gf: 0 }; });
+  for (const m of matches) {
+    if (m.status !== 'finished' || m.home_score === null) continue;
+    if (!set.has(m.home_team) || !set.has(m.away_team)) continue;
+    const h = m.home_score, a = m.away_score;
+    st[m.home_team].gf += h; st[m.home_team].gd += h - a;
+    st[m.away_team].gf += a; st[m.away_team].gd += a - h;
+    if (h > a)      st[m.home_team].pts += 3;
+    else if (h < a) st[m.away_team].pts += 3;
+    else            { st[m.home_team].pts += 1; st[m.away_team].pts += 1; }
+  }
+  return st;
+}
+
+function sortGroupTeams(teams, matches) {
+  const byPts = {};
+  for (const t of teams) (byPts[t.pts] ||= []).push(t);
+  const out = [];
+  Object.keys(byPts).map(Number).sort((a, b) => b - a).forEach((pts) => {
+    const tied = byPts[pts];
+    if (tied.length === 1) { out.push(tied[0]); return; }
+    const h = h2hStats(tied.map((t) => t.team), matches);
+    tied.sort((a, b) =>
+      h[b.team].pts - h[a.team].pts ||   // 2) puntos entre empatados
+      h[b.team].gd  - h[a.team].gd  ||   // 3) dif. goles entre empatados
+      h[b.team].gf  - h[a.team].gf  ||   // 4) goles a favor entre empatados
+      b.gd - a.gd ||                     // 5) dif. goles general
+      b.gf - a.gf ||                     // 6) goles a favor general
+      a.team.localeCompare(b.team)
+    );
+    out.push(...tied);
+  });
+  return out;
+}
+
 // ── Calcular tabla de un grupo ────────────────────────────────────────────────
 function calcStandings(matches) {
   const table = {};
@@ -78,7 +120,7 @@ function calcStandings(matches) {
     else if (h < a) { table[m.away_team].pts += 3; }
     else            { table[m.home_team].pts += 1; table[m.away_team].pts += 1; }
   }
-  return Object.values(table).sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+  return sortGroupTeams(Object.values(table), matches);
 }
 
 // ── Tabla completa de un grupo (con W/D/L, GC, forma) ──────────────────────────
@@ -101,9 +143,7 @@ function calcGroupTable(matches) {
     else if (h < a) { A.pts += 3; A.w++; H.l++; A.form.push('W'); H.form.push('L'); }
     else            { H.pts++;    A.pts++; H.d++; A.d++; H.form.push('D'); A.form.push('D'); }
   }
-  return Object.values(table).sort((a, b) =>
-    b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.team.localeCompare(b.team)
-  );
+  return sortGroupTeams(Object.values(table), matches);
 }
 
 // Extrae "Grupo X" de strings como "1° Grupo A", "2° Grupo C"
