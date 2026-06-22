@@ -46,4 +46,5 @@ export const GIFS = [
   { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWJpMmM5bWZyM2hpOXdkOHE5cXdrMWtxYXQwNDRzODc1dWk0cTkzNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3rgXBxX4myufzT6N2w/giphy.gif', label: 'Qué alegría' },
   { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExb3QwbWt2enJmbWhtazlqenpoaDgxeG8wczIxa29jMXFyemRxY2V3dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/nDSlfqf0gn5g4/giphy.gif', label: 'Di que sí' },
   { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDJ6bHI3ZWp1cDE0Z3FkMDh2c2JsZHRoM24zNWIwZTNodHJrZjZrYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Mr5yS9nR4kAda/giphy.gif', label: 'Estamos pensando lo mismo' },
+  { url: 'https://cloudfront-us-east-1.images.arcpublishing.com/eluniverso/POGUTSEYAFC2TLLRQXSDRS6W2A.jpeg', label: 'Tranquilo que yo resuelvo' },
 ];
