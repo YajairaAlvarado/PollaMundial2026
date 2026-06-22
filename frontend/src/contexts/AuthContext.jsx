@@ -116,7 +116,10 @@ export function AuthProvider({ children }) {
     const profile = await loadProfile(data.user);
     // Registrar acceso
     supabase.from('login_logs').insert({ user_id: data.user.id }).then(() => {});
-    // onAuthStateChange se encarga de setUser/setToken
+    // Setear de inmediato (no esperar a onAuthStateChange, que llega tarde y
+    // dejaba la pantalla en "Ingresando…" hasta refrescar manualmente)
+    if (data.session) setToken(data.session.access_token);
+    setUser(profile);
     return profile;
   };
 
