@@ -3,6 +3,7 @@ import { X, Send, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { Minus, Plus } from 'lucide-react';
 import { CARITAS, GIFS } from '../utils/caritas';
+import { isDT } from '../utils/album';
 import Avatar from './Avatar';
 
 const AVATAR_COLORS = [
@@ -260,6 +261,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
   const [sentChallenge, setSentChallenge] = useState(null); // id del usuario al que ya le mandé reto (cooldown)
   const [pos,    setPos]    = useState(null); // null = centro inferior por defecto (se reinicia al recargar)
   const [h2h,    setH2h]    = useState({}); // { otherUserId: { mine, opp } } — historial de trivia
+  const [noConocen, setNoConocen] = useState(new Set()); // usernames que se equivocaron contigo en el álbum (sin DTs)
   const ref = useRef(null);
   const drag = useRef({ on: false, moved: false, offX: 0, offY: 0 });
 
@@ -288,8 +290,16 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
         else if (r.winner_user_id === oppId) slot.opp++;
       }
       setH2h(map);
+
+      // Personas que se equivocaron CONTIGO en el álbum (excluye DTs)
+      const me = (currentUser?.username || '').toLowerCase();
+      if (me) {
+        const { data: fails } = await supabase.from('album_challenges')
+          .select('username, result').eq('target_username', me).neq('result', 'win');
+        setNoConocen(new Set((fails || []).map((r) => r.username).filter((u) => u !== me && !isDT(u))));
+      }
     })();
-  }, [open, currentUser?.id]);
+  }, [open, currentUser?.id, currentUser?.username]);
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setTarget(null); } };
@@ -350,6 +360,7 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
                 : sortedOnline.map((u) => {
                   const ci = (u.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length;
                   const rec = h2h[u.id]; // historial de trivia con esta persona
+                  const noTeConoce = noConocen.has(u.username); // se equivocó contigo en el álbum
                   return (
                     <button key={u.id} onClick={() => setTarget(u)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5"
@@ -360,13 +371,22 @@ export default function PresenceBar({ currentUser, onlineUsers, onSendNudge, ext
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-bold text-white block" style={{ lineHeight: 1.15, wordBreak: 'break-word' }}>{u.display_name}</span>
-                        {rec && (rec.mine + rec.opp > 0) && (
-                          <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                            style={{ background: rec.mine >= rec.opp ? 'rgba(52,211,153,0.16)' : 'rgba(248,113,113,0.16)',
-                                     color: rec.mine >= rec.opp ? '#34d399' : '#f87171' }}>
-                            🆚 {rec.mine}-{rec.opp} {rec.mine > rec.opp ? '🔥' : rec.mine < rec.opp ? '😤 ¡revancha!' : '🤝'}
-                          </span>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                          {rec && (rec.mine + rec.opp > 0) && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                              style={{ background: rec.mine >= rec.opp ? 'rgba(52,211,153,0.16)' : 'rgba(248,113,113,0.16)',
+                                       color: rec.mine >= rec.opp ? '#34d399' : '#f87171' }}>
+                              🆚 {rec.mine}-{rec.opp} {rec.mine > rec.opp ? '🔥' : rec.mine < rec.opp ? '😤 ¡revancha!' : '🤝'}
+                            </span>
+                          )}
+                          {noTeConoce && (
+                            <span title="Se equivocó contigo en el álbum — ¡conócelo y hazte su amigo!"
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                              style={{ background: 'rgba(248,113,113,0.16)', color: '#f87171' }}>
+                              🙈 No te conoce · ¡hazte su amigo!
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span className="flex-shrink-0 text-[11px] font-black px-2 py-1.5 rounded-full"
                         style={{ background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.5)' }}>
