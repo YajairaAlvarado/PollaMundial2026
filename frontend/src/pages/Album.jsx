@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlbumCtx } from '../contexts/AlbumContext';
-import { rosterByDepartment, dailyState, DAILY_LIMIT, ATTEMPT_LIMIT, ALBUM_POINTS } from '../utils/album';
+import { rosterByDepartment, dailyState, DAILY_LIMIT, ATTEMPT_LIMIT, ALBUM_POINTS, isDT } from '../utils/album';
 import { USERS } from '../utils/users';
 import StickerCard from '../components/StickerCard';
 import AlbumViewerModal from '../components/AlbumViewerModal';
@@ -30,11 +30,24 @@ export default function Album() {
   // ¿Quién tiene MI ficha en su álbum? (set para marcar en el ranking)
   const [holdersSet, setHoldersSet] = useState(new Set());
   const [viewer, setViewer] = useState(null); // { username, displayName } del álbum que estoy mirando
+  // Personas que NO te conocen: se equivocaron contigo en un reto (excluye DTs).
+  // Mapa username → cuántas veces falló contigo.
+  const [noConocen, setNoConocen] = useState({});
   useEffect(() => {
     if (!me) return;
     (async () => {
       const { data } = await supabase.from('album_stickers').select('owner_username').eq('sticker_username', me);
       setHoldersSet(new Set((data || []).map((r) => r.owner_username).filter((u) => u !== me)));
+
+      // intentos donde alguien tenía MI ficha como objetivo y falló (lose/timeout)
+      const { data: fails } = await supabase.from('album_challenges')
+        .select('username, result').eq('target_username', me).neq('result', 'win');
+      const counts = {};
+      for (const r of (fails || [])) {
+        if (r.username === me || isDT(r.username)) continue; // a los DT no los exponemos
+        counts[r.username] = (counts[r.username] || 0) + 1;
+      }
+      setNoConocen(counts);
     })();
   }, [me]);
 
@@ -47,6 +60,7 @@ export default function Album() {
   const [rankQ, setRankQ] = useState('');
   const [rankLimit, setRankLimit] = useState(10);
   const [onlyHolders, setOnlyHolders] = useState(false);
+  const [onlyNoConocen, setOnlyNoConocen] = useState(false);
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from('album_stickers').select('owner_username');
@@ -140,17 +154,41 @@ export default function Album() {
             className="w-full rounded-lg px-3 py-2 text-sm outline-none mb-2"
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white' }} />
 
-          <button onClick={() => { setOnlyHolders((v) => !v); setRankLimit(10); }}
-            className="mb-3 text-xs font-bold px-3 py-1.5 rounded-full"
-            style={{ background: onlyHolders ? 'rgba(52,211,153,0.22)' : 'rgba(255,255,255,0.06)',
-                     color: onlyHolders ? '#34d399' : 'rgba(255,255,255,0.55)',
-                     border: `1px solid ${onlyHolders ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.12)'}` }}>
-            📸 {onlyHolders ? `Mostrando quienes te tienen (${holdersSet.size})` : `Solo los que te tienen (${holdersSet.size})`}
-          </button>
+          <div className="flex flex-wrap gap-2 mb-3">
+            <button onClick={() => { setOnlyHolders((v) => !v); setOnlyNoConocen(false); setRankLimit(10); }}
+              className="text-xs font-bold px-3 py-1.5 rounded-full"
+              style={{ background: onlyHolders ? 'rgba(52,211,153,0.22)' : 'rgba(255,255,255,0.06)',
+                       color: onlyHolders ? '#34d399' : 'rgba(255,255,255,0.55)',
+                       border: `1px solid ${onlyHolders ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.12)'}` }}>
+              📸 Solo los que te tienen ({holdersSet.size})
+            </button>
+            <button onClick={() => { setOnlyNoConocen((v) => !v); setOnlyHolders(false); setRankLimit(10); }}
+              className="text-xs font-bold px-3 py-1.5 rounded-full"
+              style={{ background: onlyNoConocen ? 'rgba(248,113,113,0.22)' : 'rgba(255,255,255,0.06)',
+                       color: onlyNoConocen ? '#f87171' : 'rgba(255,255,255,0.55)',
+                       border: `1px solid ${onlyNoConocen ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.12)'}` }}>
+              🙈 No te conocen ({Object.keys(noConocen).length})
+            </button>
+          </div>
+
+          {onlyNoConocen && (
+            <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              😅 Estas personas se equivocaron contigo en un reto · ¡hazte amigo de ellas!
+            </p>
+          )}
 
           {(() => {
             const q = rankQ.trim().toLowerCase();
-            let filtered = onlyHolders ? displayRanking.filter((r) => holdersSet.has(r.username)) : displayRanking;
+            let filtered;
+            if (onlyNoConocen) {
+              // base: todas las personas que fallaron contigo (estén o no en el ranking)
+              const byUser = Object.fromEntries(displayRanking.map((r) => [r.username, r]));
+              filtered = Object.keys(noConocen)
+                .map((un) => byUser[un] || { username: un, displayName: USER_BY_NAME[un]?.displayName || un, count: 0, rank: null })
+                .sort((a, b) => (noConocen[b.username] || 0) - (noConocen[a.username] || 0));
+            } else {
+              filtered = onlyHolders ? displayRanking.filter((r) => holdersSet.has(r.username)) : displayRanking;
+            }
             if (q) filtered = filtered.filter((r) => r.displayName.toLowerCase().includes(q));
             const shown = filtered.slice(0, rankLimit);
             return (
@@ -163,20 +201,28 @@ export default function Album() {
               const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : null;
               const tieneMiFicha = holdersSet.has(r.username);
               return (
-                <div key={r.username} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg" style={{ background: r.rank <= 3 ? 'rgba(255,209,0,0.06)' : 'transparent' }}>
+                <div key={r.username} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg" style={{ background: (r.rank && r.rank <= 3) ? 'rgba(255,209,0,0.06)' : 'transparent' }}>
                   <span style={{ width: 22, textAlign: 'center', fontWeight: 900, fontSize: 13, color: r.rank === 1 ? '#FFD700' : r.rank === 2 ? '#C7CDD6' : r.rank === 3 ? '#cd7f32' : 'rgba(255,255,255,0.4)' }}>
-                    {medal || r.rank}
+                    {medal || r.rank || '·'}
                   </span>
                   <Avatar username={r.username} initials={u?.avatarInitials} displayName={r.displayName} size={30} clickable={false} />
                   <span className="text-sm font-semibold text-white truncate flex-1">{r.displayName}</span>
 
-                  {tieneMiFicha && r.username !== me && (
+                  {onlyNoConocen && (
+                    <span title="Veces que se equivocó contigo" className="text-xs font-black px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(248,113,113,0.18)', color: '#f87171' }}>
+                      ❌ {noConocen[r.username]}× {noConocen[r.username] === 1 ? 'vez' : 'veces'}
+                    </span>
+                  )}
+
+                  {!onlyNoConocen && tieneMiFicha && r.username !== me && (
                     <span title="Tiene tu ficha" className="text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(52,211,153,0.16)', color: '#34d399' }}>
                       📸 te tiene
                     </span>
                   )}
 
-                  <span className="text-xs font-black px-2 py-1 rounded-full" style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100' }}>{r.count} 📒</span>
+                  {!onlyNoConocen && (
+                    <span className="text-xs font-black px-2 py-1 rounded-full" style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100' }}>{r.count} 📒</span>
+                  )}
 
                   {r.username !== me && (
                     <button onClick={() => setViewer({ username: r.username, displayName: r.displayName })}
