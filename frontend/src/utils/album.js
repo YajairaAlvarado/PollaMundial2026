@@ -6,7 +6,8 @@ export const ALBUM_BETA_USERS = ['daniel.leon', 'kevin.castro'];
 export const isAlbumBeta = (username) => ALBUM_ENABLED || ALBUM_BETA_USERS.includes((username || '').toLowerCase());
 
 // ── Reglas (fáciles de cambiar a futuro) ───────────────────────────────────
-export const DAILY_LIMIT = 4;                   // oportunidades por día
+export const DAILY_LIMIT   = 3;                 // fichas (aciertos) máximos por día
+export const ATTEMPT_LIMIT = 6;                 // intentos máximos por día (acierte o falle)
 export const COOLDOWN_MS  = 60 * 60 * 1000;     // 1 hora entre intentos
 export const ANSWER_MS    = 10000;              // 10 seg para contestar
 export const ALBUM_POINTS = 3;                  // puntos al completar (aún NO oficial)
@@ -171,6 +172,7 @@ export function dailyState(challenges) {
 
 export function canPlay(challenges, missingCount) {
   if (missingCount <= 0) return false;
-  const { winsToday, cooldownLeft } = dailyState(challenges);
-  return winsToday < DAILY_LIMIT && cooldownLeft <= 0;
+  const { winsToday, attemptsToday, cooldownLeft } = dailyState(challenges);
+  // se acaba el día si: ya conseguiste 3 fichas, O ya usaste tus 6 intentos
+  return winsToday < DAILY_LIMIT && attemptsToday < ATTEMPT_LIMIT && cooldownLeft <= 0;
 }

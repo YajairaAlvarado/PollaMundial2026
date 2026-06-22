@@ -148,6 +148,7 @@ export const USERS = EMPLOYEE_DATA.map((e, i) => {
     email: `${e.username}@ec.andersen.com`,
     avatarInitials: parts.map(p => p[0].toUpperCase()).join('').slice(0, 2),
     department: e.department,
+    sex: e.sex,
   };
 });
 

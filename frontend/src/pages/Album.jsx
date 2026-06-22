@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlbumCtx } from '../contexts/AlbumContext';
-import { rosterByDepartment, dailyState, DAILY_LIMIT, ALBUM_POINTS } from '../utils/album';
+import { rosterByDepartment, dailyState, DAILY_LIMIT, ATTEMPT_LIMIT, ALBUM_POINTS } from '../utils/album';
 import { USERS } from '../utils/users';
 import StickerCard from '../components/StickerCard';
 import AlbumViewerModal from '../components/AlbumViewerModal';
@@ -77,17 +77,20 @@ export default function Album() {
   }
 
   const pct = total ? Math.round((owned / total) * 100) : 0;
-  const { winsToday, cooldownLeft } = dailyState(challenges || []);
-  const remaining = DAILY_LIMIT - winsToday;
+  const { winsToday, attemptsToday, cooldownLeft } = dailyState(challenges || []);
+  const gotAllFichas = winsToday >= DAILY_LIMIT;
+  const usedAllTries = attemptsToday >= ATTEMPT_LIMIT;
 
   // estado de la oportunidad
   let oppBox;
-  if (remaining <= 0) {
-    oppBox = { txt: `✅ Ya conseguiste tus ${DAILY_LIMIT} fichas de hoy · vuelve mañana`, bg: 'rgba(255,255,255,0.06)', col: 'rgba(255,255,255,0.55)', bd: 'rgba(255,255,255,0.12)' };
+  if (gotAllFichas) {
+    oppBox = { txt: `🏆 ¡Conseguiste tus ${DAILY_LIMIT} fichas de hoy! Vuelve mañana`, bg: 'rgba(52,211,153,0.14)', col: '#34d399', bd: 'rgba(52,211,153,0.45)' };
+  } else if (usedAllTries) {
+    oppBox = { txt: `😅 Se acabaron tus ${ATTEMPT_LIMIT} intentos de hoy · vuelve mañana`, bg: 'rgba(255,255,255,0.06)', col: 'rgba(255,255,255,0.55)', bd: 'rgba(255,255,255,0.12)' };
   } else if (cooldownLeft > 0) {
-    oppBox = { txt: `⏳ Próxima oportunidad de ficha en ${fmt(cooldownLeft)}`, bg: 'rgba(96,165,250,0.12)', col: '#93c5fd', bd: 'rgba(96,165,250,0.4)' };
+    oppBox = { txt: `⏳ Próximo intento en ${fmt(cooldownLeft)}`, bg: 'rgba(96,165,250,0.12)', col: '#93c5fd', bd: 'rgba(96,165,250,0.4)' };
   } else {
-    oppBox = { txt: '🎉 ¡Tienes una oportunidad de ficha nueva! Refresca para jugar', bg: 'rgba(52,211,153,0.14)', col: '#34d399', bd: 'rgba(52,211,153,0.45)' };
+    oppBox = { txt: '🎉 ¡Tienes un intento disponible! Refresca para jugar', bg: 'rgba(52,211,153,0.14)', col: '#34d399', bd: 'rgba(52,211,153,0.45)' };
   }
 
   return (
@@ -114,8 +117,9 @@ export default function Album() {
             {oppBox.txt}
           </div>
           <div className="rounded-xl px-3 py-2 text-xs font-bold flex items-center gap-1.5" style={{ background: 'rgba(255,255,255,0.06)', color: 'white', border: '1px solid rgba(255,255,255,0.12)' }}>
-            Fichas conseguidas hoy:
-            <span style={{ color: '#FFD100' }}>{Math.min(winsToday, DAILY_LIMIT)} de {DAILY_LIMIT}</span>
+            Fichas hoy: <span style={{ color: '#FFD100' }}>{Math.min(winsToday, DAILY_LIMIT)}/{DAILY_LIMIT}</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>·</span>
+            Intentos: <span style={{ color: '#93c5fd' }}>{Math.min(attemptsToday, ATTEMPT_LIMIT)}/{ATTEMPT_LIMIT}</span>
           </div>
         </div>
 
