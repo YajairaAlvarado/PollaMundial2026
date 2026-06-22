@@ -207,7 +207,7 @@ export default function Matches() {
   const [matches, setMatches] = useState([]);
   const [predictions, setPredictions] = useState({});
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('finished');
   const [selectedGroup, setSelectedGroup] = useState('A');
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [refreshing, setRefreshing] = useState(false);

@@ -499,9 +499,11 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
 
   // Miembros ordenados por puntos actuales
   const sortedMembers = [...dept.members].sort((a, b) => {
-    const pa = pointsMap[a.username]?.total_points ?? 0;
-    const pb = pointsMap[b.username]?.total_points ?? 0;
-    return pb - pa;
+    const A = pointsMap[a.username], B = pointsMap[b.username];
+    return (B?.total_points ?? 0)   - (A?.total_points ?? 0)        // puntos
+        || (B?.exact_scores ?? 0)   - (A?.exact_scores ?? 0)        // luego exactos
+        || (B?.correct_results ?? 0)- (A?.correct_results ?? 0)     // luego correctos
+        || (a.display_name || '').localeCompare(b.display_name || ''); // estable
   });
 
   // Rank anterior de cada miembro dentro del departamento (por puntos del snapshot)
