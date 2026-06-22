@@ -236,7 +236,7 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
 
   return (
     <div className="rounded-2xl shadow-2xl"
-      style={{ width: 440, maxWidth: '92vw', background: '#0f172a', border: '1px solid rgba(167,139,250,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.8)' }}>
+      style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(167,139,250,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.8)' }}>
       {/* Cabecera con el destinatario (fija arriba) */}
       <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, background: '#0f172a', zIndex: 6 }}>
         <Avatar username={target.username} initials={target.avatar_initials} displayName={target.display_name} size={32} colorClass={AVATAR_COLORS[(target.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length]} clickable={false} />
