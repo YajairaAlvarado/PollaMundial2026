@@ -60,12 +60,12 @@ function StepFree({ onSend, onBack }) {
         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
       />
       <CaritaSelector value={carita} onChange={setCarita} />
-      <div className="flex gap-2">
-        <button onClick={onBack} className="flex-1 py-2 rounded-xl text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>← Atrás</button>
+      <div className="flex gap-2" style={{ position: 'sticky', bottom: 0, background: '#0f172a', paddingTop: 8, paddingBottom: 4, marginTop: 4, zIndex: 5, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <button onClick={onBack} className="flex-1 py-2.5 rounded-xl text-xs font-bold" style={{ color: '#f87171', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)' }}>✕ Cancelar</button>
         <button
           onClick={() => onSend({ type: 'free', message: text.trim() || null, tone: carita })}
-          className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
-          style={{ background: 'rgba(167,139,250,0.25)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.4)' }}>
+          className="flex-1 py-2.5 rounded-xl text-xs font-black transition-all"
+          style={{ background: 'rgba(167,139,250,0.35)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.6)' }}>
           Enviar {isGifUrl(carita) ? '🎬' : carita}
         </button>
       </div>
@@ -163,7 +163,7 @@ function CaritaSelector({ value, onChange }) {
       <p className="text-[10px] font-bold uppercase tracking-wider mt-2.5 mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
         … o un GIF
       </p>
-      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1" style={{ maxHeight: 460 }}>
+      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1" style={{ maxHeight: 220 }}>
         {GIFS.map((g) => (
           <button key={g.url} onClick={() => onChange(g.url)} title={g.label}
             style={{
@@ -208,11 +208,11 @@ function StepScore({ match, onSend, onBack }) {
       </div>
       <input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Mensaje opcional..." className="w-full rounded-xl px-3 py-2 text-xs text-white outline-none" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
       <CaritaSelector value={carita} onChange={setCarita} />
-      <div className="flex gap-2">
-        <button onClick={onBack} className="flex-1 py-2 rounded-xl text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>← Atrás</button>
+      <div className="flex gap-2" style={{ position: 'sticky', bottom: 0, background: '#0f172a', paddingTop: 8, paddingBottom: 4, marginTop: 4, zIndex: 5, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <button onClick={onBack} className="flex-1 py-2.5 rounded-xl text-xs font-bold" style={{ color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.12)' }}>← Atrás</button>
         <button onClick={() => onSend({ type: 'match_wink', match_id: match.id, home_team: match.home_team, away_team: match.away_team, home_code: match.home_code, away_code: match.away_code, suggested_home: home, suggested_away: away, tone: carita, message: msg.trim() || null })}
-          className="flex-1 py-2 rounded-xl text-xs font-bold"
-          style={{ background: 'rgba(167,139,250,0.25)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.4)' }}>
+          className="flex-1 py-2.5 rounded-xl text-xs font-black"
+          style={{ background: 'rgba(167,139,250,0.35)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.6)' }}>
           Enviar {isGifUrl(carita) ? '🎬' : carita}
         </button>
       </div>
@@ -235,16 +235,18 @@ function NudgeSender({ target, currentUser, onSend, onClose }) {
   };
 
   return (
-    <div className="rounded-2xl overflow-hidden shadow-2xl"
+    <div className="rounded-2xl shadow-2xl"
       style={{ width: 440, maxWidth: '92vw', background: '#0f172a', border: '1px solid rgba(167,139,250,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.8)' }}>
-      {/* Cabecera con el destinatario */}
-      <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* Cabecera con el destinatario (fija arriba) */}
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, background: '#0f172a', zIndex: 6 }}>
         <Avatar username={target.username} initials={target.avatar_initials} displayName={target.display_name} size={32} colorClass={AVATAR_COLORS[(target.display_name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length]} clickable={false} />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>Guiño para</p>
           <p className="text-white text-sm font-bold truncate">{target.display_name}</p>
         </div>
-        <button onClick={onClose}><X size={16} style={{ color: 'rgba(255,255,255,0.4)' }} /></button>
+        <button onClick={onClose} className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
+          <X size={16} style={{ color: 'white' }} />
+        </button>
       </div>
       <StepFree onSend={handleSend} onBack={onClose} />
     </div>
