@@ -64,14 +64,26 @@ export function useAlbum(user) {
     return () => { supabase.removeChannel(channel); };
   }, [beta, username]);
 
-  // Abrir un reto si corresponde (respeta 3/día y cooldown). No duplica si ya hay uno.
+  // Abrir un reto si corresponde (respeta límites y cooldown). No duplica si ya hay uno.
+  // Guarda el reto activo en localStorage: si refrescas SIN contestar, te sale la
+  // MISMA pregunta (no una nueva) — así no se puede "re-rolear" refrescando.
+  const storageKey = `album_active_${username}`;
   const openChallenge = useCallback(() => {
     setChallenge((prev) => {
       if (prev) return prev;
       if (!canPlay(challenges, missing.length)) return prev;
-      return generateChallenge(roster, ownedSet, username) || prev;
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        const t = saved?.challenge?.target;
+        if (saved?.day === new Date().toDateString() && t && t.username !== username && !ownedSet.has(t.username)) {
+          return saved.challenge; // reusar el reto pendiente
+        }
+      } catch { /* noop */ }
+      const c = generateChallenge(roster, ownedSet, username);
+      if (c) { try { localStorage.setItem(storageKey, JSON.stringify({ day: new Date().toDateString(), challenge: c })); } catch { /* noop */ } }
+      return c || prev;
     });
-  }, [challenges, missing, roster, ownedSet, username]);
+  }, [challenges, missing, roster, ownedSet, username, storageKey]);
 
   // Trigger 1: al cargar/recargar la página (una sola vez)
   useEffect(() => {
@@ -87,6 +99,7 @@ export function useAlbum(user) {
   // ficha en una sola transacción con bloqueo) para que dos pestañas/sesiones
   // abiertas a la vez no puedan colarse y superar el límite diario.
   const recordResult = useCallback(async (result, target) => {
+    try { localStorage.removeItem(storageKey); } catch { /* noop */ } // ya se resolvió: no reusar
     if (result === 'win' && target) {
       const { data: awarded } = await supabase.rpc('try_award_album_sticker', {
         p_username: username, p_target: target.username,
@@ -101,9 +114,9 @@ export function useAlbum(user) {
     const nowIso = new Date().toISOString();
     setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]); // optimista
     await supabase.from('album_challenges').insert({ username, result, target_username: target?.username || null });
-  }, [username, load]);
+  }, [username, load, storageKey]);
 
-  const dismissChallenge = useCallback(() => setChallenge(null), []);
+  const dismissChallenge = useCallback(() => { try { localStorage.removeItem(storageKey); } catch { /* noop */ } setChallenge(null); }, [storageKey]);
 
   return {
     beta, loading, ready, roster, ownedSet, total, owned, completed,
