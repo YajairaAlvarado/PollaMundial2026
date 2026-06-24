@@ -61,16 +61,22 @@ export function AuthProvider({ children }) {
 
     const safety = setTimeout(finish, 5000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // OJO: NO hacer consultas a Supabase (await) DENTRO de este callback —
+    // choca con el lock interno de auth y cuelga el login (queda en "Ingresando…"
+    // hasta refrescar). El trabajo async se difiere con setTimeout(0) para salir
+    // del callstack del lock.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        const profile = await loadProfile(session.user);
         setToken(session.access_token);
-        setUser(profile);
+        setTimeout(async () => {
+          try { setUser(await loadProfile(session.user)); } catch { /* noop */ }
+          finish();
+        }, 0);
       } else {
         setToken(null);
         setUser(null);
+        finish();
       }
-      finish();
     });
 
     return () => { clearTimeout(safety); subscription.unsubscribe(); };
