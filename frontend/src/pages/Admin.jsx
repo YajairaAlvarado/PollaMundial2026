@@ -235,9 +235,22 @@ function AlbumAdminPanel() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: st }, { data: ch }] = await Promise.all([
-        supabase.from('album_stickers').select('owner_username, sticker_username'),
-        supabase.from('album_challenges').select('username, result, target_username'),
+      // paginar ambas tablas (Supabase devuelve máx 1000 filas por consulta)
+      const fetchAll = async (table, cols) => {
+        const out = []; let from = 0;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data } = await supabase.from(table).select(cols).range(from, from + 999);
+          if (!data || data.length === 0) break;
+          out.push(...data);
+          if (data.length < 1000) break;
+          from += 1000;
+        }
+        return out;
+      };
+      const [st, ch] = await Promise.all([
+        fetchAll('album_stickers', 'owner_username, sticker_username'),
+        fetchAll('album_challenges', 'username, result, target_username'),
       ]);
       setStickers(st || []);
       const map = {};

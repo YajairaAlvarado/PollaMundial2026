@@ -63,9 +63,18 @@ export default function Album() {
   const [onlyNoConocen, setOnlyNoConocen] = useState(false);
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from('album_stickers').select('owner_username');
+      // Paginar: Supabase devuelve máx 1000 filas por consulta y ya hay más
+      // cromos que eso en total, lo que dejaba el ranking corto.
       const counts = {};
-      for (const r of (data || [])) counts[r.owner_username] = (counts[r.owner_username] || 0) + 1;
+      let from = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { data: pg } = await supabase.from('album_stickers').select('owner_username').range(from, from + 999);
+        if (!pg || pg.length === 0) break;
+        for (const r of pg) counts[r.owner_username] = (counts[r.owner_username] || 0) + 1;
+        if (pg.length < 1000) break;
+        from += 1000;
+      }
       const list = Object.entries(counts)
         .map(([username, count]) => ({ username, count, displayName: USER_BY_NAME[username]?.displayName || username }))
         .sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName))
