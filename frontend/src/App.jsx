@@ -59,8 +59,7 @@ function ProtectedLayout() {
             externalTarget={nudgeTarget} onExternalTargetConsumed={() => setNudgeTarget(null)}
             onChallenge={(u) => trivia.challenge(u)} />
           <NudgePopupContainer nudges={incoming} onDismiss={dismissNudge} onReply={replyNudge} />
-          <ConnectionToastContainer alerts={connectionAlerts} onDismiss={dismissAlert}
-            onNudge={(a) => { setNudgeTarget(a); dismissAlert(a._alertId); }} />
+          {/* Avisos de "X se ha conectado" desactivados (a los usuarios no les gustaban) */}
 
           {/* Reto de trivia entrante */}
           {trivia.incoming && !trivia.active && (
