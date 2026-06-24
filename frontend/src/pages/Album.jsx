@@ -90,7 +90,7 @@ export default function Album() {
     return <div className="min-h-[60vh] flex items-center justify-center"><LoadingSpinner size="lg" text="Abriendo tu álbum…" /></div>;
   }
 
-  const pct = total ? Math.round((owned / total) * 100) : 0;
+  const pct = total ? Math.round((Math.min(owned, total) / total) * 100) : 0;
   const { winsToday, attemptsToday, cooldownLeft } = dailyState(challenges || []);
   const gotAllFichas = winsToday >= DAILY_LIMIT;
   const usedAllTries = attemptsToday >= ATTEMPT_LIMIT;

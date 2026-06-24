@@ -18,8 +18,11 @@ export function useAlbum(user) {
 
   const roster = useMemo(() => (ready ? buildRoster(avatars) : []), [avatars, ready]);
   const total  = roster.length;
-  const owned  = roster.filter((p) => ownedSet.has(p.username)).length; // solo cuenta fichas vigentes
-  const completed = total > 0 && owned >= total;
+  // owned = cromos reales que tiene (mismo criterio que el ranking), no depende
+  // de que las fotos hayan cargado todas — así el número es estable y coincide
+  // en el ranking, el álbum propio y el visor de otros.
+  const owned  = ownedSet.size;
+  const completed = total > 0 && roster.every((p) => ownedSet.has(p.username));
   const missing = useMemo(
     () => roster.filter((p) => p.username !== username && !ownedSet.has(p.username)),
     [roster, username, ownedSet]

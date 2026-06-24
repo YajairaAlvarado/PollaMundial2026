@@ -19,8 +19,8 @@ export default function AlbumViewerModal({ username, displayName, onClose }) {
   }, [username]);
 
   const total = roster.length;
-  const owned = ownedSet ? roster.filter((p) => ownedSet.has(p.username)).length : 0;
-  const pct = total ? Math.round((owned / total) * 100) : 0;
+  const owned = ownedSet ? ownedSet.size : 0; // cromos reales (coincide con el ranking)
+  const pct = total ? Math.round((Math.min(owned, total) / total) * 100) : 0;
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100003, background: 'rgba(5,2,20,0.9)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 16, overflowY: 'auto' }}>
