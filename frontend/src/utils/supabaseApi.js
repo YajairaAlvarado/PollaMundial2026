@@ -262,8 +262,11 @@ async function put(url, body = {}) {
       .select('id, home_score, away_score')
       .eq('match_id', matchId);
 
+    let failed = 0;
     if (preds && preds.length > 0) {
-      await Promise.all(preds.map((p) =>
+      // allSettled: si una actualización falla (red puntual), NO se aborta el
+      // resto — antes con Promise.all un solo error dejaba predicciones sin puntos.
+      const results = await Promise.allSettled(preds.map((p) =>
         supabase
           .from('predictions')
           .update({
@@ -273,10 +276,12 @@ async function put(url, body = {}) {
             ),
           })
           .eq('id', p.id)
+          .then(({ error }) => { if (error) throw error; })
       ));
+      failed = results.filter((r) => r.status === 'rejected').length;
     }
 
-    return { data: { ...match, predictionsUpdated: preds?.length ?? 0 } };
+    return { data: { ...match, predictionsUpdated: (preds?.length ?? 0) - failed, failed } };
   }
 
   // PUT /matches/:id/status  (admin)
