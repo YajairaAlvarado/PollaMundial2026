@@ -57,7 +57,7 @@ export default function Dashboard() {
       if (m.status !== 'scheduled') return false;
       const d = new Date(m.match_date);
       if (d <= now || myPredictions[m.id]) return false;
-      return (d - now) / 3600000 <= 60;
+      return (d - now) / 3600000 <= 72;
     });
   })();
 
@@ -69,7 +69,7 @@ export default function Dashboard() {
   const fetchData = async () => {
     try {
       const [matchesRes, predsRes] = await Promise.all([
-        api.get('/matches?stage=group&status=scheduled'),
+        api.get('/matches?status=scheduled'),
         api.get('/predictions/my'),
       ]);
 
@@ -195,7 +195,7 @@ export default function Dashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white font-semibold text-sm">Ver Todos los Partidos</p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>72 partidos de fase de grupos</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>Fase de grupos + eliminatorias</p>
           </div>
           <ArrowRight size={15} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
         </Link>
