@@ -8,6 +8,11 @@ import { MapPin, Plus } from 'lucide-react';
 
 function FlagImg({ code, name, size = 48 }) {
   const h = Math.round(size * 0.75);
+  if (!code) return (
+    <div style={{ width: size, height: h, borderRadius: 4, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ fontSize: size * 0.45 }}>🏆</span>
+    </div>
+  );
   return (
     <div style={{ width: size, height: h, overflow: 'hidden', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', display: 'inline-block' }}>
       <img
