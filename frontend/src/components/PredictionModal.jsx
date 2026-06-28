@@ -113,7 +113,16 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
         {/* Header */}
         <div className="bg-gradient-to-r from-andersen-blue to-blue-800 px-6 py-4 flex items-center justify-between">
           <div>
-            <span className="group-badge text-xs">Grupo {match.group_name}</span>
+            <span className="group-badge text-xs">
+              {match.stage === 'group' ? `Grupo ${match.group_name}`
+               : match.stage === 'r32' ? 'Ronda de 32'
+               : match.stage === 'r16' ? 'Octavos de Final'
+               : match.stage === 'qf'  ? 'Cuartos de Final'
+               : match.stage === 'sf'  ? 'Semifinal'
+               : match.stage === 'final' ? 'Final'
+               : match.stage === 'third_place' ? 'Tercer Puesto'
+               : match.stage}
+            </span>
             <h2 className="text-white font-bold text-lg mt-1">
               {prediction ? 'Tu Predicción' : step === 'confirm' ? 'Confirmar Predicción' : 'Predecir Resultado'}
             </h2>
@@ -266,6 +275,11 @@ export default function PredictionModal({ match, prediction, onClose, onSaved })
             <span>✓ Resultado = 2 pts</span>
             <span>✗ Incorrecto = 0 pts</span>
           </div>
+          {match.stage !== 'group' && (
+            <p className="text-center text-xs mt-1.5 font-semibold" style={{ color: 'rgba(251,191,36,0.7)' }}>
+              ⏱ Resultado a los 120 min · No se consideran penales
+            </p>
+          )}
         </div>
       </div>
     </div>
