@@ -9,8 +9,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/PollaMundial2026/assets/index-BVYvCb_W.js"></script>
-    <link rel="stylesheet" crossorigin href="/PollaMundial2026/assets/index-C5sWu3Yy.css">
+    <script>
+      // GitHub Pages SPA: restore path from query string set by 404.html
+      (function() {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+        var search = location.search;
+        if (search) {
+          var p = search.slice(1).split('&').reduce(function(o, s) {
+            var pair = s.split('=');
+            o[decodeURIComponent(pair[0])] = decodeURIComponent(pair.slice(1).join('=').replace(/~and~/g, '&'));
+            return o;
+          }, {});
+          if (p.p !== undefined) {
+            var base = location.pathname.split('/').slice(0, 2).join('/');
+            history.replaceState(null, null,
+              base + '/' + p.p + (p.q ? '?' + p.q : '') + location.hash
+            );
+          }
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/PollaMundial2026/assets/index-CVTaYtjM.js"></script>
+    <link rel="stylesheet" crossorigin href="/PollaMundial2026/assets/index-C9ePDrxG.css">
   </head>
   <body>
     <div id="root"></div>
