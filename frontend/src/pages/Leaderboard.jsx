@@ -6,7 +6,7 @@ import { trackPage } from '../utils/trackPage';
 import LeaderboardTable from '../components/LeaderboardTable';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Avatar from '../components/Avatar';
-import { Trophy, User, Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trophy, User, Building2, ChevronDown, ChevronUp, Star, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toZonedTime, format as formatTz } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
@@ -201,11 +201,72 @@ function UserPredictionsPanel({ userId }) {
 // ── Tabla de personas expandible ─────────────────────────────────────────────
 const RANK_COLORS = { 1: '#F59E0B', 2: '#94a3b8', 3: '#cd7f32' };
 
+function BonusModal({ entry, onClose }) {
+  const [events, setEvents] = useState(null);
+  useEffect(() => {
+    supabase
+      .from('bonus_points')
+      .select('points, position, event:bonus_events(name, description, event_date)')
+      .eq('user_id', entry.id)
+      .order('created_at')
+      .then(({ data }) => setEvents(data || []));
+  }, [entry.id]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}
+      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+      <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}
+        style={{ background: '#0D1B30', border: '1px solid rgba(245,158,11,0.3)' }}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div>
+            <p className="text-white font-black text-base">⭐ Puntos Especiales</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>{entry.display_name}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+            <X size={16} style={{ color: 'rgba(255,255,255,0.5)' }} />
+          </button>
+        </div>
+        <div className="p-5 space-y-3">
+          {!events ? (
+            <p className="text-center text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Cargando...</p>
+          ) : events.map((bp, i) => (
+            <div key={i} className="rounded-xl p-4" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)' }}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-sm leading-tight">{bp.event.name}</p>
+                  {bp.event.description && <p className="text-xs mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>{bp.event.description}</p>}
+                  <p className="text-xs mt-1.5 font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                    📅 {new Date(bp.event.event_date).toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                  {bp.position && (
+                    <p className="text-xs mt-0.5 font-bold" style={{ color: '#F59E0B' }}>
+                      {bp.position === 1 ? '🥇 1er lugar' : bp.position === 2 ? '🥈 2do lugar' : bp.position === 3 ? '🥉 3er lugar' : `#${bp.position}`}
+                    </p>
+                  )}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className="text-2xl font-black" style={{ color: '#F59E0B' }}>+{bp.points}</span>
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>pts</p>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Total especiales</span>
+            <span className="font-black text-lg" style={{ color: '#F59E0B' }}>+{entry.bonus_points} pts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LeaderboardTableExpandable({ data }) {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(null);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('puntos'); // 'puntos' | 'racha'
+  const [bonusModal, setBonusModal] = useState(null);
 
   const filtered = useMemo(() => {
     let list = data;
@@ -259,8 +320,9 @@ function LeaderboardTableExpandable({ data }) {
       <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
         style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)' }}>
         <div className="col-span-1 text-center">#</div>
-        <div className="col-span-5">Jugador</div>
+        <div className="col-span-4">Jugador</div>
         <div className="col-span-2 text-center">Pts</div>
+        <div className="col-span-1 text-center" title="Puntos de eventos especiales">⭐</div>
         <div className="col-span-2 text-center">Exactos</div>
         <div className="col-span-2 text-center">Correctos</div>
       </div>
@@ -292,7 +354,7 @@ function LeaderboardTableExpandable({ data }) {
                   {entry.trend === 'down' && <span style={{ color: '#f87171', fontSize: 11, fontWeight: 900 }}>▼</span>}
                   {entry.trend === 'same' && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>–</span>}
                 </div>
-                <div className="col-span-5 flex items-center gap-2.5 min-w-0">
+                <div className="col-span-4 flex items-center gap-2.5 min-w-0">
                   <Avatar username={entry.username} initials={entry.avatar_initials} displayName={entry.display_name} size={30} colorClass={AVATAR_COLORS[colorIdx]} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
@@ -323,6 +385,20 @@ function LeaderboardTableExpandable({ data }) {
                 <div className="col-span-2 text-center">
                   <span className="font-black text-base" style={{ color: rankColor }}>{entry.total_points}</span>
                 </div>
+                <div className="col-span-1 text-center">
+                  {entry.bonus_points > 0 ? (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setBonusModal(entry); }}
+                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg text-xs font-black transition-all hover:scale-110"
+                      style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.4)' }}
+                      title="Ver puntos de eventos especiales"
+                    >
+                      +{entry.bonus_points}
+                    </button>
+                  ) : (
+                    <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>
+                  )}
+                </div>
                 <div className="col-span-2 text-center">
                   <span className="text-sm font-semibold" style={{ color: '#34d399' }}>{entry.exact_scores}</span>
                 </div>
@@ -340,6 +416,7 @@ function LeaderboardTableExpandable({ data }) {
           );
         })}
       </div>
+      {bonusModal && <BonusModal entry={bonusModal} onClose={() => setBonusModal(null)} />}
     </div>
   );
 }
