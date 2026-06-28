@@ -217,8 +217,8 @@ export default function Matches() {
     else setRefreshing(true);
 
     try {
-      let matchUrl = '/matches?stage=group';
-      if (filter === 'group') matchUrl += `&group=${selectedGroup}`;
+      let matchUrl = '/matches';
+      if (filter === 'group') matchUrl += `?stage=group&group=${selectedGroup}`;
 
       const [matchRes, predRes] = await Promise.all([
         api.get(matchUrl),
@@ -268,11 +268,11 @@ export default function Matches() {
     }));
   };
 
+  const STAGE_LABELS = { r32: 'Ronda de 32', r16: 'Octavos de Final', qf: 'Cuartos de Final', sf: 'Semifinales', third_place: 'Tercer Puesto', final: 'Final' };
+
   // Agrupar partidos según el filtro activo
   const groupedMatches = React.useMemo(() => {
-    if (filter === 'group') {
-      return { [selectedGroup]: matches };
-    }
+    if (filter === 'group') return { [selectedGroup]: matches };
     // Próximos: agrupar por fecha local (Hoy / Mañana / dd de mes), ascendente
     if (filter === 'scheduled') {
       const grouped = {};
@@ -294,10 +294,10 @@ export default function Matches() {
       }
       return grouped;
     }
-    // Resto: agrupar por grupo
+    // Todos / En Vivo: agrupar por ronda/grupo
     const grouped = {};
     for (const m of matches) {
-      const key = m.group_name || 'Sin grupo';
+      const key = m.stage === 'group' ? (m.group_name || 'Grupo') : (STAGE_LABELS[m.stage] || m.stage);
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(m);
     }
@@ -314,7 +314,7 @@ export default function Matches() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white">Partidos ⚽</h1>
-          <p className="text-white/40 text-sm mt-0.5">Fase de grupos · 72 partidos</p>
+          <p className="text-white/40 text-sm mt-0.5">Copa Mundial 2026 · {matches.length} partidos</p>
         </div>
         <button
           onClick={() => fetchData(true)}
@@ -378,7 +378,7 @@ export default function Matches() {
               <div key={match.id}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="animate-pulse text-red-400 text-xs font-bold">🔴 EN VIVO</span>
-                  <span className="text-white/40 text-xs">· Grupo {match.group_name}</span>
+                  <span className="text-white/40 text-xs">· {match.group_name ? `Grupo ${match.group_name}` : (STAGE_LABELS[match.stage] || match.stage)}</span>
                 </div>
                 <MatchCard match={match} prediction={predictions[match.id]} onPredict={(m) => setSelectedMatch(m)} />
                 <LivePredictionsPanel match={match} />
@@ -401,9 +401,9 @@ export default function Matches() {
                 ) : (filter === 'all' || filter === 'group') && (
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-lg bg-andersen-blue border border-yellow-400/30 flex items-center justify-center">
-                      <span className="text-yellow-400 font-black text-sm">{groupName}</span>
+                      <span className="text-yellow-400 font-black text-sm">{groupName.length <= 2 ? groupName : '⚡'}</span>
                     </div>
-                    <h2 className="text-white font-bold">Grupo {groupName}</h2>
+                    <h2 className="text-white font-bold">{groupName.length <= 2 ? `Grupo ${groupName}` : groupName}</h2>
                     <div className="h-px flex-1 bg-white/10" />
                     <span className="text-white/30 text-xs">{groupMatches.length} partidos</span>
                   </div>
