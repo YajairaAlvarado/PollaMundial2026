@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Network, Eye, CheckCircle2, TrendingUp, ListOrdered } from 'lucide-react';
+import { Network, ListOrdered } from 'lucide-react';
 import api from '../utils/api';
 import canchaBg from '../assets/andersen-cancha.jpg';
 
@@ -60,9 +60,6 @@ function buildPaths() {
 const CONNECTOR_PATHS = buildPaths();
 
 // ── Desempate Mundial 2026: enfrentamiento directo PRIMERO ────────────────────
-// Orden FIFA 2026: 1) puntos · 2) pts entre empatados · 3) dif. goles entre
-// empatados · 4) goles a favor entre empatados · 5) dif. goles general ·
-// 6) goles a favor general · 7) (fair play, no se modela) · alfabético.
 function h2hStats(teamNames, matches) {
   const set = new Set(teamNames);
   const st = {};
@@ -89,11 +86,11 @@ function sortGroupTeams(teams, matches) {
     if (tied.length === 1) { out.push(tied[0]); return; }
     const h = h2hStats(tied.map((t) => t.team), matches);
     tied.sort((a, b) =>
-      h[b.team].pts - h[a.team].pts ||   // 2) puntos entre empatados
-      h[b.team].gd  - h[a.team].gd  ||   // 3) dif. goles entre empatados
-      h[b.team].gf  - h[a.team].gf  ||   // 4) goles a favor entre empatados
-      b.gd - a.gd ||                     // 5) dif. goles general
-      b.gf - a.gf ||                     // 6) goles a favor general
+      h[b.team].pts - h[a.team].pts ||
+      h[b.team].gd  - h[a.team].gd  ||
+      h[b.team].gf  - h[a.team].gf  ||
+      b.gd - a.gd ||
+      b.gf - a.gf ||
       a.team.localeCompare(b.team)
     );
     out.push(...tied);
@@ -101,29 +98,6 @@ function sortGroupTeams(teams, matches) {
   return out;
 }
 
-// ── Calcular tabla de un grupo ────────────────────────────────────────────────
-function calcStandings(matches) {
-  const table = {};
-  for (const m of matches) {
-    const addTeam = (name, code) => {
-      if (!table[name]) table[name] = { team: name, code, pts: 0, gd: 0, gf: 0, played: 0 };
-    };
-    addTeam(m.home_team, m.home_code);
-    addTeam(m.away_team, m.away_code);
-    if (m.status !== 'finished' || m.home_score === null) continue;
-    const h = m.home_score, a = m.away_score;
-    table[m.home_team].played++;
-    table[m.away_team].played++;
-    table[m.home_team].gf += h; table[m.home_team].gd += h - a;
-    table[m.away_team].gf += a; table[m.away_team].gd += a - h;
-    if (h > a)      { table[m.home_team].pts += 3; }
-    else if (h < a) { table[m.away_team].pts += 3; }
-    else            { table[m.home_team].pts += 1; table[m.away_team].pts += 1; }
-  }
-  return sortGroupTeams(Object.values(table), matches);
-}
-
-// ── Tabla completa de un grupo (con W/D/L, GC, forma) ──────────────────────────
 function calcGroupTable(matches) {
   const table = {};
   const addTeam = (name, code) => {
@@ -146,7 +120,6 @@ function calcGroupTable(matches) {
   return sortGroupTeams(Object.values(table), matches);
 }
 
-// Extrae "Grupo X" de strings como "1° Grupo A", "2° Grupo C"
 function parseGroupSlot(text) {
   if (!text) return null;
   const m = text.match(/(\d+)[°º]\s*Grupo\s+([A-L])/i);
@@ -154,7 +127,6 @@ function parseGroupSlot(text) {
   return { pos: parseInt(m[1]), group: m[2].toUpperCase() };
 }
 
-// Extrae el índice de "Mejor 3° (N)"
 function parseThirdSlot(text) {
   if (!text) return null;
   const m = text.match(/Mejor\s*3[°º]\s*\((\d+)\)/i);
@@ -162,7 +134,22 @@ function parseThirdSlot(text) {
   return parseInt(m[1]);
 }
 
-// Es un equipo real (no placeholder)
+// Resuelve "Ganador R32 M1", "Ganador R16 M3", "Ganador QF M2", etc.
+// desde los resultados reales del bracket ya terminados
+function resolveWinnerFromBracket(slotText, bracketData) {
+  if (!slotText || !bracketData) return null;
+  const m = slotText.match(/Ganador\s+(R\d+|QF|SF)\s+M(\d+)/i);
+  if (!m) return null;
+  const roundStr = m[1].toLowerCase();
+  const matchIdx = parseInt(m[2]) - 1;
+  const matches = bracketData[roundStr] || [];
+  const match = matches[matchIdx];
+  if (!match || match.status !== 'finished' || match.home_score === null) return null;
+  if (match.home_score > match.away_score) return { team: match.home_team, code: match.home_code };
+  if (match.away_score > match.home_score) return { team: match.away_team, code: match.away_code };
+  return null;
+}
+
 function isRealTeam(name) {
   if (!name) return false;
   return !(name.startsWith('Ganador') || name.startsWith('Perdedor') ||
@@ -170,8 +157,9 @@ function isRealTeam(name) {
 }
 
 // ── TeamRow ───────────────────────────────────────────────────────────────────
-function TeamRow({ team, code, score, isWinner, isTop, isPreview, pts }) {
-  const isPlaceholder = !team || team.startsWith('Ganador') || team.startsWith('Perdedor') || team.startsWith('1°') || team.startsWith('2°') || team.startsWith('Mejor');
+function TeamRow({ team, code, score, isWinner, isTop }) {
+  const isPlaceholder = !team || team.startsWith('Ganador') || team.startsWith('Perdedor') ||
+    team.startsWith('1°') || team.startsWith('2°') || team.startsWith('Mejor');
   const hasTeam = !isPlaceholder;
 
   return (
@@ -192,7 +180,7 @@ function TeamRow({ team, code, score, isWinner, isTop, isPreview, pts }) {
         flex: 1, fontSize: 9.5,
         fontWeight: hasTeam ? 700 : 400,
         color: hasTeam
-          ? (isWinner ? '#F59E0B' : isPreview ? '#93c5fd' : 'rgba(255,255,255,0.95)')
+          ? (isWinner ? '#F59E0B' : 'rgba(255,255,255,0.95)')
           : 'rgba(255,255,255,0.2)',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         fontStyle: hasTeam ? 'normal' : 'italic',
@@ -204,56 +192,28 @@ function TeamRow({ team, code, score, isWinner, isTop, isPreview, pts }) {
           {score}
         </span>
       )}
-      {isPreview && pts !== undefined && hasTeam && (
-        <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(147,197,253,0.6)', minWidth: 18, textAlign: 'right' }}>
-          {pts}pt
-        </span>
-      )}
     </div>
   );
 }
 
 // ── BracketCard ───────────────────────────────────────────────────────────────
-function BracketCard({ match, top, left, groupStandings, rankedThirds, isPreview }) {
+function BracketCard({ match, top, left, bracketData }) {
   if (!match) return null;
   const finished = match.status === 'finished';
   const homeWins = finished && match.home_score !== null && match.home_score > match.away_score;
   const awayWins = finished && match.away_score !== null && match.away_score > match.home_score;
 
-  // En modo preview, resolver placeholders con standings actuales
   let homeTeam = match.home_team, homeCode = match.home_code;
   let awayTeam = match.away_team, awayCode = match.away_code;
-  let homePts, awayPts;
 
-  if (isPreview) {
-    const resolve = (slotText) => {
-      // 1° / 2° de grupo
-      const gSlot = parseGroupSlot(slotText);
-      if (gSlot && groupStandings?.[gSlot.group]) {
-        const entry = groupStandings[gSlot.group][gSlot.pos - 1];
-        if (entry) return { team: entry.team, code: entry.code, pts: entry.pts };
-      }
-      // Mejor 3° (N)
-      const tSlot = parseThirdSlot(slotText);
-      if (tSlot && rankedThirds) {
-        const entry = rankedThirds[tSlot - 1];
-        if (entry) return { team: entry.team, code: entry.code, pts: entry.pts };
-      }
-      return null;
-    };
-    const h = resolve(match.home_team);
-    if (h) { homeTeam = h.team; homeCode = h.code; homePts = h.pts; }
-    const a = resolve(match.away_team);
-    if (a) { awayTeam = a.team; awayCode = a.code; awayPts = a.pts; }
-  }
+  // Resolver ganadores de rondas anteriores ya terminadas
+  const h = resolveWinnerFromBracket(match.home_team, bracketData);
+  if (h) { homeTeam = h.team; homeCode = h.code; }
+  const a = resolveWinnerFromBracket(match.away_team, bracketData);
+  if (a) { awayTeam = a.team; awayCode = a.code; }
 
-  const borderColor = finished
-    ? 'rgba(245,158,11,0.4)'
-    : isPreview
-    ? 'rgba(96,165,250,0.25)'
-    : 'rgba(255,255,255,0.12)';
-
-  const bgColor = finished ? 'rgba(26,16,0,0.95)' : isPreview ? 'rgba(13,27,60,0.95)' : 'rgba(10,20,42,0.95)';
+  const borderColor = finished ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.12)';
+  const bgColor     = finished ? 'rgba(26,16,0,0.95)'   : 'rgba(10,20,42,0.95)';
 
   return (
     <div style={{
@@ -261,10 +221,10 @@ function BracketCard({ match, top, left, groupStandings, rankedThirds, isPreview
       background: bgColor,
       border: `1px solid ${borderColor}`,
       borderRadius: 8, overflow: 'hidden',
-      boxShadow: finished ? '0 0 10px rgba(245,158,11,0.12)' : isPreview ? '0 0 8px rgba(96,165,250,0.08)' : 'none',
+      boxShadow: finished ? '0 0 10px rgba(245,158,11,0.12)' : 'none',
     }}>
-      <TeamRow team={homeTeam} code={homeCode} score={match.home_score} isWinner={homeWins} isTop isPreview={isPreview && !finished} pts={homePts} />
-      <TeamRow team={awayTeam} code={awayCode} score={match.away_score} isWinner={awayWins} isTop={false} isPreview={isPreview && !finished} pts={awayPts} />
+      <TeamRow team={homeTeam} code={homeCode} score={match.home_score} isWinner={homeWins} isTop />
+      <TeamRow team={awayTeam} code={awayCode} score={match.away_score} isWinner={awayWins} isTop={false} />
     </div>
   );
 }
@@ -319,14 +279,12 @@ function FormDots({ form }) {
 function GroupCard({ group, rows, qualifiedThirdTeams }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(8,16,36,0.92)', border: '1px solid rgba(255,255,255,0.1)' }}>
-      {/* Header */}
       <div className="px-3 py-2 flex items-center justify-between" style={{ background: 'rgba(245,158,11,0.1)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <span className="text-sm font-black text-white">Grupo {group}</span>
         <span className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {rows.reduce((s, r) => s + r.played, 0) / 2 | 0} / 6 jugados
         </span>
       </div>
-      {/* Tabla */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 360 }}>
           <thead>
@@ -347,12 +305,11 @@ function GroupCard({ group, rows, qualifiedThirdTeams }) {
             {rows.map((r, idx) => {
               const pos = idx + 1;
               const isReal = isRealTeam(r.team);
-              // Estado de clasificación
               let accent = null, badge = null;
-              if (pos <= 2)                              { accent = '#22c55e'; badge = null; }
-              else if (pos === 3 && qualifiedThirdTeams.has(r.team)) { accent = '#3b82f6'; badge = '3°✓'; }
-              else if (pos === 3)                        { accent = '#ef4444'; badge = '3°✗'; }
-              else                                       { accent = 'rgba(255,255,255,0.08)'; }
+              if (pos <= 2)                                              { accent = '#22c55e'; badge = null; }
+              else if (pos === 3 && qualifiedThirdTeams.has(r.team))   { accent = '#3b82f6'; badge = '3°✓'; }
+              else if (pos === 3)                                        { accent = '#ef4444'; badge = '3°✗'; }
+              else                                                       { accent = 'rgba(255,255,255,0.08)'; }
               return (
                 <tr key={r.team} style={{
                   borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -398,7 +355,6 @@ function GroupsView({ groupStandings, rankedThirds, qualifiedThirdTeams }) {
 
   return (
     <div className="space-y-5">
-      {/* Leyenda */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2.5 rounded-xl text-[11px]"
         style={{ background: 'rgba(8,16,36,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <span className="flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -412,14 +368,12 @@ function GroupsView({ groupStandings, rankedThirds, qualifiedThirdTeams }) {
         </span>
       </div>
 
-      {/* Grid de grupos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {groups.map((g) => (
           <GroupCard key={g} group={g} rows={groupStandings[g]} qualifiedThirdTeams={qualifiedThirdTeams} />
         ))}
       </div>
 
-      {/* Ranking de mejores terceros */}
       {rankedThirds.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(8,16,36,0.92)', border: '1px solid rgba(59,130,246,0.3)' }}>
           <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: 'rgba(59,130,246,0.1)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -464,11 +418,10 @@ function GroupsView({ groupStandings, rankedThirds, qualifiedThirdTeams }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Bracket() {
-  const [bracket,       setBracket]       = useState(null);
-  const [groupMatches,  setGroupMatches]  = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [viewMode,      setViewMode]      = useState('preview'); // 'preview' | 'oficial'
-  const [tab,           setTab]           = useState('llaves');  // 'llaves' | 'grupos'
+  const [bracket,      setBracket]      = useState(null);
+  const [groupMatches, setGroupMatches] = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [tab,          setTab]          = useState('llaves');
 
   useEffect(() => {
     Promise.all([
@@ -481,7 +434,6 @@ export default function Bracket() {
     }).catch(() => setLoading(false));
   }, []);
 
-  // Calcular tablas completas por grupo
   const groupStandings = useMemo(() => {
     const byGroup = {};
     for (const m of groupMatches) {
@@ -497,13 +449,11 @@ export default function Bracket() {
     return result;
   }, [groupMatches]);
 
-  // Mejores terceros: rankear los 12 terceros, top 8 clasifican
   const rankedThirds = useMemo(() => {
-    const thirds = Object.entries(groupStandings)
+    return Object.entries(groupStandings)
       .map(([g, rows]) => (rows[2] ? { ...rows[2], group: g } : null))
       .filter(Boolean)
       .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.team.localeCompare(b.team));
-    return thirds;
   }, [groupStandings]);
 
   const qualifiedThirdTeams = useMemo(
@@ -529,11 +479,6 @@ export default function Bracket() {
   const qfL  = qf.slice(0, 2);   const qfR  = qf.slice(2, 4);
   const sfL  = sf[0] || null;    const sfR  = sf[1] || null;
 
-  const isPreview = viewMode === 'preview';
-
-  // Contar grupos con al menos 1 partido jugado
-  const groupsWithData = Object.values(groupStandings).filter((s) => s.some((e) => e.played > 0)).length;
-
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)]"
       style={{ backgroundImage: `url(${canchaBg})`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }}>
@@ -542,50 +487,14 @@ export default function Bracket() {
       <div className="px-4 py-6 max-w-[1500px] mx-auto relative z-10">
 
         {/* Header */}
-        <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <Network size={20} style={{ color: '#F59E0B' }} />
-            <div>
-              <h1 className="text-white font-black text-xl leading-none">Llaves · FIFA World Cup 2026™</h1>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                Fase eliminatoria · 28 jun – 19 jul
-              </p>
-            </div>
+        <div className="mb-5 flex items-center gap-3">
+          <Network size={20} style={{ color: '#F59E0B' }} />
+          <div>
+            <h1 className="text-white font-black text-xl leading-none">Llaves · FIFA World Cup 2026™</h1>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              Fase eliminatoria · 28 jun – 19 jul
+            </p>
           </div>
-
-          {/* Toggle vista — solo en Llaves */}
-          {tab === 'llaves' && (
-            <div className="flex items-center rounded-xl overflow-hidden"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <button
-                onClick={() => setViewMode('preview')}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold transition-all"
-                style={{
-                  background: isPreview ? 'rgba(96,165,250,0.18)' : 'transparent',
-                  color: isPreview ? '#93c5fd' : 'rgba(255,255,255,0.4)',
-                  borderRight: '1px solid rgba(255,255,255,0.08)',
-                }}>
-                <TrendingUp size={12} />
-                Proyección actual
-                {groupsWithData > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-black"
-                    style={{ background: 'rgba(96,165,250,0.2)', color: '#93c5fd' }}>
-                    {groupsWithData} grupos
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setViewMode('oficial')}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold transition-all"
-                style={{
-                  background: !isPreview ? 'rgba(245,158,11,0.15)' : 'transparent',
-                  color: !isPreview ? '#F59E0B' : 'rgba(255,255,255,0.4)',
-                }}>
-                <CheckCircle2 size={12} />
-                Resultados oficiales
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Tabs Llaves / Grupos */}
@@ -609,67 +518,63 @@ export default function Bracket() {
 
         {/* ════ TAB LLAVES ════ */}
         {tab === 'llaves' && (<>
-        {/* Leyenda del modo */}
-        {isPreview && (
-          <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
-            <Eye size={13} style={{ color: '#93c5fd', flexShrink: 0 }} />
-            <p className="text-xs" style={{ color: 'rgba(147,197,253,0.8)' }}>
-              <span className="font-bold text-blue-300">Proyección actual</span> — muestra qué equipos clasificarían según la tabla de grupos en este momento.
-              Los equipos en <span className="font-bold text-blue-300">azul</span> aún no están confirmados oficialmente.
-            </p>
-          </div>
-        )}
 
         {/* Bracket container */}
         <div className="rounded-2xl" style={{
           background: 'rgba(8,16,36,0.92)',
           border: '1px solid rgba(255,255,255,0.1)',
-          padding: '20px 20px 24px',
+          padding: '16px 16px 20px',
           backdropFilter: 'blur(8px)',
         }}>
-          <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
-            <div style={{ position: 'relative', width: TOTAL_W, height: TOTAL_H, minWidth: TOTAL_W }}>
+          {/* Hint desliza solo en móvil */}
+          <p className="text-center text-[11px] mb-3 sm:hidden" style={{ color: 'rgba(255,255,255,0.28)' }}>
+            ← Desliza para ver el bracket →
+          </p>
 
-              {/* SVG connectors */}
-              <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} width={TOTAL_W} height={TOTAL_H}>
-                <defs>
-                  <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="rgba(96,165,250,0.3)" />
-                    <stop offset="100%" stopColor="rgba(245,158,11,0.3)" />
-                  </linearGradient>
-                </defs>
-                {CONNECTOR_PATHS.map((d, i) => (
-                  <path key={i} d={d} stroke={isPreview ? 'rgba(96,165,250,0.18)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" fill="none" />
+          <div style={{ position: 'relative' }}>
+            <div style={{ overflowX: 'auto', paddingBottom: 6, WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
+              <div style={{ position: 'relative', width: TOTAL_W, height: TOTAL_H, minWidth: TOTAL_W }}>
+
+                {/* SVG connectors */}
+                <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} width={TOTAL_W} height={TOTAL_H}>
+                  {CONNECTOR_PATHS.map((d, i) => (
+                    <path key={i} d={d} stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" fill="none" />
+                  ))}
+                </svg>
+
+                {/* Column labels */}
+                {LABELS.map(({ x, label, isCenter }) => (
+                  <div key={x} style={{ position: 'absolute', top: 0, left: x, width: CW, height: LABEL_H, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
+                      color: isCenter ? 'rgba(245,158,11,0.9)' : 'rgba(255,255,255,0.35)',
+                    }}>{label}</span>
+                  </div>
                 ))}
-              </svg>
 
-              {/* Column labels */}
-              {LABELS.map(({ x, label, isCenter }) => (
-                <div key={x} style={{ position: 'absolute', top: 0, left: x, width: CW, height: LABEL_H, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{
-                    fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
-                    color: isCenter ? 'rgba(245,158,11,0.9)' : 'rgba(255,255,255,0.35)',
-                  }}>{label}</span>
-                </div>
-              ))}
+                {/* LEFT */}
+                {r32L.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy32(i))} left={X.r32L} bracketData={bracket} />)}
+                {r16L.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy16(i))} left={X.r16L} bracketData={bracket} />)}
+                {qfL.map((m, i)  => <BracketCard key={m.id} match={m} top={cardTop(cyQF(i))} left={X.qfL}  bracketData={bracket} />)}
+                {sfL && <BracketCard match={sfL} top={cardTop(cySF())} left={X.sfL} bracketData={bracket} />}
 
-              {/* LEFT */}
-              {r32L.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy32(i))} left={X.r32L} groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />)}
-              {r16L.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy16(i))} left={X.r16L} groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />)}
-              {qfL.map((m, i)  => <BracketCard key={m.id} match={m} top={cardTop(cyQF(i))} left={X.qfL}  groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />)}
-              {sfL && <BracketCard match={sfL} top={cardTop(cySF())} left={X.sfL} groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />}
+                {/* FINAL */}
+                <FinalCard match={bracket.final} />
 
-              {/* FINAL */}
-              <FinalCard match={bracket.final} />
+                {/* RIGHT */}
+                {r32R.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy32(i))} left={X.r32R} bracketData={bracket} />)}
+                {r16R.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy16(i))} left={X.r16R} bracketData={bracket} />)}
+                {qfR.map((m, i)  => <BracketCard key={m.id} match={m} top={cardTop(cyQF(i))} left={X.qfR}  bracketData={bracket} />)}
+                {sfR && <BracketCard match={sfR} top={cardTop(cySF())} left={X.sfR} bracketData={bracket} />}
 
-              {/* RIGHT */}
-              {r32R.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy32(i))} left={X.r32R} groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />)}
-              {r16R.map((m, i) => <BracketCard key={m.id} match={m} top={cardTop(cy16(i))} left={X.r16R} groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />)}
-              {qfR.map((m, i)  => <BracketCard key={m.id} match={m} top={cardTop(cyQF(i))} left={X.qfR}  groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />)}
-              {sfR && <BracketCard match={sfR} top={cardTop(cySF())} left={X.sfR} groupStandings={groupStandings} rankedThirds={rankedThirds} isPreview={isPreview} />}
-
+              </div>
             </div>
+            {/* Gradiente de scroll hint en móvil */}
+            <div className="sm:hidden pointer-events-none" style={{
+              position: 'absolute', top: 0, right: 0, bottom: 6, width: 32,
+              background: 'linear-gradient(to right, transparent, rgba(8,16,36,0.85))',
+              borderRadius: '0 2px 2px 0',
+            }} />
           </div>
         </div>
 
@@ -678,7 +583,7 @@ export default function Bracket() {
           <div className="mt-5 flex flex-col items-center gap-2">
             <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>Tercer Puesto</p>
             <div style={{ position: 'relative', width: CW, height: CH }}>
-              <BracketCard match={bracket.thirdPlace} top={0} left={0} groupStandings={groupStandings} isPreview={false} />
+              <BracketCard match={bracket.thirdPlace} top={0} left={0} bracketData={bracket} />
             </div>
           </div>
         )}
