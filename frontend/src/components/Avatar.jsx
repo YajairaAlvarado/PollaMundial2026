@@ -13,6 +13,8 @@ export default function Avatar({ username, initials, displayName, size = 30, col
       <img
         src={url}
         alt={displayName || initials || ''}
+        loading="lazy"
+        decoding="async"
         onClick={clickable ? (e) => { e.stopPropagation(); openLightbox(username.toLowerCase(), displayName); } : undefined}
         className={`rounded-full object-cover flex-shrink-0 ${clickable ? 'cursor-pointer' : ''} ${className}`}
         style={{ width: size, height: size, ...style }}

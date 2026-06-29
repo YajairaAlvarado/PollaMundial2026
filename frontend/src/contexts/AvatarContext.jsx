@@ -6,6 +6,11 @@ const AvatarContext = createContext({ avatars: {}, openLightbox: () => {}, ready
 export const useAvatars = () => useContext(AvatarContext);
 
 const SIGNED_EXPIRY = 60 * 60 * 24 * 7; // 7 días
+// Caché de las URLs firmadas: reusar las MISMAS urls entre sesiones hace que el
+// navegador cachee las imágenes (antes se generaban urls nuevas cada vez y se
+// re-descargaban todas las fotos → ~52% del egress). TTL < expiry de la firma.
+const AVA_CACHE_KEY = 'wc2026_avatars_v1';
+const AVA_CACHE_TTL = 6 * 24 * 60 * 60 * 1000; // 6 días
 
 export function AvatarProvider({ children }) {
   const { isAuthenticated } = useAuth();
@@ -15,6 +20,16 @@ export function AvatarProvider({ children }) {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    // 1) Si hay caché vigente, reusar las mismas URLs y NO regenerar (cero egress de fotos)
+    try {
+      const cached = JSON.parse(localStorage.getItem(AVA_CACHE_KEY) || 'null');
+      if (cached && cached.exp > Date.now() && cached.map && Object.keys(cached.map).length) {
+        setAvatars(cached.map);
+        setReady(true);
+        return;
+      }
+    } catch { /* noop */ }
+
     let cancel = false;
     (async () => {
       try {
@@ -31,6 +46,7 @@ export function AvatarProvider({ children }) {
         });
         setAvatars(map);
         setReady(true);
+        try { localStorage.setItem(AVA_CACHE_KEY, JSON.stringify({ exp: Date.now() + AVA_CACHE_TTL, map })); } catch { /* noop */ }
       } catch { setReady(true); }
     })();
     return () => { cancel = true; };

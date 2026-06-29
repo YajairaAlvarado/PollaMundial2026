@@ -16,7 +16,19 @@ export default function GlobalRace() {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    const CACHE_KEY = 'wc2026_globalrace_v1';
+    const TTL = 10 * 60 * 1000; // 10 min: evita re-bajar TODAS las predicciones en cada visita
     (async () => {
+      // 1) caché de sesión (recorta egress de PostgREST)
+      try {
+        const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
+        if (c && c.exp > Date.now()) {
+          setMatches(c.fm || []); setUsers(c.us || []); setPointsMap(c.pm || {});
+          setLoading(false); setStep(0); setPlaying(true);
+          return;
+        }
+      } catch { /* noop */ }
+
       const { data: fm } = await supabase.from('matches')
         .select('id, match_date, home_team, away_team, home_code, away_code')
         .eq('status', 'finished').order('match_date', { ascending: true });
@@ -34,6 +46,7 @@ export default function GlobalRace() {
       }
       setMatches(fm || []); setUsers(us || []); setPointsMap(pm);
       setLoading(false); setStep(0); setPlaying(true);
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ exp: Date.now() + TTL, fm, us, pm })); } catch { /* noop */ }
     })();
   }, []);
 

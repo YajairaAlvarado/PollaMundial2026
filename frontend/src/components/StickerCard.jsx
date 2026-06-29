@@ -72,7 +72,7 @@ export default function StickerCard({
         )}
         {dt && owned && <span style={{ position: 'absolute', top: 4, right: 6, fontSize: s.w * 0.16, zIndex: 2 }}>⭐</span>}
         {owned || hideName ? (
-          <img src={player.photo} alt={hideName ? 'cromo' : player.displayName}
+          <img src={player.photo} alt={hideName ? 'cromo' : player.displayName} loading="lazy" decoding="async"
                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
                         filter: dt ? 'saturate(1.1)' : 'none' }} />
         ) : (
