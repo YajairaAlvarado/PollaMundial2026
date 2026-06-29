@@ -65,14 +65,26 @@ export function useAlbum(user) {
   }, [beta, username]);
 
   // Abrir un reto si corresponde (respeta límites y cooldown). No duplica si ya hay uno.
+  // Persistimos el reto activo: al refrescar SIN contestar sale el MISMO (no uno
+  // nuevo cada vez). Seguro doble: nunca reusar/abrir un reto de alguien que ya tengo.
+  const storageKey = `album_active_${username}`;
   const openChallenge = useCallback(() => {
     setChallenge((prev) => {
-      // Seguro: si el reto actual ya es de alguien que YA tengo, lo descarto.
       if (prev) return ownedSet.has(prev.target?.username) ? null : prev;
       if (!canPlay(challenges, missing.length)) return prev;
-      return generateChallenge(roster, ownedSet, username) || prev;
+      const missingSet = new Set(missing.map((p) => p.username));
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        const t = saved?.challenge?.target;
+        if (saved?.day === new Date().toDateString() && t && missingSet.has(t.username)) {
+          return saved.challenge; // reto pendiente todavía válido
+        }
+      } catch { /* noop */ }
+      const c = generateChallenge(roster, ownedSet, username);
+      if (c) { try { localStorage.setItem(storageKey, JSON.stringify({ day: new Date().toDateString(), challenge: c })); } catch { /* noop */ } }
+      return c || prev;
     });
-  }, [challenges, missing, roster, ownedSet, username]);
+  }, [challenges, missing, roster, ownedSet, username, storageKey]);
 
   // Trigger 1: al cargar/recargar la página (una sola vez)
   useEffect(() => {
@@ -88,6 +100,7 @@ export function useAlbum(user) {
   // ficha en una sola transacción con bloqueo) para que dos pestañas/sesiones
   // abiertas a la vez no puedan colarse y superar el límite diario.
   const recordResult = useCallback(async (result, target) => {
+    try { localStorage.removeItem(storageKey); } catch { /* noop */ } // ya se resolvió
     if (result === 'win' && target) {
       const { data: awarded } = await supabase.rpc('try_award_album_sticker', {
         p_username: username, p_target: target.username,
@@ -102,9 +115,9 @@ export function useAlbum(user) {
     const nowIso = new Date().toISOString();
     setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]); // optimista
     await supabase.from('album_challenges').insert({ username, result, target_username: target?.username || null });
-  }, [username, load]);
+  }, [username, load, storageKey]);
 
-  const dismissChallenge = useCallback(() => setChallenge(null), []);
+  const dismissChallenge = useCallback(() => { try { localStorage.removeItem(storageKey); } catch { /* noop */ } setChallenge(null); }, [storageKey]);
 
   return {
     beta, loading, ready, roster, ownedSet, total, owned, completed,
