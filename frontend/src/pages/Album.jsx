@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlbumCtx } from '../contexts/AlbumContext';
 import { rosterByDepartment, dailyState, DAILY_LIMIT, ATTEMPT_LIMIT, ALBUM_POINTS, isDT } from '../utils/album';
@@ -24,8 +24,16 @@ export default function Album() {
   const { beta, loading, roster, ownedSet, total, owned, completed, challenges, openChallenge } = useAlbumCtx();
   const groups = useMemo(() => rosterByDepartment(roster), [roster]);
 
-  // Trigger 2: al entrar a la sección Álbum, abrir el reto si hay oportunidad
-  useEffect(() => { if (!loading) openChallenge(); }, [loading, openChallenge]);
+  // Trigger 2: al entrar a la sección Álbum, abrir el reto si hay oportunidad.
+  // SOLO una vez por montaje (no en cada cambio de openChallenge) — antes se
+  // re-disparaba con cada respuesta y re-montaba el popup en bucle.
+  const openedRef = useRef(false);
+  useEffect(() => {
+    if (loading || openedRef.current) return;
+    openedRef.current = true;
+    openChallenge();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   // ¿Quién tiene MI ficha en su álbum? (set para marcar en el ranking)
   const [holdersSet, setHoldersSet] = useState(new Set());
