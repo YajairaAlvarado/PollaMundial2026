@@ -266,6 +266,7 @@ function LeaderboardTableExpandable({ data }) {
   const [expanded, setExpanded] = useState(null);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('puntos'); // 'puntos' | 'racha'
+  const [streakMode, setStreakMode] = useState('actual'); // 'actual' | 'historica'
   const [bonusModal, setBonusModal] = useState(null);
 
   const filtered = useMemo(() => {
@@ -275,10 +276,11 @@ function LeaderboardTableExpandable({ data }) {
       list = list.filter((e) => e.display_name?.toLowerCase().includes(q));
     }
     if (sortBy === 'racha') {
-      list = [...list].sort((a, b) => (b.streak || 0) - (a.streak || 0) || (b.total_points || 0) - (a.total_points || 0));
+      const key = streakMode === 'historica' ? 'maxStreak' : 'streak';
+      list = [...list].sort((a, b) => (b[key] || 0) - (a[key] || 0) || (b.total_points || 0) - (a.total_points || 0));
     }
     return list;
-  }, [data, search, sortBy]);
+  }, [data, search, sortBy, streakMode]);
 
   if (!data || data.length === 0) return (
     <div className="rounded-xl p-8 text-center" style={{ background: '#0D1B30', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -316,6 +318,28 @@ function LeaderboardTableExpandable({ data }) {
             </button>
           ))}
         </div>
+        {/* Sub-filtro de racha: actual vs histórica */}
+        {sortBy === 'racha' && (
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Racha:</span>
+            {[{ k: 'actual', l: '🔥 Actual' }, { k: 'historica', l: '🏆 Histórica (mejor de todas)' }].map((o) => (
+              <button key={o.k} onClick={() => setStreakMode(o.k)}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all"
+                style={{
+                  background: streakMode === o.k ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${streakMode === o.k ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                  color: streakMode === o.k ? '#F59E0B' : 'rgba(255,255,255,0.5)',
+                }}>
+                {o.l}
+              </button>
+            ))}
+          </div>
+        )}
+        {sortBy === 'racha' && streakMode === 'historica' && (
+          <p className="text-[10px] mt-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            🏆 Ranking de la mejor racha de aciertos seguidos que cada quien ha logrado (premiable más adelante).
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
         style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)' }}>
@@ -362,12 +386,22 @@ function LeaderboardTableExpandable({ data }) {
                         {entry.display_name}
                         {isCurrentUser && <span className="ml-1 text-xs" style={{ color: 'rgba(245,158,11,0.6)' }}>(tú)</span>}
                       </p>
-                      {entry.streak >= 2 && (
-                        <span className="flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full"
-                          style={{ background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.4)' }}
-                          title={`${entry.streak} aciertos seguidos`}>
-                          🔥 {entry.streak}
-                        </span>
+                      {sortBy === 'racha' && streakMode === 'historica' ? (
+                        (entry.maxStreak >= 2) && (
+                          <span className="flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                            style={{ background: 'rgba(245,158,11,0.18)', color: '#FFD100', border: '1px solid rgba(245,158,11,0.45)' }}
+                            title={`Mejor racha histórica: ${entry.maxStreak} aciertos seguidos`}>
+                            🏆 {entry.maxStreak}
+                          </span>
+                        )
+                      ) : (
+                        entry.streak >= 2 && (
+                          <span className="flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                            style={{ background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.4)' }}
+                            title={`${entry.streak} aciertos seguidos`}>
+                            🔥 {entry.streak}
+                          </span>
+                        )
                       )}
                     </div>
                     {(() => {
@@ -1031,6 +1065,14 @@ export default function Leaderboard() {
           }
           return s;
         };
+        // Racha MÁXIMA histórica: la mejor seguidilla de aciertos que tuvo (aunque ya se haya cortado)
+        const calcMaxStreak = (uid) => {
+          let best = 0, cur = 0;
+          for (const m of finishedDesc) {
+            if (hitsByUser[uid]?.has(m.id)) { cur++; if (cur > best) best = cur; } else cur = 0;
+          }
+          return best;
+        };
 
         const ranked = assignRanks(lbRes.data);
         const snapMap = {};
@@ -1038,7 +1080,7 @@ export default function Leaderboard() {
         const withTrend = ranked.map((e) => {
           const prev = snapMap[e.username]?.rank;
           const trend = prev == null ? null : prev > e.rank ? 'up' : prev < e.rank ? 'down' : 'same';
-          return { ...e, prev_rank: prev ?? null, trend, streak: calcStreak(e.id) };
+          return { ...e, prev_rank: prev ?? null, trend, streak: calcStreak(e.id), maxStreak: calcMaxStreak(e.id) };
         });
         setLeaderboard(withTrend);
         setAllUsers(usersRes.data);
