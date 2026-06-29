@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../utils/supabase';
 import { useAvatars } from '../contexts/AvatarContext';
 import {
-  buildRoster, generateChallenge, canPlay, isAlbumBeta,
+  buildRoster, generateChallenge, canPlay, isAlbumBeta, dailyState,
 } from '../utils/album';
+
+const DBG = (...a) => console.log('%c[ALBUM]', 'color:#FFD100;font-weight:bold', ...a);
 
 export function useAlbum(user) {
   const { avatars, ready } = useAvatars();
@@ -69,18 +71,30 @@ export function useAlbum(user) {
   // nuevo cada vez). Seguro doble: nunca reusar/abrir un reto de alguien que ya tengo.
   const storageKey = `album_active_${username}`;
   const openChallenge = useCallback(() => {
+    const ds = dailyState(challenges);
+    const play = canPlay(challenges, missing.length);
+    DBG('openChallenge()', { winsToday: ds.winsToday, attemptsToday: ds.attemptsToday,
+      cooldownMin: Math.round(ds.cooldownLeft / 60000), missing: missing.length,
+      ownedCount: ownedSet.size, canPlay: play });
     setChallenge((prev) => {
-      if (prev) return ownedSet.has(prev.target?.username) ? null : prev;
-      if (!canPlay(challenges, missing.length)) return prev;
+      if (prev) {
+        const own = ownedSet.has(prev.target?.username);
+        DBG('  ya hay reto activo:', prev.target?.username, own ? '(YA LO TENGO → descarto)' : '(lo mantengo)');
+        return own ? null : prev;
+      }
+      if (!play) { DBG('  NO se abre (canPlay=false)'); return prev; }
       const missingSet = new Set(missing.map((p) => p.username));
       try {
         const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
         const t = saved?.challenge?.target;
         if (saved?.day === new Date().toDateString() && t && missingSet.has(t.username)) {
-          return saved.challenge; // reto pendiente todavía válido
+          DBG('  REUSO reto guardado →', t.username, '(¿lo tengo?', ownedSet.has(t.username), ')');
+          return saved.challenge;
         }
+        if (saved) DBG('  reto guardado descartado →', t?.username, '(no está en missing)');
       } catch { /* noop */ }
       const c = generateChallenge(roster, ownedSet, username);
+      DBG('  GENERO nuevo →', c?.target?.username, '(¿lo tengo?', c ? ownedSet.has(c.target.username) : '-', ')');
       if (c) { try { localStorage.setItem(storageKey, JSON.stringify({ day: new Date().toDateString(), challenge: c })); } catch { /* noop */ } }
       return c || prev;
     });
@@ -100,11 +114,13 @@ export function useAlbum(user) {
   // ficha en una sola transacción con bloqueo) para que dos pestañas/sesiones
   // abiertas a la vez no puedan colarse y superar el límite diario.
   const recordResult = useCallback(async (result, target) => {
+    DBG('recordResult()', result, '→', target?.username);
     try { localStorage.removeItem(storageKey); } catch { /* noop */ } // ya se resolvió
     if (result === 'win' && target) {
-      const { data: awarded } = await supabase.rpc('try_award_album_sticker', {
+      const { data: awarded, error } = await supabase.rpc('try_award_album_sticker', {
         p_username: username, p_target: target.username,
       });
+      DBG('  RPC try_award →', { awarded, error: error?.message });
       // Tras el RPC, recargamos desde la base (única fuente de verdad) en vez de
       // sumar a mano en local — así evitamos contar dos veces la misma victoria
       // cuando además llega el aviso en tiempo real con el mismo registro.
