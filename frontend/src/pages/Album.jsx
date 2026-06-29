@@ -21,19 +21,18 @@ function fmt(ms) {
 export default function Album() {
   const { user } = useAuth();
   const me = (user?.username || '').toLowerCase();
-  const { beta, loading, roster, ownedSet, total, owned, completed, challenges, openChallenge } = useAlbumCtx();
+  const { beta, loading, dataReady, roster, ownedSet, total, owned, completed, challenges, openChallenge } = useAlbumCtx();
   const groups = useMemo(() => rosterByDepartment(roster), [roster]);
 
   // Trigger 2: al entrar a la sección Álbum, abrir el reto si hay oportunidad.
-  // SOLO una vez por montaje (no en cada cambio de openChallenge) — antes se
-  // re-disparaba con cada respuesta y re-montaba el popup en bucle.
+  // SOLO una vez por montaje y SOLO con datos reales cargados (dataReady).
   const openedRef = useRef(false);
   useEffect(() => {
-    if (loading || openedRef.current) return;
+    if (!dataReady || openedRef.current) return;
     openedRef.current = true;
     openChallenge();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [dataReady]);
 
   // ¿Quién tiene MI ficha en su álbum? (set para marcar en el ranking)
   const [holdersSet, setHoldersSet] = useState(new Set());

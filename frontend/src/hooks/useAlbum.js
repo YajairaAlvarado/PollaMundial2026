@@ -15,6 +15,7 @@ export function useAlbum(user) {
   const [ownedSet, setOwnedSet]     = useState(new Set());
   const [challenges, setChallenges] = useState([]);   // intentos del usuario
   const [loading, setLoading]       = useState(true);
+  const [dataReady, setDataReady]   = useState(false); // true SOLO cuando ya se cargaron fichas+intentos reales
   const [challenge, setChallenge]   = useState(null); // reto activo (popup)
   const shownRef = useRef(false);                     // solo auto-mostrar una vez por carga
 
@@ -33,11 +34,11 @@ export function useAlbum(user) {
   // Tick para reevaluar la disponibilidad cuando se vence el cooldown
   const [, setTick] = useState(0);
   useEffect(() => { const id = setInterval(() => setTick((t) => t + 1), 10000); return () => clearInterval(id); }, []);
-  const canPlayNow = beta && !loading && ready && canPlay(challenges, missing.length);
+  const canPlayNow = beta && dataReady && ready && canPlay(challenges, missing.length);
 
   // Cargar fichas + intentos
   const load = useCallback(async () => {
-    if (!beta || !username) { setLoading(false); return; }
+    if (!beta || !username) { setLoading(false); setDataReady(false); return; } // aún sin usuario: NO marcar listo
     setLoading(true);
     const [stRes, chRes] = await Promise.all([
       supabase.from('album_stickers').select('sticker_username').eq('owner_username', username),
@@ -45,6 +46,7 @@ export function useAlbum(user) {
     ]);
     setOwnedSet(new Set((stRes.data || []).map((r) => r.sticker_username)));
     setChallenges(chRes.data || []);
+    setDataReady(true);   // datos reales ya disponibles
     setLoading(false);
   }, [beta, username]);
 
@@ -71,6 +73,7 @@ export function useAlbum(user) {
   // nuevo cada vez). Seguro doble: nunca reusar/abrir un reto de alguien que ya tengo.
   const storageKey = `album_active_${username}`;
   const openChallenge = useCallback(() => {
+    if (!dataReady || !username) { DBG('openChallenge() ABORTA: datos no listos', { dataReady, username }); return; }
     const ds = dailyState(challenges);
     const play = canPlay(challenges, missing.length);
     DBG('openChallenge()', { winsToday: ds.winsToday, attemptsToday: ds.attemptsToday,
@@ -98,15 +101,15 @@ export function useAlbum(user) {
       if (c) { try { localStorage.setItem(storageKey, JSON.stringify({ day: new Date().toDateString(), challenge: c })); } catch { /* noop */ } }
       return c || prev;
     });
-  }, [challenges, missing, roster, ownedSet, username, storageKey]);
+  }, [dataReady, challenges, missing, roster, ownedSet, username, storageKey]);
 
-  // Trigger 1: al cargar/recargar la página (una sola vez)
+  // Trigger 1: al cargar/recargar la página (una sola vez, SOLO con datos reales cargados)
   useEffect(() => {
-    if (!beta || loading || !ready || shownRef.current) return;
+    if (!beta || !dataReady || !ready || shownRef.current) return;
     shownRef.current = true;
     openChallenge();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beta, loading, ready]);
+  }, [beta, dataReady, ready]);
 
   // Registrar resultado del reto: 'win' | 'lose' | 'timeout'.
   // NO cierra el popup (para mostrar la animación); el cierre lo hace dismissChallenge.
@@ -136,7 +139,7 @@ export function useAlbum(user) {
   const dismissChallenge = useCallback(() => { try { localStorage.removeItem(storageKey); } catch { /* noop */ } setChallenge(null); }, [storageKey]);
 
   return {
-    beta, loading, ready, roster, ownedSet, total, owned, completed,
+    beta, loading, dataReady, ready, roster, ownedSet, total, owned, completed,
     challenge, challenges, canPlayNow, openChallenge, recordResult, dismissChallenge, reload: load,
   };
 }
