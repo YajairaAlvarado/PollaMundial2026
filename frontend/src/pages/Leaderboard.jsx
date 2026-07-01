@@ -344,11 +344,12 @@ function LeaderboardTableExpandable({ data }) {
       <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
         style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)' }}>
         <div className="col-span-1 text-center">#</div>
-        <div className="col-span-4">Jugador</div>
-        <div className="col-span-2 text-center">Pts</div>
-        <div className="col-span-1 text-center" title="Puntos de eventos especiales">⭐</div>
-        <div className="col-span-2 text-center">Exactos</div>
-        <div className="col-span-2 text-center">Correctos</div>
+        <div className="col-span-3">Jugador</div>
+        <div className="col-span-2 text-center" title="Puntos ganados en partidos">Partidos</div>
+        <div className="col-span-2 text-center" title="Puntos adicionales (eventos especiales)">+ ⭐ Extra</div>
+        <div className="col-span-2 text-center" title="Total = partidos + extra">= Total</div>
+        <div className="col-span-1 text-center" title="Marcadores exactos">Ex</div>
+        <div className="col-span-1 text-center" title="Resultados correctos">Co</div>
       </div>
       <div>
         {filtered.length === 0
@@ -378,7 +379,7 @@ function LeaderboardTableExpandable({ data }) {
                   {entry.trend === 'down' && <span style={{ color: '#f87171', fontSize: 11, fontWeight: 900 }}>▼</span>}
                   {entry.trend === 'same' && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>–</span>}
                 </div>
-                <div className="col-span-4 flex items-center gap-2.5 min-w-0">
+                <div className="col-span-3 flex items-center gap-2.5 min-w-0">
                   <Avatar username={entry.username} initials={entry.avatar_initials} displayName={entry.display_name} size={30} colorClass={AVATAR_COLORS[colorIdx]} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
@@ -416,10 +417,12 @@ function LeaderboardTableExpandable({ data }) {
                   </div>
                   {isOpen ? <ChevronUp size={13} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={13} style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />}
                 </div>
+                {/* Puntos de partidos (total menos los adicionales) */}
                 <div className="col-span-2 text-center">
-                  <span className="font-black text-base" style={{ color: rankColor }}>{entry.total_points}</span>
+                  <span className="font-bold text-base text-white">{(entry.total_points || 0) - (entry.bonus_points || 0)}</span>
                 </div>
-                <div className="col-span-1 text-center">
+                {/* Adicionales (eventos especiales) */}
+                <div className="col-span-2 text-center">
                   {entry.bonus_points > 0 ? (
                     <button
                       onClick={(e) => { e.stopPropagation(); setBonusModal(entry); }}
@@ -430,13 +433,17 @@ function LeaderboardTableExpandable({ data }) {
                       +{entry.bonus_points}
                     </button>
                   ) : (
-                    <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>
+                    <span style={{ color: 'rgba(255,255,255,0.2)' }}>+0</span>
                   )}
                 </div>
+                {/* Total */}
                 <div className="col-span-2 text-center">
+                  <span className="font-black text-base" style={{ color: rankColor }}>{entry.total_points}</span>
+                </div>
+                <div className="col-span-1 text-center">
                   <span className="text-sm font-semibold" style={{ color: '#34d399' }}>{entry.exact_scores}</span>
                 </div>
-                <div className="col-span-2 text-center">
+                <div className="col-span-1 text-center">
                   <span className="text-sm font-semibold" style={{ color: '#60a5fa' }}>{entry.correct_results}</span>
                 </div>
               </div>
