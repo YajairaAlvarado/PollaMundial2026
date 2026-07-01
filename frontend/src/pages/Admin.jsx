@@ -728,6 +728,70 @@ function TabAccesos({ users, currentUser }) {
   );
 }
 
+// ─── Empates de eliminación: quién avanza (penales) ──────────────────────────
+const KO_STAGES = ['r32', 'r16', 'qf', 'sf', 'final', 'third_place'];
+const KO_LABEL = { r32: 'Ronda de 32', r16: 'Octavos', qf: 'Cuartos', sf: 'Semifinal', final: 'Final', third_place: '3er puesto' };
+
+function KnockoutTiebreakers() {
+  const [ties, setTies] = useState(null);
+  const [saving, setSaving] = useState(null);
+
+  const load = () => {
+    supabase.from('matches').select('*')
+      .in('stage', KO_STAGES).eq('status', 'finished')
+      .then(({ data }) => {
+        const draws = (data || []).filter((m) => m.home_score !== null && m.home_score === m.away_score);
+        draws.sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
+        setTies(draws);
+      });
+  };
+  useEffect(load, []);
+
+  const setAdvance = async (matchId, team) => {
+    setSaving(matchId);
+    await supabase.from('matches').update({ advance_team: team }).eq('id', matchId);
+    setTies((prev) => prev.map((m) => (m.id === matchId ? { ...m, advance_team: team } : m)));
+    setSaving(null);
+  };
+
+  if (!ties || ties.length === 0) return null; // nada que resolver
+
+  return (
+    <div className="rounded-xl p-4 mb-2" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.3)' }}>
+      <h3 className="font-black text-white mb-1 flex items-center gap-2" style={{ fontSize: 15 }}>⚖️ ¿Quién avanzó? (empates de eliminación)</h3>
+      <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        Estos partidos de eliminación quedaron empatados. Marca quién pasó (penales) para que las llaves avancen.
+      </p>
+      <div className="space-y-2">
+        {ties.map((m) => (
+          <div key={m.id} className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>{KO_LABEL[m.stage] || m.stage}</span>
+              <span className="text-white/50 text-xs">{m.home_score} – {m.away_score}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[[m.home_team, m.home_code], [m.away_team, m.away_code]].map(([team, code]) => {
+                const chosen = m.advance_team === team;
+                return (
+                  <button key={team} disabled={saving === m.id} onClick={() => setAdvance(m.id, team)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all"
+                    style={{ background: chosen ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.05)',
+                             border: `1px solid ${chosen ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                             color: chosen ? '#34d399' : 'white' }}>
+                    {code && <img src={`https://flagcdn.com/20x15/${code}.png`} alt="" className="rounded" />}
+                    <span className="truncate">{team}</span>
+                    {chosen && <span className="ml-auto">✓ avanza</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Pestaña Resultados ──────────────────────────────────────────────────────
 
 // Estado del flujo por partido: 'idle' | 'fetching' | 'fetched' | 'manual' | 'saving' | 'saved'
@@ -1061,7 +1125,7 @@ export default function Admin() {
       </div>
 
       {tab === 'usuarios'   && <TabUsuarios users={users} />}
-      {tab === 'resultados' && <TabResultados />}
+      {tab === 'resultados' && <div className="space-y-4"><KnockoutTiebreakers /><TabResultados /></div>}
       {tab === 'accesos'    && <TabAccesos  users={users} currentUser={user} />}
     </div>
   );

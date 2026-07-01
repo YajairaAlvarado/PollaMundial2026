@@ -147,6 +147,9 @@ function resolveWinnerFromBracket(slotText, bracketData) {
   if (!match || match.status !== 'finished' || match.home_score === null) return null;
   if (match.home_score > match.away_score) return { team: match.home_team, code: match.home_code };
   if (match.away_score > match.home_score) return { team: match.away_team, code: match.away_code };
+  // Empate (se definió por penales): el admin marca quién avanzó en advance_team
+  if (match.advance_team === match.home_team) return { team: match.home_team, code: match.home_code };
+  if (match.advance_team === match.away_team) return { team: match.away_team, code: match.away_code };
   return null;
 }
 
