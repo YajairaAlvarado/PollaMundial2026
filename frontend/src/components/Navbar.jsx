@@ -32,7 +32,7 @@ export default function Navbar({ unread = 0, onBellOpen }) {
     { to: '/leaderboard', label: 'Posiciones', icon: <Trophy size={14} /> },
     { to: '/vs',          label: 'Vs 👊⚡👊',   icon: null },
     { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
-    { to: '/prizes',      label: 'Premios 🎁', icon: <Gift size={14} /> },
+    { to: '/prizes',      label: 'Premios 🎁', icon: <Gift size={14} />, highlight: true },
     ...(isAlbumBeta(user?.username) ? [
       { to: '/album',   label: 'Álbum 📒', icon: <BookOpen size={14} />, alert: albumAlert },
     ] : []),
@@ -71,11 +71,12 @@ export default function Navbar({ unread = 0, onBellOpen }) {
               <Link
                 key={link.to}
                 to={link.to}
-                className="relative flex items-center gap-1.5 px-4 py-5 text-[13px] font-semibold transition-colors duration-150"
-                style={{ color: isActive(link.to) ? '#ffffff' : 'rgba(255,255,255,0.42)' }}
-                onMouseEnter={(e) => { if (!isActive(link.to)) e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
-                onMouseLeave={(e) => { if (!isActive(link.to)) e.currentTarget.style.color = 'rgba(255,255,255,0.42)'; }}
+                className={`relative flex items-center gap-1.5 px-4 py-5 text-[13px] font-semibold transition-colors duration-150 ${link.highlight ? 'prize-pulse' : ''}`}
+                style={{ color: link.highlight ? '#FFD100' : isActive(link.to) ? '#ffffff' : 'rgba(255,255,255,0.42)', fontWeight: link.highlight ? 900 : undefined }}
+                onMouseEnter={(e) => { if (!isActive(link.to) && !link.highlight) e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+                onMouseLeave={(e) => { if (!isActive(link.to) && !link.highlight) e.currentTarget.style.color = 'rgba(255,255,255,0.42)'; }}
               >
+                {link.highlight && <span className="point-finger" aria-hidden="true">👉</span>}
                 {link.icon}
                 {link.label}
                 {link.alert && (
@@ -161,14 +162,16 @@ export default function Navbar({ unread = 0, onBellOpen }) {
               <Link
                 key={link.to}
                 to={link.to}
-                className="flex items-center gap-2.5 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                className={`flex items-center gap-2.5 px-4 py-3 rounded-lg text-sm font-medium transition-all ${link.highlight ? 'prize-pulse' : ''}`}
                 style={{
-                  color:      isActive(link.to) ? 'white' : 'rgba(255,255,255,0.48)',
-                  background: isActive(link.to) ? 'rgba(228,0,43,0.1)' : 'transparent',
+                  color:      link.highlight ? '#FFD100' : isActive(link.to) ? 'white' : 'rgba(255,255,255,0.48)',
+                  fontWeight: link.highlight ? 900 : undefined,
+                  background: link.highlight ? undefined : isActive(link.to) ? 'rgba(228,0,43,0.1)' : 'transparent',
                   borderLeft: isActive(link.to) ? '2px solid #E4002B' : '2px solid transparent',
                 }}
                 onClick={() => setMenuOpen(false)}
               >
+                {link.highlight && <span className="point-finger" aria-hidden="true">👉</span>}
                 {link.icon}
                 {link.label}
                 {link.alert && (
