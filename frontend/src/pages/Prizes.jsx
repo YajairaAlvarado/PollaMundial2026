@@ -100,7 +100,7 @@ function WinnerRow({ pos, name, sub, avatarUser, initials, right, dim }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: dim ? 0.45 : 1 }}>
       {medal ? <span style={{ fontSize: 18, width: 22, textAlign: 'center' }}>{medal}</span> : <span style={{ width: 22 }} />}
       {avatarUser !== undefined && (
-        <Avatar username={avatarUser} initials={initials || '?'} displayName={name} size={30} colorClass={colorFor(avatarUser)} clickable={false} />
+        <Avatar username={avatarUser} initials={initials || '?'} displayName={name} size={30} colorClass={colorFor(avatarUser)} />
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ color: 'white', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</p>
@@ -356,7 +356,7 @@ export default function Prizes() {
               {derived.predicted.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '4px 2px' }}>Nadie todavía</p>}
               {derived.predicted.map((c) => (
                 <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: (c.out || c.excluded) ? 0.5 : 1 }}>
-                  <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={30} colorClass={colorFor(c.u.username)} clickable={false} />
+                  <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={30} colorClass={colorFor(c.u.username)} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ color: 'white', fontWeight: 700, fontSize: 13, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none' }}>{c.u.display_name}</p>
                     {c.excluded
@@ -380,7 +380,7 @@ export default function Prizes() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {derived.notPredicted.map((u) => (
                       <span key={u.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '3px 10px 3px 4px' }}>
-                        <Avatar username={u.username} initials={u.avatar_initials || '?'} displayName={u.display_name} size={22} colorClass={colorFor(u.username)} clickable={false} />
+                        <Avatar username={u.username} initials={u.avatar_initials || '?'} displayName={u.display_name} size={22} colorClass={colorFor(u.username)} />
                         <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{u.display_name?.split(' ')[0]}</span>
                       </span>
                     ))}

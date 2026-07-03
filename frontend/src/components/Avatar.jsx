@@ -25,8 +25,10 @@ export default function Avatar({ username, initials, displayName, size = 30, col
 
   return (
     <div
-      className={`rounded-full flex items-center justify-center font-black text-white flex-shrink-0 ${colorClass} ${className}`}
-      style={{ width: size, height: size, fontSize: fs, ...style }}>
+      onClick={clickable && username ? (e) => { e.stopPropagation(); openLightbox(username.toLowerCase(), displayName); } : undefined}
+      className={`rounded-full flex items-center justify-center font-black text-white flex-shrink-0 ${colorClass} ${clickable && username ? 'cursor-pointer' : ''} ${className}`}
+      style={{ width: size, height: size, fontSize: fs, ...style }}
+      title={clickable && username ? 'Ver ficha' : undefined}>
       {initials || displayName?.substring(0, 2).toUpperCase() || '??'}
     </div>
   );
