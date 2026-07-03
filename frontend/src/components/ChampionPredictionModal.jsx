@@ -113,9 +113,14 @@ export default function ChampionPredictionModal({ aliveTeams = [], onSave }) {
                 Vas a elegir:
                 <ul style={{ marginTop: 6, paddingLeft: 4, listStyle: 'none' }}>
                   <li>🥇 <b style={{ color: 'white' }}>Campeón</b> del Mundial</li>
-                  <li>🥈 <b style={{ color: 'white' }}>Subcampeón</b> (desempate)</li>
-                  <li>⚽ <b style={{ color: 'white' }}>Marcador exacto</b> de la final (desempate)</li>
+                  <li>🥈 <b style={{ color: 'white' }}>Subcampeón</b></li>
+                  <li>⚽ <b style={{ color: 'white' }}>Marcador exacto</b> de la final (120 min)</li>
                 </ul>
+                <div style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: 10, padding: '9px 11px', marginTop: 10 }}>
+                  <p style={{ color: '#bfdbfe', fontSize: 11.5, lineHeight: 1.45 }}>
+                    💡 El premio lo gana quien acierte el <b>campeón</b>. El <b>subcampeón</b> y el <b>marcador</b> solo se usan como <b>desempate</b>: si varias personas aciertan el mismo campeón, gana quien también acierte el subcampeón y, si sigue el empate, el marcador exacto de la final.
+                  </p>
+                </div>
               </div>
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 12, padding: '10px 12px', display: 'flex', gap: 8, alignItems: 'flex-start', textAlign: 'left', marginBottom: 4 }}>
                 <AlertTriangle size={15} style={{ color: '#f87171', flexShrink: 0, marginTop: 1 }} />
