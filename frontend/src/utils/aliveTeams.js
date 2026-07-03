@@ -38,14 +38,18 @@ export function matchWinnerLoser(m) {
 //   { participants:Set, eliminated:Set, teamCode:{team->code}, alive:[{team,code}] }
 export function computeTeams(matches = []) {
   const teamCode = {};
+  const teamSide = {}; // 'L' (izquierda) | 'R' (derecha) del cuadro
   const participants = new Set();
 
-  // Participantes y códigos de bandera desde la Ronda de 32 (todos equipos reales)
-  for (const m of matches) {
-    if (m.stage !== 'r32') continue;
-    if (isRealTeam(m.home_team)) { participants.add(m.home_team); if (m.home_code) teamCode[m.home_team] = m.home_code; }
-    if (isRealTeam(m.away_team)) { participants.add(m.away_team); if (m.away_code) teamCode[m.away_team] = m.away_code; }
-  }
+  // Participantes, códigos y LADO del cuadro desde la Ronda de 32.
+  // El bracket separa los primeros 8 partidos (por id) a la izquierda y los
+  // últimos 8 a la derecha — mismo criterio que la página de Llaves.
+  const r32Sorted = matches.filter((m) => m.stage === 'r32').sort((a, b) => a.id - b.id);
+  r32Sorted.forEach((m, idx) => {
+    const side = idx < 8 ? 'L' : 'R';
+    if (isRealTeam(m.home_team)) { participants.add(m.home_team); if (m.home_code) teamCode[m.home_team] = m.home_code; teamSide[m.home_team] = side; }
+    if (isRealTeam(m.away_team)) { participants.add(m.away_team); if (m.away_code) teamCode[m.away_team] = m.away_code; teamSide[m.away_team] = side; }
+  });
 
   const eliminated = new Set();
   for (const m of matches) {
@@ -56,8 +60,8 @@ export function computeTeams(matches = []) {
 
   const alive = [...participants]
     .filter((t) => !eliminated.has(t))
-    .map((t) => ({ team: t, code: teamCode[t] || null }))
+    .map((t) => ({ team: t, code: teamCode[t] || null, side: teamSide[t] || null }))
     .sort((a, b) => a.team.localeCompare(b.team));
 
-  return { participants, eliminated, teamCode, alive };
+  return { participants, eliminated, teamCode, teamSide, alive };
 }

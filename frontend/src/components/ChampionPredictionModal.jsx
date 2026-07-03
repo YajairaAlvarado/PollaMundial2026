@@ -63,6 +63,10 @@ export default function ChampionPredictionModal({ aliveTeams = [], onSave }) {
 
   const isDraw = champScore === runnerScore;
 
+  // El subcampeón debe salir del OTRO lado del cuadro (no se pueden cruzar antes de la final)
+  const champSide = aliveTeams.find((t) => t.team === champion)?.side;
+  const runnerOptions = aliveTeams.filter((t) => t.team !== champion && (!champSide || t.side !== champSide));
+
   const handleSave = async () => {
     setSaving(true); setError('');
     try {
@@ -146,20 +150,20 @@ export default function ChampionPredictionModal({ aliveTeams = [], onSave }) {
             <>
               <Header title="🥇 Elige al Campeón" sub={`${aliveTeams.length} equipos siguen con vida`} />
               <TeamGrid teams={aliveTeams} selected={champion}
-                onPick={(t, c) => { setChampion(t); setChampCode(c); if (runner === t) { setRunner(null); setRunnerCode(null); } setStep('runner'); }} />
+                onPick={(t, c) => { setChampion(t); setChampCode(c); setRunner(null); setRunnerCode(null); setStep('runner'); }} />
             </>
           )}
 
           {/* ── Subcampeón ── */}
           {step === 'runner' && (
             <>
-              <Header title="🥈 Elige al Subcampeón" sub="El finalista que perderá la final" onBack={() => setStep('champion')} />
+              <Header title="🥈 Elige al Subcampeón" sub="Solo equipos del otro lado del cuadro (el rival de la final)" onBack={() => setStep('champion')} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: '8px 12px', marginBottom: 12 }}>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>Campeón:</span>
                 <Flag code={champCode} size={24} />
                 <b style={{ color: '#FCD34D', fontSize: 13 }}>{champion}</b>
               </div>
-              <TeamGrid teams={aliveTeams} selected={runner} disabledTeam={champion}
+              <TeamGrid teams={runnerOptions} selected={runner}
                 onPick={(t, c) => { setRunner(t); setRunnerCode(c); setStep('score'); }} />
             </>
           )}
