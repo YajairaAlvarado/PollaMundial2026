@@ -19,8 +19,17 @@ function Flag({ code, size = 26 }) {
   return <img src={`https://flagcdn.com/${size}x${h}/${code.toLowerCase()}.png`} alt="" style={{ width: size, height: h, borderRadius: 3, objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle' }} onError={(e) => { e.target.style.display = 'none'; }} />;
 }
 
+// Etiqueta "posición temporal"
+function TempTag() {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(251,191,36,0.14)', border: '1px solid rgba(251,191,36,0.4)', color: '#fbbf24', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
+      🔄 Temporal
+    </span>
+  );
+}
+
 // Tarjeta contenedora de cada premio
-function PrizeCard({ icon, accent, title, prizeLabel, children, ribbon }) {
+function PrizeCard({ icon, accent, title, prizeLabel, children, ribbon, temp }) {
   return (
     <div style={{ position: 'relative', background: 'linear-gradient(160deg,#0f1a30,#0b1424)', border: `1px solid ${accent}44`, borderRadius: 18, padding: 16, overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: `radial-gradient(circle, ${accent}22, transparent 70%)`, pointerEvents: 'none' }} />
@@ -34,6 +43,12 @@ function PrizeCard({ icon, accent, title, prizeLabel, children, ribbon }) {
           <p style={{ color: accent, fontSize: 12, fontWeight: 700, marginTop: 1 }}>{prizeLabel}</p>
         </div>
       </div>
+      {temp && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, position: 'relative' }}>
+          <TempTag />
+          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Van ganando ahora · <b>nadie ha ganado aún</b>, puede cambiar</span>
+        </div>
+      )}
       <div style={{ marginTop: 12, position: 'relative' }}>{children}</div>
     </div>
   );
@@ -158,25 +173,33 @@ export default function Prizes() {
           </p>
         </div>
 
+        {/* Aviso: todo es temporal */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.35)', borderRadius: 14, padding: '11px 14px' }}>
+          <span style={{ fontSize: 22 }}>⚠️</span>
+          <p style={{ color: '#fde68a', fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>
+            Estas posiciones son <b>temporales</b> y cambian con cada partido. <b>Nadie ha ganado todavía</b>: los premios se entregan al final del Mundial con los resultados oficiales.
+          </p>
+        </div>
+
         {/* ── Podio individual ── */}
         <div>
           <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '4px 2px 10px' }}>🏅 Pronóstico Individual · Podio</h2>
           <div style={{ display: 'grid', gap: 12 }}>
-            <PrizeCard icon={<Plane size={22} />} accent="#FFD700" title="🥇 Primer Lugar" prizeLabel="Millas Andersen · viaje hasta $500" ribbon="TOP 1">
+            <PrizeCard icon={<Plane size={22} />} accent="#FFD700" title="🥇 Primer Lugar" prizeLabel="Millas Andersen · viaje hasta $500" ribbon="TOP 1" temp>
               {derived.podium[0]
                 ? <WinnerRow pos={1} name={derived.podium[0].display_name} sub={`${derived.podium[0].total_points} pts`} avatarUser={derived.podium[0].username} initials={derived.podium[0].avatar_initials} />
                 : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Viaje obligatorio, puede ir acompañado. Boletos comprados por Andersen (hasta $500), a usar en 2026. Personal e intransferible.</p>
             </PrizeCard>
 
-            <PrizeCard icon={<UtensilsCrossed size={22} />} accent="#C7CDD6" title="🥈 Segundo Lugar" prizeLabel="Experiencia gastronómica para 2">
+            <PrizeCard icon={<UtensilsCrossed size={22} />} accent="#C7CDD6" title="🥈 Segundo Lugar" prizeLabel="Experiencia gastronómica para 2" temp>
               {derived.podium[1]
                 ? <WinnerRow pos={2} name={derived.podium[1].display_name} sub={`${derived.podium[1].total_points} pts`} avatarUser={derived.podium[1].username} initials={derived.podium[1].avatar_initials} />
                 : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Cena para 2 en un reconocido restaurante de Guayaquil elegido por la firma. Sujeto a disponibilidad.</p>
             </PrizeCard>
 
-            <PrizeCard icon={<HeartPulse size={22} />} accent="#cd7f32" title="🥉 Tercer Lugar" prizeLabel="Experiencia de bienestar">
+            <PrizeCard icon={<HeartPulse size={22} />} accent="#cd7f32" title="🥉 Tercer Lugar" prizeLabel="Experiencia de bienestar" temp>
               {derived.podium[2]
                 ? <WinnerRow pos={3} name={derived.podium[2].display_name} sub={`${derived.podium[2].total_points} pts`} avatarUser={derived.podium[2].username} initials={derived.podium[2].avatar_initials} />
                 : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
@@ -188,7 +211,7 @@ export default function Prizes() {
         {/* ── Departamento ── */}
         <div>
           <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 2px 10px' }}>🏢 Pronóstico por Departamento</h2>
-          <PrizeCard icon={<Building2 size={22} />} accent="#34d399" title="Departamento Campeón" prizeLabel="Orden de consumo grupal hasta $100" ribbon="EQUIPO">
+          <PrizeCard icon={<Building2 size={22} />} accent="#34d399" title="Departamento Campeón" prizeLabel="Orden de consumo grupal hasta $100" ribbon="EQUIPO" temp>
             {derived.depts.slice(0, 3).map((d, i) => (
               <WinnerRow key={d.dept} pos={i + 1} name={d.dept} sub={`Promedio ${d.avg.toFixed(1)} pts · ${d.count} participantes`} />
             ))}
@@ -202,7 +225,7 @@ export default function Prizes() {
           <div style={{ display: 'grid', gap: 12 }}>
 
             {/* Álbum */}
-            <PrizeCard icon={<BookOpen size={22} />} accent="#a78bfa" title="📸 Álbum Completo" prizeLabel="Gift Card Sweet & Coffee $20 c/u (×3)">
+            <PrizeCard icon={<BookOpen size={22} />} accent="#a78bfa" title="📸 Álbum Completo" prizeLabel="Gift Card Sweet & Coffee $20 c/u (×3)" temp>
               {derived.albumTop.length ? derived.albumTop.map((a, i) => (
                 <WinnerRow key={a.username} pos={i + 1} name={a.u.display_name} sub={`${a.count} cromos`} avatarUser={a.username} initials={a.u.avatar_initials} />
               )) : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún nadie ha pegado cromos</p>}
@@ -210,7 +233,7 @@ export default function Prizes() {
             </PrizeCard>
 
             {/* Racha */}
-            <PrizeCard icon={<Flame size={22} />} accent="#fb923c" title="⚡ Mejor Racha de Aciertos" prizeLabel="Gift Card $50" ribbon="🔥">
+            <PrizeCard icon={<Flame size={22} />} accent="#fb923c" title="⚡ Mejor Racha de Aciertos" prizeLabel="Gift Card $50" ribbon="🔥" temp>
               {derived.streakBoard.length ? derived.streakBoard.map((s, i) => (
                 <WinnerRow key={s.u.id} pos={i + 1} name={s.u.display_name} sub={`Racha de ${s.streak} aciertos`} avatarUser={s.u.username} initials={s.u.avatar_initials}
                   right={<span style={{ color: '#fb923c', fontWeight: 900, fontSize: 14 }}>🔥 {s.streak}</span>} />
