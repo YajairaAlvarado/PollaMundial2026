@@ -164,6 +164,11 @@ export default function Prizes() {
 
     // Podio individual
     const podium = leaderboard.slice(0, 3);
+    // Los 1°/2°/3° individuales NO participan en Álbum, Racha ni Campeón (condición #3)
+    const top3Ids = new Set(podium.map((e) => e.id));
+    const top3Usernames = new Set(podium.map((e) => (e.username || '').toLowerCase()));
+    const isTop3 = (u) => !!u && (top3Ids.has(u.id) || top3Usernames.has((u.username || '').toLowerCase()));
+    const top3Names = podium.map((e) => e.display_name);
 
     // Departamento campeón (promedio de puntos)
     const deptMap = {};
@@ -177,12 +182,12 @@ export default function Prizes() {
       .map((d) => ({ ...d, avg: d.count ? d.total / d.count : 0 }))
       .sort((a, b) => b.avg - a.avg);
 
-    // Álbum: top coleccionistas
+    // Álbum: top coleccionistas (excluye a los 1°/2°/3° individuales → sube el siguiente)
     const stickerCount = {};
     for (const s of stickers) stickerCount[s.owner_username] = (stickerCount[s.owner_username] || 0) + 1;
     const albumTop = Object.entries(stickerCount)
       .map(([username, count]) => ({ username, count, u: users.find((x) => x.username === username) }))
-      .filter((x) => x.u)
+      .filter((x) => x.u && !isTop3(x.u))
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
 
@@ -198,7 +203,7 @@ export default function Prizes() {
     };
     const streakBoard = users
       .map((u) => ({ u, streak: maxStreakOf(u.id) }))
-      .filter((x) => x.streak >= 2)
+      .filter((x) => x.streak >= 2 && !isTop3(x.u)) // excluye a los 1°/2°/3° individuales
       .sort((a, b) => b.streak - a.streak)
       .slice(0, 3);
 
@@ -214,12 +219,17 @@ export default function Prizes() {
       .map((c) => ({
         ...c,
         out: eliminated.has(c.champion),
+        excluded: isTop3(c.u), // va en el podio individual → no participa en este premio
         decoy: decoyPool.length ? decoyPool[hashStr(c.user_id) % decoyPool.length] : { team: '¿?', code: null },
       }))
-      .sort((a, b) => (a.out - b.out) || (a.u.display_name || '').localeCompare(b.u.display_name || ''));
+      .sort((a, b) => {
+        const ra = a.excluded ? 2 : a.out ? 1 : 0;
+        const rb = b.excluded ? 2 : b.out ? 1 : 0;
+        return ra - rb || (a.u.display_name || '').localeCompare(b.u.display_name || '');
+      });
     const notPredicted = users.filter((u) => !predByUser[u.id]);
 
-    return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated };
+    return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated, top3Names };
   }, [data]);
 
   if (loading) return <LoadingSpinner size="lg" text="Cargando premios..." />;
@@ -298,6 +308,17 @@ export default function Prizes() {
         {/* ── Especiales ── */}
         <div>
           <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 2px 10px' }}>🎯 Premios Especiales</h2>
+
+          {/* Los 1°/2°/3° individuales no participan en estos premios */}
+          {derived.top3Names?.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 12, padding: '10px 12px', marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>ℹ️</span>
+              <p style={{ color: '#bfdbfe', fontSize: 11.5, lineHeight: 1.45 }}>
+                No participan en estos premios quienes van <b>1°, 2° o 3°</b> en la tabla individual (ya tienen su premio): <b>{derived.top3Names.join(' · ')}</b>. Por eso sube el siguiente en cada categoría.
+              </p>
+            </div>
+          )}
+
           <div style={{ display: 'grid', gap: 12 }}>
 
             {/* Álbum */}
@@ -334,11 +355,13 @@ export default function Prizes() {
               </p>
               {derived.predicted.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '4px 2px' }}>Nadie todavía</p>}
               {derived.predicted.map((c) => (
-                <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: c.out ? 0.5 : 1 }}>
+                <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: (c.out || c.excluded) ? 0.5 : 1 }}>
                   <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={30} colorClass={colorFor(c.u.username)} clickable={false} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: 'white', fontWeight: 700, fontSize: 13, textDecoration: c.out ? 'line-through' : 'none' }}>{c.u.display_name}</p>
-                    {c.out && <p style={{ color: '#f87171', fontSize: 10.5, fontWeight: 700 }}>❌ Fuera · su campeón quedó eliminado</p>}
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 13, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none' }}>{c.u.display_name}</p>
+                    {c.excluded
+                      ? <p style={{ color: '#93c5fd', fontSize: 10.5, fontWeight: 700 }}>🏅 No participa · va en el podio individual</p>
+                      : c.out && <p style={{ color: '#f87171', fontSize: 10.5, fontWeight: 700 }}>❌ Fuera · su campeón quedó eliminado</p>}
                   </div>
                   <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, filter: revealed ? 'none' : 'blur(7px)', userSelect: revealed ? 'auto' : 'none', pointerEvents: revealed ? 'auto' : 'none' }}>
                     {/* Antes del sábado mostramos un equipo SEÑUELO (ya eliminado) para despistar 😈 */}
