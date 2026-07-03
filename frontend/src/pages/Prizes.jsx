@@ -19,6 +19,21 @@ function Flag({ code, size = 26 }) {
   return <img src={`https://flagcdn.com/${size}x${h}/${code.toLowerCase()}.png`} alt="" style={{ width: size, height: h, borderRadius: 3, objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle' }} onError={(e) => { e.target.style.display = 'none'; }} />;
 }
 
+// Cartel animado sostenido por una mano 😄
+function TempSign() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+      <div style={{ transformOrigin: 'bottom center', animation: 'signWave 1.9s ease-in-out infinite' }}>
+        <div style={{ background: 'linear-gradient(180deg,#ef2b45,#c40024)', color: '#fff', fontWeight: 900, fontSize: 15, lineHeight: 1.15, padding: '10px 20px', borderRadius: 7, boxShadow: '0 8px 20px rgba(228,0,43,0.45)', textAlign: 'center', letterSpacing: '0.04em', border: '2px solid rgba(255,255,255,0.85)', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+          RESULTADOS<br />TEMPORALES
+        </div>
+        <div style={{ width: 7, height: 30, background: 'linear-gradient(90deg,#5e3d1c,#8a5a2b,#5e3d1c)', margin: '0 auto', borderRadius: 4 }} />
+        <div style={{ textAlign: 'center', fontSize: 38, marginTop: -8, lineHeight: 1 }}>✊</div>
+      </div>
+    </div>
+  );
+}
+
 // Etiqueta "posición temporal"
 function TempTag() {
   return (
@@ -216,6 +231,9 @@ export default function Prizes() {
             La firma premia tu esfuerzo. Estos son los reconocimientos en juego y quiénes van ganando ahora mismo ✨
           </p>
         </div>
+
+        {/* Cartel animado */}
+        <TempSign />
 
         {/* Aviso: todo es temporal */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.35)', borderRadius: 14, padding: '11px 14px' }}>

@@ -423,3 +423,8 @@ body.nudge-shaking {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-3px); }
 }
+
+@keyframes signWave {
+  0%, 100% { transform: rotate(-7deg); }
+  50%      { transform: rotate(7deg); }
+}
