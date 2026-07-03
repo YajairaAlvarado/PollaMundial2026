@@ -186,14 +186,19 @@ export default function Prizes() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
 
-    // Mejor racha (aciertos consecutivos desde el partido más reciente)
-    const finishedDesc = matches.filter((m) => m.status === 'finished').sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+    // Mejor racha HISTÓRICA (la mejor seguidilla de aciertos, aunque ya se haya cortado)
+    // — misma fórmula que la tabla de posiciones (racha "Histórica / mejor de todas").
+    const finishedChrono = matches.filter((m) => m.status === 'finished').sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
     const hitsByUser = {};
     for (const p of hits) (hitsByUser[p.user_id] ||= new Set()).add(p.match_id);
-    const streakOf = (uid) => { let s = 0; for (const m of finishedDesc) { if (hitsByUser[uid]?.has(m.id)) s++; else break; } return s; };
+    const maxStreakOf = (uid) => {
+      let best = 0, cur = 0;
+      for (const m of finishedChrono) { if (hitsByUser[uid]?.has(m.id)) { cur++; if (cur > best) best = cur; } else cur = 0; }
+      return best;
+    };
     const streakBoard = users
-      .map((u) => ({ u, streak: streakOf(u.id) }))
-      .filter((x) => x.streak > 0)
+      .map((u) => ({ u, streak: maxStreakOf(u.id) }))
+      .filter((x) => x.streak >= 2)
       .sort((a, b) => b.streak - a.streak)
       .slice(0, 3);
 
