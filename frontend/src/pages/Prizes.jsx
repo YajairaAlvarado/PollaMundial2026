@@ -49,6 +49,7 @@ function PrizeScene({ variant, face, initials }) {
     plane:  { grad: 'linear-gradient(160deg,#7dd3fc,#0284c7)', main: '✈️', sub: '🗽', extra: '☁️', anim: 'planeFloat 3s ease-in-out infinite' },
     dinner: { grad: 'linear-gradient(160deg,#fcd34d,#c2410c)', main: '🍽️', sub: '🍷', extra: '✨', anim: 'sceneBob 3.2s ease-in-out infinite' },
     beach:  { grad: 'linear-gradient(160deg,#6ee7b7,#0d9488)', main: '🏖️', sub: '🌴', extra: '☀️', anim: 'sceneBob 3.4s ease-in-out infinite' },
+    spa:    { grad: 'linear-gradient(160deg,#f9a8d4,#a855f7)', main: '💆', sub: '🕯️', extra: '🌸', anim: 'sceneBob 3.4s ease-in-out infinite' },
   }[variant];
   if (!V) return null;
   return (
@@ -276,7 +277,7 @@ export default function Prizes() {
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Cena para 2 en un reconocido restaurante de Guayaquil elegido por la firma. Sujeto a disponibilidad.</p>
             </PrizeCard>
 
-            <PrizeCard icon={<HeartPulse size={22} />} accent="#cd7f32" title="🥉 Tercer Lugar" prizeLabel="Experiencia de bienestar" scene="beach" sceneFace={avatars[derived.podium[2]?.username?.toLowerCase()]} sceneInitials={derived.podium[2]?.avatar_initials} temp>
+            <PrizeCard icon={<HeartPulse size={22} />} accent="#cd7f32" title="🥉 Tercer Lugar" prizeLabel="Experiencia de bienestar" scene="spa" sceneFace={avatars[derived.podium[2]?.username?.toLowerCase()]} sceneInitials={derived.podium[2]?.avatar_initials} temp>
               {derived.podium[2]
                 ? <WinnerRow pos={3} name={derived.podium[2].display_name} sub={`${derived.podium[2].total_points} pts`} avatarUser={derived.podium[2].username} initials={derived.podium[2].avatar_initials} />
                 : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}

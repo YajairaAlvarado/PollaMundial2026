@@ -110,10 +110,12 @@ function weightedPick(candidates) {
 // ── Generar un reto ──────────────────────────────────────────────────────────
 // roster: array completo · ownedSet: Set de usernames que ya tengo · self: mi username
 // Devuelve { type: 'photo-name', target, options, answer } o null si ya no faltan.
-// ÚNICO tipo: muestra la FOTO y 4 nombres. Los distractores usan el MISMO primer
-// nombre del target + APELLIDOS reales de otras personas (ej. foto de "Daniel Leon"
-// → Daniel Leon / Daniel Castro / Daniel Lopez), para que haya que saber el
-// nombre exacto y no se pueda adivinar por eliminación.
+// ÚNICO tipo: muestra la FOTO y 6 nombres (5 distractores + 1 correcto, MEZCLADOS).
+// Los distractores usan el MISMO primer nombre del target + APELLIDOS reales de
+// otras personas (ej. foto de "Daniel Leon" → Daniel Leon / Daniel Castro /
+// Daniel Lopez / …), para que haya que saber el nombre exacto y no se pueda
+// adivinar por eliminación.
+const N_DISTRACTORS = 5;
 const firstNameOf = (name) => (name || '').split(' ')[0];
 const lastNameOf  = (name) => { const p = (name || '').split(' '); return p.slice(1).join(' ') || p[0] || ''; };
 
@@ -133,21 +135,22 @@ export function generateChallenge(roster, ownedSet, self) {
       .map((p) => lastNameOf(p.displayName))
       .filter((ln) => ln && ln.toLowerCase() !== targetLast.toLowerCase())
   )];
-  const distractorLabels = sample(otherLasts, 3).map((ln) => `${firstName} ${ln}`);
+  const distractorLabels = sample(otherLasts, N_DISTRACTORS).map((ln) => `${firstName} ${ln}`);
 
   // por si faltaran apellidos, rellenar con nombres completos de otras personas
-  if (distractorLabels.length < 3) {
+  if (distractorLabels.length < N_DISTRACTORS) {
     const pool = shuffle(roster.filter((p) => p.username !== target.username).map((p) => p.displayName));
     for (const name of pool) {
-      if (distractorLabels.length >= 3) break;
+      if (distractorLabels.length >= N_DISTRACTORS) break;
       if (name !== target.displayName && !distractorLabels.includes(name)) distractorLabels.push(name);
     }
   }
 
-  const options = shuffle([
+  // Barajado doble para asegurar que la correcta NO quede siempre en la misma posición
+  const options = shuffle(shuffle([
     { username: target.username, label: target.displayName },
     ...distractorLabels.map((label, i) => ({ username: `__distractor_${i}`, label })),
-  ]);
+  ]));
 
   return { type: 'photo-name', target, options, answer: target.username };
 }

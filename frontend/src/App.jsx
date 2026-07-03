@@ -112,8 +112,9 @@ function ProtectedLayout() {
           )}
         </>
       )}
-      {/* Reto del álbum (aparece al abrir la app, beta) */}
-      {album.challenge && (
+      {/* Reto del álbum — NO mostrar mientras esté el pronóstico obligatorio del
+          campeón (si no, se montaba encima y el cronómetro corría sin poder jugar) */}
+      {!forceChampion && album.challenge && (
         <AlbumChallenge challenge={album.challenge}
           onRecord={album.recordResult} onClose={album.dismissChallenge} />
       )}
