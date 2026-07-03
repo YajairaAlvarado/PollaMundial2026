@@ -27,6 +27,9 @@ import Bracket from './pages/Bracket';
 import Profile from './pages/Profile';
 import Vs from './pages/Vs';
 import Album from './pages/Album';
+import Prizes from './pages/Prizes';
+import ChampionPredictionModal from './components/ChampionPredictionModal';
+import { useChampionPrediction } from './hooks/useChampionPrediction';
 
 function ProtectedLayout() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -38,6 +41,11 @@ function ProtectedLayout() {
   const { incoming, dismiss: dismissNudge, reply: replyNudge, send: sendNudge } = useNudges(canNudge ? user?.id : null);
   const trivia = useTrivia(canNudge ? user?.id : null, user);
   const album  = useAlbumCtx();
+
+  // Pronóstico obligatorio del campeón (por ahora solo para daniel.leon, en pruebas)
+  const champion = useChampionPrediction(user?.id);
+  const forceChampion = user?.username?.toLowerCase() === 'daniel.leon'
+    && !champion.loading && !champion.prediction && champion.aliveTeams.length > 0;
 
   if (loading) {
     return (
@@ -113,6 +121,11 @@ function ProtectedLayout() {
       <main className="min-h-[calc(100vh-4rem)]">
         <Outlet />
       </main>
+
+      {/* Pronóstico obligatorio del campeón — bloquea la app hasta responder */}
+      {forceChampion && (
+        <ChampionPredictionModal aliveTeams={champion.aliveTeams} onSave={champion.save} />
+      )}
     </>
   );
 }
@@ -143,6 +156,7 @@ function AppRoutes() {
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/vs" element={<Vs />} />
         <Route path="/album" element={<Album />} />
+        <Route path="/prizes" element={<Prizes />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
       </Route>

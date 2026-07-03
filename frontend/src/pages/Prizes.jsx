@@ -1,0 +1,293 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useAvatars } from '../contexts/AvatarContext';
+import api from '../utils/api';
+import { supabase } from '../utils/supabase';
+import { trackPage } from '../utils/trackPage';
+import { isExcluded } from '../utils/users';
+import { computeTeams, isChampionRevealed, CHAMPION_REVEAL } from '../utils/aliveTeams';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Avatar from '../components/Avatar';
+import { Trophy, Plane, UtensilsCrossed, HeartPulse, Building2, BookOpen, Flame, Globe2, Gift, Lock, Sparkles } from 'lucide-react';
+
+const AVATAR_COLORS = ['bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600','bg-orange-600','bg-teal-600','bg-indigo-600','bg-pink-600'];
+const colorFor = (u) => AVATAR_COLORS[(u?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+
+function Flag({ code, size = 26 }) {
+  const h = Math.round(size * 0.75);
+  if (!code) return <span style={{ fontSize: size * 0.7 }}>🏳️</span>;
+  return <img src={`https://flagcdn.com/${size}x${h}/${code.toLowerCase()}.png`} alt="" style={{ width: size, height: h, borderRadius: 3, objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle' }} onError={(e) => { e.target.style.display = 'none'; }} />;
+}
+
+// Tarjeta contenedora de cada premio
+function PrizeCard({ icon, accent, title, prizeLabel, children, ribbon }) {
+  return (
+    <div style={{ position: 'relative', background: 'linear-gradient(160deg,#0f1a30,#0b1424)', border: `1px solid ${accent}44`, borderRadius: 18, padding: 16, overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: `radial-gradient(circle, ${accent}22, transparent 70%)`, pointerEvents: 'none' }} />
+      {ribbon && (
+        <div style={{ position: 'absolute', top: 12, right: -34, transform: 'rotate(38deg)', background: accent, color: '#0a0a0a', fontWeight: 900, fontSize: 9, padding: '3px 40px', letterSpacing: '0.05em' }}>{ribbon}</div>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, position: 'relative' }}>
+        <div style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}22`, color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+        <div style={{ minWidth: 0 }}>
+          <h3 style={{ color: 'white', fontWeight: 900, fontSize: 15, lineHeight: 1.15 }}>{title}</h3>
+          <p style={{ color: accent, fontSize: 12, fontWeight: 700, marginTop: 1 }}>{prizeLabel}</p>
+        </div>
+      </div>
+      <div style={{ marginTop: 12, position: 'relative' }}>{children}</div>
+    </div>
+  );
+}
+
+// Fila de ganador temporal
+function WinnerRow({ pos, name, sub, avatarUser, initials, right, dim }) {
+  const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: dim ? 0.45 : 1 }}>
+      {medal ? <span style={{ fontSize: 18, width: 22, textAlign: 'center' }}>{medal}</span> : <span style={{ width: 22 }} />}
+      {avatarUser !== undefined && (
+        <Avatar username={avatarUser} initials={initials || '?'} displayName={name} size={30} colorClass={colorFor(avatarUser)} clickable={false} />
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ color: 'white', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</p>
+        {sub && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{sub}</p>}
+      </div>
+      {right && <div style={{ flexShrink: 0 }}>{right}</div>}
+    </div>
+  );
+}
+
+export default function Prizes() {
+  const { user } = useAuth();
+  const { avatars } = useAvatars();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const revealed = isChampionRevealed();
+
+  useEffect(() => {
+    if (user?.id) trackPage(user.id, 'premios');
+    (async () => {
+      try {
+        const [lbRes, usersRes, matchesRes, champRes, stickersRes, hitsRes] = await Promise.all([
+          api.get('/leaderboard'),
+          api.get('/users'),
+          api.get('/matches'),
+          supabase.from('champion_predictions').select('*, u:users(display_name, username, avatar_initials, department)'),
+          supabase.from('album_stickers').select('owner_username'),
+          supabase.from('predictions').select('user_id, match_id, match:matches!inner(status)').eq('match.status', 'finished').gte('points_earned', 2),
+        ]);
+        setData({
+          leaderboard: lbRes.data || [],
+          users: (usersRes.data || []).filter((u) => !isExcluded(u.username)),
+          matches: matchesRes.data || [],
+          champions: (champRes.data || []),
+          stickers: stickersRes.data || [],
+          hits: hitsRes.data || [],
+        });
+      } catch (e) {
+        console.error('Prizes fetch error:', e);
+        setData({ leaderboard: [], users: [], matches: [], champions: [], stickers: [], hits: [] });
+      } finally { setLoading(false); }
+    })();
+  }, []);
+
+  const derived = useMemo(() => {
+    if (!data) return null;
+    const { leaderboard, users, matches, champions, stickers, hits } = data;
+
+    // Podio individual
+    const podium = leaderboard.slice(0, 3);
+
+    // Departamento campeón (promedio de puntos)
+    const deptMap = {};
+    for (const e of leaderboard) {
+      const d = e.department || 'Sin departamento';
+      (deptMap[d] ||= { dept: d, total: 0, count: 0 });
+      deptMap[d].total += e.total_points || 0;
+      deptMap[d].count += 1;
+    }
+    const depts = Object.values(deptMap)
+      .map((d) => ({ ...d, avg: d.count ? d.total / d.count : 0 }))
+      .sort((a, b) => b.avg - a.avg);
+
+    // Álbum: top coleccionistas
+    const stickerCount = {};
+    for (const s of stickers) stickerCount[s.owner_username] = (stickerCount[s.owner_username] || 0) + 1;
+    const albumTop = Object.entries(stickerCount)
+      .map(([username, count]) => ({ username, count, u: users.find((x) => x.username === username) }))
+      .filter((x) => x.u)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    // Mejor racha (aciertos consecutivos desde el partido más reciente)
+    const finishedDesc = matches.filter((m) => m.status === 'finished').sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+    const hitsByUser = {};
+    for (const p of hits) (hitsByUser[p.user_id] ||= new Set()).add(p.match_id);
+    const streakOf = (uid) => { let s = 0; for (const m of finishedDesc) { if (hitsByUser[uid]?.has(m.id)) s++; else break; } return s; };
+    const streakBoard = users
+      .map((u) => ({ u, streak: streakOf(u.id) }))
+      .filter((x) => x.streak > 0)
+      .sort((a, b) => b.streak - a.streak)
+      .slice(0, 3);
+
+    // Campeón del Mundial
+    const { eliminated } = computeTeams(matches);
+    const predByUser = {};
+    for (const c of champions) predByUser[c.user_id] = c;
+    const predicted = champions
+      .filter((c) => c.u && !isExcluded(c.u.username))
+      .map((c) => ({ ...c, out: eliminated.has(c.champion) }))
+      .sort((a, b) => (a.out - b.out) || (a.u.display_name || '').localeCompare(b.u.display_name || ''));
+    const notPredicted = users.filter((u) => !predByUser[u.id]);
+
+    return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated };
+  }, [data]);
+
+  if (loading) return <LoadingSpinner size="lg" text="Cargando premios..." />;
+
+  return (
+    <div style={{ minHeight: 'calc(100vh - 3.5rem)', background: 'radial-gradient(120% 60% at 50% 0%, #16112e 0%, #0a0a1a 55%)' }}>
+      <div className="max-w-3xl mx-auto px-4 py-6" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* Hero */}
+        <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
+          <div style={{ fontSize: 46, animation: 'trophyBounce 2.2s ease-in-out infinite' }}>🏆</div>
+          <h1 style={{ color: 'white', fontWeight: 900, fontSize: 24, lineHeight: 1.1 }}>Premios Andersen<br />Mundialista 2026</h1>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6, maxWidth: 420, margin: '6px auto 0' }}>
+            La firma premia tu esfuerzo. Estos son los reconocimientos en juego y quiénes van ganando ahora mismo ✨
+          </p>
+        </div>
+
+        {/* ── Podio individual ── */}
+        <div>
+          <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '4px 2px 10px' }}>🏅 Pronóstico Individual · Podio</h2>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <PrizeCard icon={<Plane size={22} />} accent="#FFD700" title="🥇 Primer Lugar" prizeLabel="Millas Andersen · viaje hasta $500" ribbon="TOP 1">
+              {derived.podium[0]
+                ? <WinnerRow pos={1} name={derived.podium[0].display_name} sub={`${derived.podium[0].total_points} pts`} avatarUser={derived.podium[0].username} initials={derived.podium[0].avatar_initials} />
+                : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Viaje obligatorio, puede ir acompañado. Boletos comprados por Andersen (hasta $500), a usar en 2026. Personal e intransferible.</p>
+            </PrizeCard>
+
+            <PrizeCard icon={<UtensilsCrossed size={22} />} accent="#C7CDD6" title="🥈 Segundo Lugar" prizeLabel="Experiencia gastronómica para 2">
+              {derived.podium[1]
+                ? <WinnerRow pos={2} name={derived.podium[1].display_name} sub={`${derived.podium[1].total_points} pts`} avatarUser={derived.podium[1].username} initials={derived.podium[1].avatar_initials} />
+                : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Cena para 2 en un reconocido restaurante de Guayaquil elegido por la firma. Sujeto a disponibilidad.</p>
+            </PrizeCard>
+
+            <PrizeCard icon={<HeartPulse size={22} />} accent="#cd7f32" title="🥉 Tercer Lugar" prizeLabel="Experiencia de bienestar">
+              {derived.podium[2]
+                ? <WinnerRow pos={3} name={derived.podium[2].display_name} sub={`${derived.podium[2].total_points} pts`} avatarUser={derived.podium[2].username} initials={derived.podium[2].avatar_initials} />
+                : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Sesión de masajes para 2 personas. Sujeto a disponibilidad del proveedor.</p>
+            </PrizeCard>
+          </div>
+        </div>
+
+        {/* ── Departamento ── */}
+        <div>
+          <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 2px 10px' }}>🏢 Pronóstico por Departamento</h2>
+          <PrizeCard icon={<Building2 size={22} />} accent="#34d399" title="Departamento Campeón" prizeLabel="Orden de consumo grupal hasta $100" ribbon="EQUIPO">
+            {derived.depts.slice(0, 3).map((d, i) => (
+              <WinnerRow key={d.dept} pos={i + 1} name={d.dept} sub={`Promedio ${d.avg.toFixed(1)} pts · ${d.count} participantes`} />
+            ))}
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Gana el departamento con mayor <b>promedio</b> de puntos. Almuerzo, pizza u otra experiencia para compartir en equipo.</p>
+          </PrizeCard>
+        </div>
+
+        {/* ── Especiales ── */}
+        <div>
+          <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 2px 10px' }}>🎯 Premios Especiales</h2>
+          <div style={{ display: 'grid', gap: 12 }}>
+
+            {/* Álbum */}
+            <PrizeCard icon={<BookOpen size={22} />} accent="#a78bfa" title="📸 Álbum Completo" prizeLabel="Gift Card Sweet & Coffee $20 c/u (×3)">
+              {derived.albumTop.length ? derived.albumTop.map((a, i) => (
+                <WinnerRow key={a.username} pos={i + 1} name={a.u.display_name} sub={`${a.count} cromos`} avatarUser={a.username} initials={a.u.avatar_initials} />
+              )) : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún nadie ha pegado cromos</p>}
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Los <b>3 primeros</b> en completar el álbum ganan. Empate → sorteo. (Aquí se muestra quién va liderando.)</p>
+            </PrizeCard>
+
+            {/* Racha */}
+            <PrizeCard icon={<Flame size={22} />} accent="#fb923c" title="⚡ Mejor Racha de Aciertos" prizeLabel="Gift Card $50" ribbon="🔥">
+              {derived.streakBoard.length ? derived.streakBoard.map((s, i) => (
+                <WinnerRow key={s.u.id} pos={i + 1} name={s.u.display_name} sub={`Racha de ${s.streak} aciertos`} avatarUser={s.u.username} initials={s.u.avatar_initials}
+                  right={<span style={{ color: '#fb923c', fontWeight: 900, fontSize: 14 }}>🔥 {s.streak}</span>} />
+              )) : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin rachas</p>}
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Mayor cantidad de aciertos <b>consecutivos</b> en partidos ya jugados. Empate → sorteo.</p>
+            </PrizeCard>
+
+            {/* Campeón del Mundial */}
+            <PrizeCard icon={<Globe2 size={22} />} accent="#F59E0B" title="⚽ Campeón del Mundial" prizeLabel="Gift Card $50" ribbon="🌎">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: revealed ? 'rgba(52,211,153,0.1)' : 'rgba(96,165,250,0.1)', border: `1px solid ${revealed ? 'rgba(52,211,153,0.3)' : 'rgba(96,165,250,0.3)'}`, borderRadius: 10, padding: '8px 12px', marginBottom: 10 }}>
+                {revealed ? <Sparkles size={15} style={{ color: '#34d399' }} /> : <Lock size={15} style={{ color: '#93c5fd' }} />}
+                <p style={{ color: revealed ? '#a7f3d0' : '#bfdbfe', fontSize: 11.5, fontWeight: 600 }}>
+                  {revealed
+                    ? 'Los pronósticos ya son visibles para todos 👀'
+                    : 'Los pronósticos se revelan el sábado, cuando cierra el sorteo. ¡Ve el sábado para descubrir qué puso cada quién! 🤫'}
+                </p>
+              </div>
+
+              {/* Ya pronosticaron */}
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px' }}>
+                ✅ Ya pronosticaron ({derived.predicted.length})
+              </p>
+              {derived.predicted.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '4px 2px' }}>Nadie todavía</p>}
+              {derived.predicted.map((c) => (
+                <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: c.out ? 0.5 : 1 }}>
+                  <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={30} colorClass={colorFor(c.u.username)} clickable={false} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 13, textDecoration: c.out ? 'line-through' : 'none' }}>{c.u.display_name}</p>
+                    {c.out && <p style={{ color: '#f87171', fontSize: 10.5, fontWeight: 700 }}>❌ Fuera · su campeón quedó eliminado</p>}
+                  </div>
+                  <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, filter: revealed ? 'none' : 'blur(6px)', userSelect: revealed ? 'auto' : 'none' }}>
+                    <Flag code={c.champion_code} size={24} />
+                    <span style={{ color: '#FCD34D', fontWeight: 800, fontSize: 12 }}>{c.champion}</span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Aún no pronostican */}
+              {derived.notPredicted.length > 0 && (
+                <>
+                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '12px 2px 4px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                    ⏳ Aún no pronostican ({derived.notPredicted.length})
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {derived.notPredicted.map((u) => (
+                      <span key={u.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '3px 10px 3px 4px' }}>
+                        <Avatar username={u.username} initials={u.avatar_initials || '?'} displayName={u.display_name} size={22} colorClass={colorFor(u.username)} clickable={false} />
+                        <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{u.display_name?.split(' ')[0]}</span>
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 12, lineHeight: 1.4 }}>
+                Acierta el <b>campeón</b> y ganas. Desempates: (1) subcampeón, (2) marcador exacto de la final en 120 min. Quien puso un campeón ya eliminado queda <b>fuera</b> de este premio.
+              </p>
+            </PrizeCard>
+          </div>
+        </div>
+
+        {/* Condiciones */}
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>📋 Condiciones generales</p>
+          <ul style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11, lineHeight: 1.7, paddingLeft: 16, listStyle: 'disc' }}>
+            <li>Premios asignados según resultados oficiales en la app.</li>
+            <li>Todos personales e intransferibles; no canjeables por dinero.</li>
+            <li>Álbum, Racha y Campeón no aplican para los ganadores del 1°, 2° o 3° lugar individual.</li>
+            <li>En caso de empate, tras los criterios de cada categoría, se define por sorteo.</li>
+            <li>Consultas: área de Capital Humano.</li>
+          </ul>
+        </div>
+
+        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '4px 0 8px' }}>
+          ¡Participa, acumula puntos y conviértete en ganador! ⚽🏆
+        </p>
+      </div>
+    </div>
+  );
+}

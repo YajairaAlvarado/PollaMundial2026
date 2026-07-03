@@ -408,3 +408,8 @@ body.nudge-shaking {
   80%  { transform: skewY(-0.5deg) scaleY(1.01); }
   100% { transform: skewY(0deg) scaleY(1); }
 }
+
+@keyframes trophyBounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-8px) rotate(3deg); }
+}
