@@ -9,6 +9,7 @@ import PredictionModal from '../components/PredictionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import GlobalRace from '../components/GlobalRace';
 import { Trophy, Target, CheckCircle, Calendar, ArrowRight } from 'lucide-react';
+import { isStageLocked } from '../utils/aliveTeams';
 import canchaBg from '../assets/andersen-cancha.jpg';
 
 const STAT_CONFIGS = [
@@ -54,7 +55,7 @@ export default function Dashboard() {
   const hasPending = (() => {
     const now = new Date();
     return upcomingMatchesAll.some((m) => {
-      if (m.status !== 'scheduled') return false;
+      if (m.status !== 'scheduled' || isStageLocked(m.stage)) return false;
       const d = new Date(m.match_date);
       if (d <= now || myPredictions[m.id]) return false;
       return (d - now) / 3600000 <= 72;

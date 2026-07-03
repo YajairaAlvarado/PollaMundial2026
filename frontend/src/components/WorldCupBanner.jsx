@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { parseISO, differenceInSeconds, isSameDay, addDays } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { isStageLocked } from '../utils/aliveTeams';
 
 const TZ = 'America/Guayaquil';
 const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z');
@@ -127,7 +128,7 @@ export default function WorldCupBanner({ matches = [], predictions = {}, onPredi
 
   // Partidos en la ventana temporal
   const windowMatches = matches
-    .filter((m) => m.status === 'scheduled' && isInWindow(m.match_date))
+    .filter((m) => m.status === 'scheduled' && !isStageLocked(m.stage) && isInWindow(m.match_date))
     .sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
 
   const unpredicted = windowMatches.filter((m) => !predictions[m.id]);

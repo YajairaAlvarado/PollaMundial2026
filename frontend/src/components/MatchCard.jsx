@@ -4,7 +4,10 @@ import { format, toZonedTime } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 
 const TZ = 'America/Guayaquil';
-import { MapPin, Plus } from 'lucide-react';
+import { MapPin, Plus, Lock } from 'lucide-react';
+import { isStageLocked } from '../utils/aliveTeams';
+
+const STAGE_LABELS = { r32: 'Ronda de 32', r16: 'Octavos', qf: 'Cuartos', sf: 'Semifinal', third_place: '3er puesto', final: 'Final' };
 
 function FlagImg({ code, name, size = 48 }) {
   const h = Math.round(size * 0.75);
@@ -49,7 +52,9 @@ export default function MatchCard({ match, prediction, onPredict }) {
   const deadline = isMexSaf
     ? new Date('2026-06-11T20:00:00Z')
     : start;
-  const canPredict = isScheduled && now < deadline;
+  const stageLocked = isStageLocked(match.stage); // octavos+ bloqueados por ahora
+  const canPredict = isScheduled && now < deadline && !stageLocked;
+  const badgeLabel = match.stage === 'group' ? `Grupo ${match.group_name}` : (STAGE_LABELS[match.stage] || 'Eliminatoria');
 
   let borderAccent = 'rgba(255,255,255,0.08)';
   if (isFinished && hasPrediction) {
@@ -67,7 +72,7 @@ export default function MatchCard({ match, prediction, onPredict }) {
     >
       {/* Header row */}
       <div className="flex items-center justify-between mb-3">
-        <span className="group-badge">Grupo {match.group_name}</span>
+        <span className="group-badge">{badgeLabel}</span>
         <div className="flex items-center gap-1.5">
           {isLive && (
             <span
@@ -165,7 +170,16 @@ export default function MatchCard({ match, prediction, onPredict }) {
         </button>
       )}
 
-      {isScheduled && !canPredict && (
+      {isScheduled && !canPredict && stageLocked && !hasPrediction && (
+        <div
+          className="w-full py-2 rounded-lg text-xs text-center flex items-center justify-center gap-1.5"
+          style={{ color: 'rgba(147,197,253,0.7)', border: '1px solid rgba(96,165,250,0.2)', background: 'rgba(96,165,250,0.06)' }}
+        >
+          <Lock size={11} /> Predicciones disponibles pronto
+        </div>
+      )}
+
+      {isScheduled && !canPredict && !stageLocked && (
         <div
           className="w-full py-2 rounded-lg text-xs text-center"
           style={{ color: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.07)' }}
