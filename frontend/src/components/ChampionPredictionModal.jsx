@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Minus, Plus, CheckCircle, AlertTriangle, ChevronLeft, Gift } from 'lucide-react';
+import { Trophy, Minus, Plus, CheckCircle, AlertTriangle, ChevronLeft, Gift, Network } from 'lucide-react';
+import Bracket from '../pages/Bracket';
 
 // Bandera pequeña reutilizable
 function Flag({ code, size = 34 }) {
@@ -53,6 +54,7 @@ export default function ChampionPredictionModal({ aliveTeams = [], onSave }) {
   const [runnerScore, setRunnerScore] = useState(0);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState('');
+  const [showBracket, setShowBracket] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -93,9 +95,13 @@ export default function ChampionPredictionModal({ aliveTeams = [], onSave }) {
       <div style={{ width: 460, maxWidth: '96vw', maxHeight: '94vh', display: 'flex', flexDirection: 'column', borderRadius: 22, overflow: 'hidden', background: 'linear-gradient(165deg,#141033,#0a1226)', border: '2px solid rgba(245,158,11,0.45)', boxShadow: '0 24px 70px rgba(0,0,0,0.75)' }}>
 
         {/* Banda superior dorada */}
-        <div style={{ background: 'linear-gradient(90deg,#F59E0B,#FCD34D,#F59E0B)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Trophy size={18} style={{ color: '#3a2600' }} />
-          <span style={{ color: '#3a2600', fontWeight: 900, fontSize: 13, letterSpacing: '0.03em' }}>PRONÓSTICO CAMPEÓN DEL MUNDIAL 2026</span>
+        <div style={{ background: 'linear-gradient(90deg,#F59E0B,#FCD34D,#F59E0B)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Trophy size={18} style={{ color: '#3a2600', flexShrink: 0 }} />
+          <span style={{ color: '#3a2600', fontWeight: 900, fontSize: 12, letterSpacing: '0.02em', flex: 1, minWidth: 0 }}>PRONÓSTICO CAMPEÓN 2026</span>
+          <button onClick={() => setShowBracket(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(58,38,0,0.15)', color: '#3a2600', fontWeight: 900, fontSize: 11.5, padding: '5px 10px', borderRadius: 20, border: '1.5px solid rgba(58,38,0,0.35)', flexShrink: 0, touchAction: 'manipulation' }}>
+            <Network size={13} /> Ver llaves
+          </button>
         </div>
 
         <div style={{ padding: 18, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -233,6 +239,22 @@ export default function ChampionPredictionModal({ aliveTeams = [], onSave }) {
           )}
         </div>
       </div>
+
+      {/* Overlay de LLAVES para decidir campeón / subcampeón */}
+      {showBracket && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200002, background: '#0a0a1a', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(10,10,26,0.97)', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+            <button onClick={() => setShowBracket(false)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(90deg,#F59E0B,#FCD34D)', color: '#3a2600', fontWeight: 900, fontSize: 13, padding: '8px 14px', borderRadius: 20, touchAction: 'manipulation' }}>
+              <ChevronLeft size={16} /> Volver a elegir
+            </button>
+            <span style={{ color: 'white', fontWeight: 800, fontSize: 14 }}>🔑 Llaves del Mundial</span>
+          </div>
+          <div style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <Bracket />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
