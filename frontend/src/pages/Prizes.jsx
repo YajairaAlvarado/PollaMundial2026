@@ -28,8 +28,8 @@ function TempTag() {
   );
 }
 
-// Escena ilustrada del premio (avión→isla, restaurante, playa)
-function PrizeScene({ variant }) {
+// Escena ilustrada del premio con la CARA del ganador metida adentro 😂
+function PrizeScene({ variant, face, initials }) {
   const V = {
     plane:  { grad: 'linear-gradient(160deg,#7dd3fc,#0284c7)', main: '✈️', sub: '🏝️', extra: '☁️', anim: 'planeFloat 3s ease-in-out infinite' },
     dinner: { grad: 'linear-gradient(160deg,#fcd34d,#c2410c)', main: '🍽️', sub: '🍷', extra: '✨', anim: 'sceneBob 3.2s ease-in-out infinite' },
@@ -38,19 +38,25 @@ function PrizeScene({ variant }) {
   if (!V) return null;
   return (
     <div style={{ position: 'absolute', top: 12, right: 12, width: 78, height: 78, borderRadius: 16, background: V.grad, boxShadow: '0 6px 18px rgba(0,0,0,0.4)', overflow: 'hidden', zIndex: 1 }}>
-      <span style={{ position: 'absolute', top: 5, right: 7, fontSize: 13, opacity: 0.85 }}>{V.extra}</span>
-      <span style={{ position: 'absolute', bottom: 1, left: 5, fontSize: 26 }}>{V.sub}</span>
-      <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 32, animation: V.anim, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.3))' }}>{V.main}</span>
+      <span style={{ position: 'absolute', top: 4, left: 5, fontSize: 20, animation: V.anim, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.3))', zIndex: 3 }}>{V.main}</span>
+      <span style={{ position: 'absolute', top: 4, right: 6, fontSize: 12, opacity: 0.85 }}>{V.extra}</span>
+      <span style={{ position: 'absolute', bottom: -2, left: 2, fontSize: 22, zIndex: 3 }}>{V.sub}</span>
+      {/* Cara del ganador */}
+      <div style={{ position: 'absolute', left: '50%', top: '54%', transform: 'translate(-50%,-50%)', width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.45)', background: '#0a1730', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, animation: 'sceneBob 2.8s ease-in-out infinite' }}>
+        {face
+          ? <img src={face} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <span style={{ color: 'white', fontWeight: 900, fontSize: 13 }}>{initials || '?'}</span>}
+      </div>
     </div>
   );
 }
 
 // Tarjeta contenedora de cada premio
-function PrizeCard({ icon, accent, title, prizeLabel, children, ribbon, temp, scene }) {
+function PrizeCard({ icon, accent, title, prizeLabel, children, ribbon, temp, scene, sceneFace, sceneInitials }) {
   return (
     <div style={{ position: 'relative', background: 'linear-gradient(160deg,#0f1a30,#0b1424)', border: `1px solid ${accent}44`, borderRadius: 18, padding: 16, overflow: 'hidden' }}>
       {!scene && <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: `radial-gradient(circle, ${accent}22, transparent 70%)`, pointerEvents: 'none' }} />}
-      {scene && <PrizeScene variant={scene} />}
+      {scene && <PrizeScene variant={scene} face={sceneFace} initials={sceneInitials} />}
       {ribbon && !scene && (
         <div style={{ position: 'absolute', top: 12, right: -34, transform: 'rotate(38deg)', background: accent, color: '#0a0a0a', fontWeight: 900, fontSize: 9, padding: '3px 40px', letterSpacing: '0.05em' }}>{ribbon}</div>
       )}
@@ -223,21 +229,21 @@ export default function Prizes() {
         <div>
           <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '4px 2px 10px' }}>🏅 Pronóstico Individual · Podio</h2>
           <div style={{ display: 'grid', gap: 12 }}>
-            <PrizeCard icon={<Plane size={22} />} accent="#FFD700" title="🥇 Primer Lugar" prizeLabel="Millas Andersen · viaje hasta $500" scene="plane" temp>
+            <PrizeCard icon={<Plane size={22} />} accent="#FFD700" title="🥇 Primer Lugar" prizeLabel="Millas Andersen · viaje hasta $500" scene="plane" sceneFace={avatars[derived.podium[0]?.username?.toLowerCase()]} sceneInitials={derived.podium[0]?.avatar_initials} temp>
               {derived.podium[0]
                 ? <WinnerRow pos={1} name={derived.podium[0].display_name} sub={`${derived.podium[0].total_points} pts`} avatarUser={derived.podium[0].username} initials={derived.podium[0].avatar_initials} />
                 : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Viaje obligatorio, puede ir acompañado. Boletos comprados por Andersen (hasta $500), a usar en 2026. Personal e intransferible.</p>
             </PrizeCard>
 
-            <PrizeCard icon={<UtensilsCrossed size={22} />} accent="#C7CDD6" title="🥈 Segundo Lugar" prizeLabel="Experiencia gastronómica para 2" scene="dinner" temp>
+            <PrizeCard icon={<UtensilsCrossed size={22} />} accent="#C7CDD6" title="🥈 Segundo Lugar" prizeLabel="Experiencia gastronómica para 2" scene="dinner" sceneFace={avatars[derived.podium[1]?.username?.toLowerCase()]} sceneInitials={derived.podium[1]?.avatar_initials} temp>
               {derived.podium[1]
                 ? <WinnerRow pos={2} name={derived.podium[1].display_name} sub={`${derived.podium[1].total_points} pts`} avatarUser={derived.podium[1].username} initials={derived.podium[1].avatar_initials} />
                 : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Cena para 2 en un reconocido restaurante de Guayaquil elegido por la firma. Sujeto a disponibilidad.</p>
             </PrizeCard>
 
-            <PrizeCard icon={<HeartPulse size={22} />} accent="#cd7f32" title="🥉 Tercer Lugar" prizeLabel="Experiencia de bienestar" scene="beach" temp>
+            <PrizeCard icon={<HeartPulse size={22} />} accent="#cd7f32" title="🥉 Tercer Lugar" prizeLabel="Experiencia de bienestar" scene="beach" sceneFace={avatars[derived.podium[2]?.username?.toLowerCase()]} sceneInitials={derived.podium[2]?.avatar_initials} temp>
               {derived.podium[2]
                 ? <WinnerRow pos={3} name={derived.podium[2].display_name} sub={`${derived.podium[2].total_points} pts`} avatarUser={derived.podium[2].username} initials={derived.podium[2].avatar_initials} />
                 : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin datos</p>}

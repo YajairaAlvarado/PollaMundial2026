@@ -7,9 +7,9 @@ export const isAlbumBeta = (username) => ALBUM_ENABLED || ALBUM_BETA_USERS.inclu
 
 // ── Reglas (fáciles de cambiar a futuro) ───────────────────────────────────
 export const DAILY_LIMIT   = 6;                 // fichas (aciertos) máximos por día
-export const ATTEMPT_LIMIT = 8;                 // intentos máximos por día (acierte o falle)
+export const ATTEMPT_LIMIT = 6;                 // intentos máximos por día (acierte o falle)
 export const COOLDOWN_MS  = 60 * 60 * 1000;     // 1 hora entre intentos
-export const ANSWER_MS    = 10000;              // 10 seg para contestar
+export const ANSWER_MS    = 8000;               // 8 seg para contestar (más difícil)
 export const ALBUM_POINTS = 3;                  // puntos al completar (aún NO oficial)
 
 // ── DT (socio líder) por departamento ──────────────────────────────────────

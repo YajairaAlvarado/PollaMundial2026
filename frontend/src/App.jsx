@@ -42,10 +42,9 @@ function ProtectedLayout() {
   const trivia = useTrivia(canNudge ? user?.id : null, user);
   const album  = useAlbumCtx();
 
-  // Pronóstico obligatorio del campeón (por ahora solo para daniel.leon, en pruebas)
+  // Pronóstico obligatorio del campeón — para TODOS los usuarios
   const champion = useChampionPrediction(user?.id);
-  const forceChampion = user?.username?.toLowerCase() === 'daniel.leon'
-    && !champion.loading && !champion.prediction && champion.aliveTeams.length > 0;
+  const forceChampion = !champion.loading && !champion.prediction && champion.aliveTeams.length > 0;
 
   if (loading) {
     return (
