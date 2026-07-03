@@ -189,7 +189,7 @@ export default function ChampionPredictionModal({ aliveTeams = [], onSave }) {
               </div>
               <button onClick={() => setStep('confirm')}
                 style={{ width: '100%', marginTop: 8, padding: '14px', borderRadius: 14, fontWeight: 900, fontSize: 15, background: 'linear-gradient(90deg,#F59E0B,#FCD34D)', color: '#3a2600', touchAction: 'manipulation' }}>
-                Revisar mi pronóstico →
+                Continuar →
               </button>
             </>
           )}
