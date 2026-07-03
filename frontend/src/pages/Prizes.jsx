@@ -159,12 +159,19 @@ export default function Prizes() {
       .slice(0, 3);
 
     // Campeón del Mundial
-    const { eliminated } = computeTeams(matches);
+    const { eliminated, teamCode } = computeTeams(matches);
+    // Señuelos: equipos YA eliminados (con bandera) para despistar antes del sábado
+    const decoyPool = [...eliminated].map((t) => ({ team: t, code: teamCode[t] })).filter((x) => x.code);
+    const hashStr = (s) => { let h = 0; for (let i = 0; i < (s || '').length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; };
     const predByUser = {};
     for (const c of champions) predByUser[c.user_id] = c;
     const predicted = champions
       .filter((c) => c.u && !isExcluded(c.u.username))
-      .map((c) => ({ ...c, out: eliminated.has(c.champion) }))
+      .map((c) => ({
+        ...c,
+        out: eliminated.has(c.champion),
+        decoy: decoyPool.length ? decoyPool[hashStr(c.user_id) % decoyPool.length] : { team: '¿?', code: null },
+      }))
       .sort((a, b) => (a.out - b.out) || (a.u.display_name || '').localeCompare(b.u.display_name || ''));
     const notPredicted = users.filter((u) => !predByUser[u.id]);
 
@@ -286,9 +293,10 @@ export default function Prizes() {
                     <p style={{ color: 'white', fontWeight: 700, fontSize: 13, textDecoration: c.out ? 'line-through' : 'none' }}>{c.u.display_name}</p>
                     {c.out && <p style={{ color: '#f87171', fontSize: 10.5, fontWeight: 700 }}>❌ Fuera · su campeón quedó eliminado</p>}
                   </div>
-                  <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, filter: revealed ? 'none' : 'blur(6px)', userSelect: revealed ? 'auto' : 'none' }}>
-                    <Flag code={c.champion_code} size={24} />
-                    <span style={{ color: '#FCD34D', fontWeight: 800, fontSize: 12 }}>{c.champion}</span>
+                  <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, filter: revealed ? 'none' : 'blur(7px)', userSelect: revealed ? 'auto' : 'none', pointerEvents: revealed ? 'auto' : 'none' }}>
+                    {/* Antes del sábado mostramos un equipo SEÑUELO (ya eliminado) para despistar 😈 */}
+                    <Flag code={revealed ? c.champion_code : c.decoy.code} size={24} />
+                    <span style={{ color: '#FCD34D', fontWeight: 800, fontSize: 12 }}>{revealed ? c.champion : c.decoy.team}</span>
                   </div>
                 </div>
               ))}
