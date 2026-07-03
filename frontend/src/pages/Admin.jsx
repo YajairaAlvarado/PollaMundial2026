@@ -740,7 +740,8 @@ function KnockoutTiebreakers() {
     supabase.from('matches').select('*')
       .in('stage', KO_STAGES).eq('status', 'finished')
       .then(({ data }) => {
-        const draws = (data || []).filter((m) => m.home_score !== null && m.home_score === m.away_score);
+        // Solo empates que AÚN no tienen definido quién avanzó (los ya resueltos se ocultan)
+        const draws = (data || []).filter((m) => m.home_score !== null && m.home_score === m.away_score && !m.advance_team);
         draws.sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
         setTies(draws);
       });
