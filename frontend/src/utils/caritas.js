@@ -48,4 +48,6 @@ export const GIFS = [
   { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDJ6bHI3ZWp1cDE0Z3FkMDh2c2JsZHRoM24zNWIwZTNodHJrZjZrYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Mr5yS9nR4kAda/giphy.gif', label: 'Estamos pensando lo mismo' },
   { url: 'https://cloudfront-us-east-1.images.arcpublishing.com/eluniverso/POGUTSEYAFC2TLLRQXSDRS6W2A.jpeg', label: 'Tranquilo que yo resuelvo' },
   { url: 'https://media.tenor.com/D1eCb9NKyGIAAAAM/messi-que-miras-bobo.gif', label: '¿Qué mirás, bobo?' },
+  { url: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmd3dTdma3E2a292dTJzZjlnaHM3bHl6M3B2c2R6bmRndGhwZXNyNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/kXNYthbiZZWda/giphy.gif', label: 'Sacando la lengua' },
+  { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExem5jZnlrMTYwa2I2ZXB6YTA3dXM0MHJjb2RrYWpiYTkxeDVzZzRqZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/qYlV78hZixVRoLTKuH/giphy.gif', label: 'Yo comiendo' },
 ];
