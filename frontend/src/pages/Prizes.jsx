@@ -81,23 +81,36 @@ export default function Prizes() {
 
   useEffect(() => {
     if (user?.id) trackPage(user.id, 'premios');
+    // Supabase corta a 1000 filas por consulta → paginamos para no truncar conteos
+    const fetchAll = async (build) => {
+      const all = []; let from = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { data, error } = await build(from, from + 999);
+        if (error || !data) break;
+        all.push(...data);
+        if (data.length < 1000) break;
+        from += 1000;
+      }
+      return all;
+    };
     (async () => {
       try {
-        const [lbRes, usersRes, matchesRes, champRes, stickersRes, hitsRes] = await Promise.all([
+        const [lbRes, usersRes, matchesRes, champRes, stickers, hits] = await Promise.all([
           api.get('/leaderboard'),
           api.get('/users'),
           api.get('/matches'),
           supabase.from('champion_predictions').select('*, u:users(display_name, username, avatar_initials, department)'),
-          supabase.from('album_stickers').select('owner_username'),
-          supabase.from('predictions').select('user_id, match_id, match:matches!inner(status)').eq('match.status', 'finished').gte('points_earned', 2),
+          fetchAll((a, b) => supabase.from('album_stickers').select('owner_username').range(a, b)),
+          fetchAll((a, b) => supabase.from('predictions').select('user_id, match_id, match:matches!inner(status)').eq('match.status', 'finished').gte('points_earned', 2).range(a, b)),
         ]);
         setData({
           leaderboard: lbRes.data || [],
           users: (usersRes.data || []).filter((u) => !isExcluded(u.username)),
           matches: matchesRes.data || [],
           champions: (champRes.data || []),
-          stickers: stickersRes.data || [],
-          hits: hitsRes.data || [],
+          stickers: stickers || [],
+          hits: hits || [],
         });
       } catch (e) {
         console.error('Prizes fetch error:', e);
@@ -212,10 +225,19 @@ export default function Prizes() {
         <div>
           <h2 style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 2px 10px' }}>🏢 Pronóstico por Departamento</h2>
           <PrizeCard icon={<Building2 size={22} />} accent="#34d399" title="Departamento Campeón" prizeLabel="Orden de consumo grupal hasta $100" ribbon="EQUIPO" temp>
-            {derived.depts.slice(0, 3).map((d, i) => (
-              <WinnerRow key={d.dept} pos={i + 1} name={d.dept} sub={`Promedio ${d.avg.toFixed(1)} pts · ${d.count} participantes`} />
-            ))}
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Gana el departamento con mayor <b>promedio</b> de puntos. Almuerzo, pizza u otra experiencia para compartir en equipo.</p>
+            {derived.depts[0] && (
+              <div style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: 12, padding: '12px 14px', textAlign: 'center' }}>
+                <p style={{ fontSize: 24 }}>🏆</p>
+                <p style={{ color: 'white', fontWeight: 900, fontSize: 17, marginTop: 2 }}>{derived.depts[0].dept}</p>
+                <p style={{ color: '#34d399', fontSize: 12.5, fontWeight: 700, marginTop: 2 }}>Promedio {derived.depts[0].avg.toFixed(1)} pts · {derived.depts[0].count} participantes</p>
+              </div>
+            )}
+            {derived.depts.length > 1 && (
+              <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
+                Le persiguen: {derived.depts.slice(1, 3).map((d) => `${d.dept} (${d.avg.toFixed(1)})`).join(' · ')}
+              </p>
+            )}
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 8, lineHeight: 1.4 }}>Gana <b>un solo</b> departamento: el de mayor <b>promedio</b> de puntos. Almuerzo, pizza u otra experiencia para compartir en equipo.</p>
           </PrizeCard>
         </div>
 
