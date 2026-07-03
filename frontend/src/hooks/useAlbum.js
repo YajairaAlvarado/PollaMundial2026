@@ -5,7 +5,7 @@ import {
   buildRoster, generateChallenge, canPlay, isAlbumBeta, dailyState,
 } from '../utils/album';
 
-const DBG = (...a) => console.log('%c[ALBUM]', 'color:#FFD100;font-weight:bold', ...a);
+const DBG = () => {}; // diagnóstico desactivado (el bug ya se resolvió)
 
 export function useAlbum(user) {
   const { avatars, ready } = useAvatars();

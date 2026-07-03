@@ -1,4 +1,4 @@
-import { USERS } from './users';
+import { USERS, isExcluded } from './users';
 
 // ── Quiénes ven el álbum ────────────────────────────────────────────────────
 export const ALBUM_ENABLED   = true;           // true = abierto a toda la firma
@@ -9,7 +9,7 @@ export const isAlbumBeta = (username) => ALBUM_ENABLED || ALBUM_BETA_USERS.inclu
 export const DAILY_LIMIT   = 6;                 // fichas (aciertos) máximos por día
 export const ATTEMPT_LIMIT = 6;                 // intentos máximos por día (acierte o falle)
 export const COOLDOWN_MS  = 60 * 60 * 1000;     // 1 hora entre intentos
-export const ANSWER_MS    = 8000;               // 8 seg para contestar (más difícil)
+export const ANSWER_MS    = 7000;               // 7 seg para contestar (más difícil)
 export const ALBUM_POINTS = 3;                  // puntos al completar (aún NO oficial)
 
 // ── DT (socio líder) por departamento ──────────────────────────────────────
@@ -64,7 +64,7 @@ const NORMAL_WEIGHT = 12;
 // avatars: { username -> url } (de AvatarContext)
 export function buildRoster(avatars) {
   return USERS
-    .filter((u) => avatars[u.username.toLowerCase()])
+    .filter((u) => avatars[u.username.toLowerCase()] && !isExcluded(u.username))
     .map((u) => ({
       username: u.username,
       displayName: u.displayName,
@@ -109,50 +109,47 @@ function weightedPick(candidates) {
 
 // ── Generar un reto ──────────────────────────────────────────────────────────
 // roster: array completo · ownedSet: Set de usernames que ya tengo · self: mi username
-// Devuelve { type, target, options, answer } o null si ya no faltan fichas.
-//   type 'photo-name'  → muestro foto, 4 nombres
-//   type 'name-photo'  → muestro nombre, 3 fotos (cromos sin nombre)
-//   type 'photo-dept'  → muestro foto, 4 departamentos
+// Devuelve { type: 'photo-name', target, options, answer } o null si ya no faltan.
+// ÚNICO tipo: muestra la FOTO y 4 nombres. Los distractores usan el MISMO primer
+// nombre del target + APELLIDOS reales de otras personas (ej. foto de "Daniel Leon"
+// → Daniel Leon / Daniel Castro / Daniel Lopez), para que haya que saber el
+// nombre exacto y no se pueda adivinar por eliminación.
+const firstNameOf = (name) => (name || '').split(' ')[0];
+const lastNameOf  = (name) => { const p = (name || '').split(' '); return p.slice(1).join(' ') || p[0] || ''; };
+
 export function generateChallenge(roster, ownedSet, self) {
   self = (self || '').toLowerCase();
   const missing = roster.filter((p) => p.username !== self && !ownedSet.has(p.username));
   if (!missing.length) return null;
 
   const target = weightedPick(missing);
-  const others = roster.filter((p) => p.username !== target.username);
-  // En "foto→nombre" y "nombre→foto" el sexo de la foto/nombre es una pista
-  // visual gratis, así que los distractores deben ser del mismo sexo que el
-  // target (si hay suficientes candidatos; si no, se completa con cualquiera).
-  const sameSex = others.filter((p) => p.sex && p.sex === target.sex);
-  const pickDistractors = (n) => {
-    if (sameSex.length >= n) return sample(sameSex, n);
-    const rest = others.filter((p) => !sameSex.includes(p));
-    return [...sameSex, ...sample(rest, n - sameSex.length)];
-  };
+  const firstName  = firstNameOf(target.displayName);
+  const targetLast = lastNameOf(target.displayName);
 
-  const types = [];
-  if (others.length >= 3) types.push('photo-name');
-  if (others.length >= 2) types.push('name-photo');
-  types.push('photo-dept');
-  const type = types[Math.floor(Math.random() * types.length)];
+  // apellidos reales de OTRAS personas, distintos al del target
+  const otherLasts = [...new Set(
+    roster
+      .filter((p) => p.username !== target.username)
+      .map((p) => lastNameOf(p.displayName))
+      .filter((ln) => ln && ln.toLowerCase() !== targetLast.toLowerCase())
+  )];
+  const distractorLabels = sample(otherLasts, 3).map((ln) => `${firstName} ${ln}`);
 
-  if (type === 'photo-name') {
-    const distractors = pickDistractors(3);
-    const options = shuffle([target, ...distractors]).map((p) => ({ username: p.username, label: p.displayName }));
-    return { type, target, options, answer: target.username };
+  // por si faltaran apellidos, rellenar con nombres completos de otras personas
+  if (distractorLabels.length < 3) {
+    const pool = shuffle(roster.filter((p) => p.username !== target.username).map((p) => p.displayName));
+    for (const name of pool) {
+      if (distractorLabels.length >= 3) break;
+      if (name !== target.displayName && !distractorLabels.includes(name)) distractorLabels.push(name);
+    }
   }
 
-  if (type === 'name-photo') {
-    const distractors = pickDistractors(2);
-    const options = shuffle([target, ...distractors]); // se renderizan como cromos sin nombre
-    return { type, target, options, answer: target.username };
-  }
+  const options = shuffle([
+    { username: target.username, label: target.displayName },
+    ...distractorLabels.map((label, i) => ({ username: `__distractor_${i}`, label })),
+  ]);
 
-  // photo-dept
-  const otherDepts = DEPARTMENT_ORDER.filter((d) => d !== target.department);
-  const distractors = sample(otherDepts, 3);
-  const options = shuffle([target.department, ...distractors]).map((d) => ({ value: d, label: d }));
-  return { type, target, options, answer: target.department };
+  return { type: 'photo-name', target, options, answer: target.username };
 }
 
 // ── Estado del día desde la lista de intentos ────────────────────────────────

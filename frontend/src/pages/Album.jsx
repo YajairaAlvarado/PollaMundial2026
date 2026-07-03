@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlbumCtx } from '../contexts/AlbumContext';
 import { rosterByDepartment, dailyState, DAILY_LIMIT, ATTEMPT_LIMIT, ALBUM_POINTS, isDT } from '../utils/album';
-import { USERS } from '../utils/users';
+import { USERS, isExcluded } from '../utils/users';
 import StickerCard from '../components/StickerCard';
 import AlbumViewerModal from '../components/AlbumViewerModal';
 import Avatar from '../components/Avatar';
@@ -83,6 +83,7 @@ export default function Album() {
         from += 1000;
       }
       const list = Object.entries(counts)
+        .filter(([username]) => !isExcluded(username))   // ocultar ex-empleados
         .map(([username, count]) => ({ username, count, displayName: USER_BY_NAME[username]?.displayName || username }))
         .sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName))
         .map((r, i) => ({ ...r, rank: i + 1 }));
