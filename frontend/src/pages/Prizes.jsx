@@ -330,13 +330,13 @@ export default function Prizes() {
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Los <b>3 primeros</b> en completar el álbum ganan. Empate → sorteo. (Aquí se muestra quién va liderando.)</p>
             </PrizeCard>
 
-            {/* Racha */}
+            {/* Racha — UN SOLO ganador (solo el #1) */}
             <PrizeCard icon={<Flame size={22} />} accent="#fb923c" title="⚡ Mejor Racha de Aciertos" prizeLabel="Gift Card $50" ribbon="🔥" temp>
-              {derived.streakBoard.length ? derived.streakBoard.map((s, i) => (
-                <WinnerRow key={s.u.id} pos={i + 1} name={s.u.display_name} sub={`Racha de ${s.streak} aciertos`} avatarUser={s.u.username} initials={s.u.avatar_initials}
+              {derived.streakBoard.length ? derived.streakBoard.slice(0, 1).map((s) => (
+                <WinnerRow key={s.u.id} pos={1} name={s.u.display_name} sub={`Racha de ${s.streak} aciertos`} avatarUser={s.u.username} initials={s.u.avatar_initials}
                   right={<span style={{ color: '#fb923c', fontWeight: 900, fontSize: 14 }}>🔥 {s.streak}</span>} />
               )) : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin rachas</p>}
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Mayor cantidad de aciertos <b>consecutivos</b> en partidos ya jugados. Empate → sorteo.</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Solo <b>1 ganador</b>: la mejor racha de aciertos <b>consecutivos</b>. Empate → más puntos en rachas; si persiste → sorteo.</p>
             </PrizeCard>
 
             {/* Campeón del Mundial */}
