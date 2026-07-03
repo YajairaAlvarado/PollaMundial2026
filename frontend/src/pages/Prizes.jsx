@@ -46,7 +46,7 @@ function TempTag() {
 // Escena ilustrada del premio con la CARA del ganador metida adentro 😂
 function PrizeScene({ variant, face, initials }) {
   const V = {
-    plane:  { grad: 'linear-gradient(160deg,#7dd3fc,#0284c7)', main: '✈️', sub: '🏝️', extra: '☁️', anim: 'planeFloat 3s ease-in-out infinite' },
+    plane:  { grad: 'linear-gradient(160deg,#7dd3fc,#0284c7)', main: '✈️', sub: '🗽', extra: '☁️', anim: 'planeFloat 3s ease-in-out infinite' },
     dinner: { grad: 'linear-gradient(160deg,#fcd34d,#c2410c)', main: '🍽️', sub: '🍷', extra: '✨', anim: 'sceneBob 3.2s ease-in-out infinite' },
     beach:  { grad: 'linear-gradient(160deg,#6ee7b7,#0d9488)', main: '🏖️', sub: '🌴', extra: '☀️', anim: 'sceneBob 3.4s ease-in-out infinite' },
   }[variant];
