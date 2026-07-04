@@ -116,6 +116,16 @@ function weightedPick(candidates) {
 // Daniel Lopez / …), para que haya que saber el nombre exacto y no se pueda
 // adivinar por eliminación.
 const N_DISTRACTORS = 3;
+
+// Distractores "hechos a mano" para ciertas fichas: variaciones fonéticas muy
+// parecidas al nombre real para confundir de verdad 😈. Clave = username.
+const CUSTOM_DISTRACTORS = {
+  'stephany.lara':       ['Estefany Lara', 'Stephany Jara', 'Stephanya Lara', 'Sthefany Lara'],
+  'joffre.villegas':     ['Yoffre Villacis', 'Joffrre Villalva', 'Joffre Billegas'],
+  'jeancarlos.marcillo': ['Juan Carlos Murillo', 'JeanCarlos Astudillo', 'Juan Carlos Martillo'],
+  'lesny.pico':          ['Lenny Pico', 'Lesny Pilco', 'Lesni Pico'],
+};
+
 const firstNameOf = (name) => (name || '').split(' ')[0];
 const lastNameOf  = (name) => { const p = (name || '').split(' '); return p.slice(1).join(' ') || p[0] || ''; };
 
@@ -128,14 +138,21 @@ export function generateChallenge(roster, ownedSet, self) {
   const firstName  = firstNameOf(target.displayName);
   const targetLast = lastNameOf(target.displayName);
 
-  // apellidos reales de OTRAS personas, distintos al del target
-  const otherLasts = [...new Set(
-    roster
-      .filter((p) => p.username !== target.username)
-      .map((p) => lastNameOf(p.displayName))
-      .filter((ln) => ln && ln.toLowerCase() !== targetLast.toLowerCase())
-  )];
-  const distractorLabels = sample(otherLasts, N_DISTRACTORS).map((ln) => `${firstName} ${ln}`);
+  // ¿Tiene esta ficha distractores hechos a mano? → usarlos (mezclados)
+  const custom = CUSTOM_DISTRACTORS[(target.username || '').toLowerCase()];
+  let distractorLabels;
+  if (custom && custom.length) {
+    distractorLabels = sample(custom, N_DISTRACTORS);
+  } else {
+    // apellidos reales de OTRAS personas, distintos al del target
+    const otherLasts = [...new Set(
+      roster
+        .filter((p) => p.username !== target.username)
+        .map((p) => lastNameOf(p.displayName))
+        .filter((ln) => ln && ln.toLowerCase() !== targetLast.toLowerCase())
+    )];
+    distractorLabels = sample(otherLasts, N_DISTRACTORS).map((ln) => `${firstName} ${ln}`);
+  }
 
   // por si faltaran apellidos, rellenar con nombres completos de otras personas
   if (distractorLabels.length < N_DISTRACTORS) {
