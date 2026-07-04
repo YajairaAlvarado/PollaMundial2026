@@ -18,6 +18,12 @@ function fmt(ms) {
   return `${m}:${String(ss).padStart(2, '0')}`;
 }
 
+// Hora (Ecuador) de la última ficha, para el desempate del premio del álbum
+function fmtStickerTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('es-EC', { timeZone: 'America/Guayaquil', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
 export default function Album() {
   const { user } = useAuth();
   const me = (user?.username || '').toLowerCase();
@@ -73,19 +79,24 @@ export default function Album() {
       // Paginar: Supabase devuelve máx 1000 filas por consulta y ya hay más
       // cromos que eso en total, lo que dejaba el ranking corto.
       const counts = {};
+      const lastAt = {}; // username -> created_at de la ÚLTIMA ficha (para desempate)
       let from = 0;
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const { data: pg } = await supabase.from('album_stickers').select('owner_username').range(from, from + 999);
+        const { data: pg } = await supabase.from('album_stickers').select('owner_username, created_at').range(from, from + 999);
         if (!pg || pg.length === 0) break;
-        for (const r of pg) counts[r.owner_username] = (counts[r.owner_username] || 0) + 1;
+        for (const r of pg) {
+          counts[r.owner_username] = (counts[r.owner_username] || 0) + 1;
+          if (!lastAt[r.owner_username] || r.created_at > lastAt[r.owner_username]) lastAt[r.owner_username] = r.created_at;
+        }
         if (pg.length < 1000) break;
         from += 1000;
       }
       const list = Object.entries(counts)
         .filter(([username]) => !isExcluded(username))   // ocultar ex-empleados
-        .map(([username, count]) => ({ username, count, displayName: USER_BY_NAME[username]?.displayName || username }))
-        .sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName))
+        .map(([username, count]) => ({ username, count, last: lastAt[username], displayName: USER_BY_NAME[username]?.displayName || username }))
+        // a igual número de cromos, va primero quien llegó ANTES (última ficha más temprana)
+        .sort((a, b) => b.count - a.count || (new Date(a.last) - new Date(b.last)) || a.displayName.localeCompare(b.displayName))
         .map((r, i) => ({ ...r, rank: i + 1 }));
       setRanking(list);
     })();
@@ -98,7 +109,7 @@ export default function Album() {
     const mine = list.find((r) => r.username === me);
     if (mine) mine.count = Math.max(mine.count, owned);
     else if (owned > 0 && me) list.push({ username: me, count: owned, displayName: USER_BY_NAME[me]?.displayName || me });
-    list.sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
+    list.sort((a, b) => b.count - a.count || (new Date(a.last || 8e15) - new Date(b.last || 8e15)) || a.displayName.localeCompare(b.displayName));
     return list.map((r, i) => ({ ...r, rank: i + 1 }));
   }, [ranking, owned, me]);
 
@@ -223,7 +234,10 @@ export default function Album() {
                     {medal || r.rank || '·'}
                   </span>
                   <Avatar username={r.username} initials={u?.avatarInitials} displayName={r.displayName} size={30} clickable={false} />
-                  <span className="text-sm font-semibold text-white truncate flex-1">{r.displayName}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-white truncate block">{r.displayName}</span>
+                    {r.last && <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>🕐 última ficha {fmtStickerTime(r.last)}</span>}
+                  </div>
 
                   {onlyNoConocen && (
                     <span title="Veces que se equivocó contigo" className="text-xs font-black px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(248,113,113,0.18)', color: '#f87171' }}>

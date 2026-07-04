@@ -94,6 +94,7 @@ const LEGAL_SECTIONS = [
 
 const AVATAR_COLORS = ['bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600','bg-orange-600','bg-teal-600','bg-indigo-600','bg-pink-600'];
 const colorFor = (u) => AVATAR_COLORS[(u?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+const fmtTime = (iso) => iso ? new Date(iso).toLocaleString('es-EC', { timeZone: 'America/Guayaquil', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
 
 function Flag({ code, size = 26 }) {
   const h = Math.round(size * 0.75);
@@ -223,7 +224,7 @@ export default function Prizes() {
           api.get('/users'),
           api.get('/matches'),
           supabase.from('champion_predictions').select('*, u:users(display_name, username, avatar_initials, department)'),
-          fetchAll((a, b) => supabase.from('album_stickers').select('owner_username').range(a, b)),
+          fetchAll((a, b) => supabase.from('album_stickers').select('owner_username, created_at').range(a, b)),
           fetchAll((a, b) => supabase.from('predictions').select('user_id, match_id, match:matches!inner(status)').eq('match.status', 'finished').gte('points_earned', 2).range(a, b)),
         ]);
         setData({
@@ -265,13 +266,18 @@ export default function Prizes() {
       .map((d) => ({ ...d, avg: d.count ? d.total / d.count : 0 }))
       .sort((a, b) => b.avg - a.avg);
 
-    // Álbum: top coleccionistas (excluye a los 1°/2°/3° individuales → sube el siguiente)
+    // Álbum: top coleccionistas (excluye a los 1°/2°/3° individuales → sube el siguiente).
+    // A igual número de cromos, va primero quien llegó ANTES (última ficha más temprana).
     const stickerCount = {};
-    for (const s of stickers) stickerCount[s.owner_username] = (stickerCount[s.owner_username] || 0) + 1;
+    const stickerLast = {};
+    for (const s of stickers) {
+      stickerCount[s.owner_username] = (stickerCount[s.owner_username] || 0) + 1;
+      if (!stickerLast[s.owner_username] || s.created_at > stickerLast[s.owner_username]) stickerLast[s.owner_username] = s.created_at;
+    }
     const albumTop = Object.entries(stickerCount)
-      .map(([username, count]) => ({ username, count, u: users.find((x) => x.username === username) }))
+      .map(([username, count]) => ({ username, count, last: stickerLast[username], u: users.find((x) => x.username === username) }))
       .filter((x) => x.u && !isTop3(x.u))
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => (b.count - a.count) || (new Date(a.last) - new Date(b.last)))
       .slice(0, 3);
 
     // Mejor racha HISTÓRICA (la mejor seguidilla de aciertos, aunque ya se haya cortado)
@@ -410,9 +416,9 @@ export default function Prizes() {
             {/* Álbum */}
             <PrizeCard icon={<BookOpen size={22} />} accent="#a78bfa" title="📸 Álbum Completo" prizeLabel="Gift Card Sweet & Coffee $20 c/u (×3)" temp>
               {derived.albumTop.length ? derived.albumTop.map((a, i) => (
-                <WinnerRow key={a.username} pos={i + 1} name={a.u.display_name} sub={`${a.count} cromos`} avatarUser={a.username} initials={a.u.avatar_initials} />
+                <WinnerRow key={a.username} pos={i + 1} name={a.u.display_name} sub={`${a.count} cromos · 🕐 última ${fmtTime(a.last)}`} avatarUser={a.username} initials={a.u.avatar_initials} />
               )) : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún nadie ha pegado cromos</p>}
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Los <b>3 primeros</b> en completar el álbum ganan. Empate → sorteo. (Aquí se muestra quién va liderando.)</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Los <b>3 primeros</b> en completar el álbum ganan. A igual cantidad, va primero <b>quien la consiguió antes</b> (hora de la última ficha). Empate exacto → sorteo.</p>
             </PrizeCard>
 
             {/* Racha — UN SOLO ganador (solo el #1) */}
