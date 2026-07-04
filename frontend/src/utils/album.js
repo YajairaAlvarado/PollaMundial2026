@@ -110,12 +110,12 @@ function weightedPick(candidates) {
 // ── Generar un reto ──────────────────────────────────────────────────────────
 // roster: array completo · ownedSet: Set de usernames que ya tengo · self: mi username
 // Devuelve { type: 'photo-name', target, options, answer } o null si ya no faltan.
-// ÚNICO tipo: muestra la FOTO y 6 nombres (5 distractores + 1 correcto, MEZCLADOS).
+// ÚNICO tipo: muestra la FOTO y 4 nombres (3 distractores + 1 correcto, MEZCLADOS).
 // Los distractores usan el MISMO primer nombre del target + APELLIDOS reales de
 // otras personas (ej. foto de "Daniel Leon" → Daniel Leon / Daniel Castro /
 // Daniel Lopez / …), para que haya que saber el nombre exacto y no se pueda
 // adivinar por eliminación.
-const N_DISTRACTORS = 5;
+const N_DISTRACTORS = 3;
 const firstNameOf = (name) => (name || '').split(' ')[0];
 const lastNameOf  = (name) => { const p = (name || '').split(' '); return p.slice(1).join(' ') || p[0] || ''; };
 

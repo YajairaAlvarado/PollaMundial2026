@@ -10,6 +10,88 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Avatar from '../components/Avatar';
 import { Trophy, Plane, UtensilsCrossed, HeartPulse, Building2, BookOpen, Flame, Globe2, Gift, Lock, Sparkles } from 'lucide-react';
 
+// Texto OFICIAL verbatim de los lineamientos (para que nada quede fuera de la página)
+const LEGAL_SECTIONS = [
+  {
+    h: 'LINEAMIENTOS DE PREMIOS — ANDERSEN MUNDIALISTA 2026',
+    intro: 'Con el fin de garantizar transparencia en la asignación de premios del Andersen Mundialista 2026, compartimos los siguientes lineamientos y condiciones aplicables a todos los participantes.',
+  },
+  {
+    h: '🏅 Pronóstico Individual (Podio)',
+    sub: '🥇 Primer Lugar — Millas Andersen',
+    items: [
+      'El premio aplica para un único viaje.',
+      'Es obligatorio que el ganador viaje; puede ir acompañado de una o más personas, según decida el ganador.',
+      'La compra de los boletos la realiza directamente Andersen hasta un valor de $500.',
+      'El boleto debe usarse dentro del año 2026.',
+      'Personal e intransferible; no canjeable por dinero en efectivo.',
+    ],
+  },
+  {
+    h: '🥈 Segundo Lugar — Experiencia Gastronómica',
+    items: [
+      'Experiencia gastronómica para 2 personas en un reconocido restaurante de Guayaquil, seleccionado por la firma.',
+      'Las fechas estarán sujetas a disponibilidad del proveedor.',
+      'Personal e intransferible; no canjeable por dinero en efectivo.',
+    ],
+  },
+  {
+    h: '🥉 Tercer Lugar — Experiencia de Bienestar',
+    items: [
+      'Sesión de masajes para 2 personas.',
+      'Las fechas estarán sujetas a disponibilidad del proveedor seleccionado.',
+      'Personal e intransferible; no canjeable por dinero en efectivo.',
+    ],
+  },
+  {
+    h: '🏆 Pronóstico por Departamento',
+    sub: 'Departamento Campeón — Orden de consumo grupal hasta $100',
+    items: [
+      'El departamento ganador será aquel que obtenga la mayor puntuación promedio acumulada de sus participantes en la plataforma Andersen Mundialista 2026.',
+      'El beneficio consiste en una orden de consumo grupal de hasta $100 para compartir en equipo (ej. almuerzo, pizza u otra experiencia de consumo colectivo).',
+      'Aplica únicamente para los colaboradores que formen parte del departamento al cierre de la competencia.',
+      'No canjeable por dinero en efectivo.',
+    ],
+  },
+  {
+    h: '🎯 Premios Especiales',
+    sub: '📸 Álbum Completo — Gift Card Sweet & Coffee $20 c/u',
+    items: [
+      'Se otorgará una Gift Card de $20 de Sweet & Coffee a cada uno de los 3 primeros participantes en completar el álbum dentro de la aplicación.',
+      'En caso de empate en el momento de completar el álbum, se realizará un sorteo entre los participantes que cumplan la condición simultáneamente.',
+      'Personal e intransferible; no canjeable por dinero en efectivo.',
+    ],
+  },
+  {
+    h: '⚡ Mejor Racha de Aciertos — Gift Card $50',
+    items: [
+      'Se premiará al participante que alcance la mejor racha de aciertos consecutivos durante la competencia.',
+      'En caso de empate, el ganador será el participante que haya acumulado la mayor cantidad de puntos en rachas de aciertos. De persistir el empate, se realizará un sorteo.',
+      'Personal e intransferible; no canjeable por dinero en efectivo.',
+    ],
+  },
+  {
+    h: '⚽ Campeón del Mundial — Gift Card $50',
+    items: [
+      'Se otorgará una Gift Card al participante que haya acertado correctamente el país campeón del Mundial 2026.',
+      'En caso de que varios participantes acierten el campeón, se aplicarán los siguientes criterios de desempate en orden: (1) subcampeón del mundial, (2) marcador exacto del partido final dentro de los 90 minutos reglamentarios y prórroga (120 minutos). De persistir el empate, se realizará un sorteo.',
+      'Personal e intransferible; no canjeable por dinero en efectivo.',
+    ],
+  },
+  {
+    h: '📋 Condiciones Generales',
+    ordered: true,
+    items: [
+      'Los premios serán asignados con base en los resultados oficiales registrados en la aplicación Andersen Mundialista 2026.',
+      'Todos los premios son personales e intransferibles y no podrán ser canjeados por dinero en efectivo ni sustituidos por otro beneficio.',
+      'Los premios de Álbum Completo, Mejor Racha y Campeón del Mundial no aplican para quienes resulten ganadores del 1er, 2do o 3er lugar individual.',
+      'En caso de empate en cualquiera de los premios, y una vez agotados los criterios de desempate específicos de cada categoría, el ganador se definirá mediante sorteo.',
+      'Los ganadores deberán atender las instrucciones comunicadas para la coordinación y entrega de los premios.',
+      'Para consultas relacionadas con la competencia o los premios, los colaboradores podrán contactarse con el área de Capital Humano.',
+    ],
+  },
+];
+
 const AVATAR_COLORS = ['bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600','bg-orange-600','bg-teal-600','bg-indigo-600','bg-pink-600'];
 const colorFor = (u) => AVATAR_COLORS[(u?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
 
@@ -400,13 +482,35 @@ export default function Prizes() {
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>📋 Condiciones generales</p>
           <ul style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11, lineHeight: 1.7, paddingLeft: 16, listStyle: 'disc' }}>
-            <li>Premios asignados según resultados oficiales en la app.</li>
-            <li>Todos personales e intransferibles; no canjeables por dinero.</li>
-            <li>Álbum, Racha y Campeón no aplican para los ganadores del 1°, 2° o 3° lugar individual.</li>
-            <li>En caso de empate, tras los criterios de cada categoría, se define por sorteo.</li>
-            <li>Consultas: área de Capital Humano.</li>
+            <li>Los premios serán asignados con base en los resultados oficiales registrados en la aplicación Andersen Mundialista 2026.</li>
+            <li>Todos los premios son personales e intransferibles y no podrán ser canjeados por dinero en efectivo ni sustituidos por otro beneficio.</li>
+            <li>Los premios de Álbum Completo, Mejor Racha y Campeón del Mundial no aplican para quienes resulten ganadores del 1er, 2do o 3er lugar individual.</li>
+            <li>En caso de empate en cualquiera de los premios, y una vez agotados los criterios de desempate específicos de cada categoría, el ganador se definirá mediante sorteo.</li>
+            <li>Los ganadores deberán atender las instrucciones comunicadas para la coordinación y entrega de los premios.</li>
+            <li>Para consultas relacionadas con la competencia o los premios, los colaboradores podrán contactarse con el área de Capital Humano.</li>
           </ul>
         </div>
+
+        {/* Lineamientos oficiales COMPLETOS (texto verbatim, para no dejar nada fuera) */}
+        <details style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '12px 16px' }}>
+          <summary style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', listStyle: 'none' }}>
+            📜 Ver lineamientos y condiciones oficiales completos
+          </summary>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11.5, lineHeight: 1.6, marginTop: 12 }}>
+            {LEGAL_SECTIONS.map((sec) => (
+              <div key={sec.h} style={{ marginBottom: 14 }}>
+                <p style={{ color: '#FFD100', fontWeight: 800, fontSize: 12.5, marginBottom: 4 }}>{sec.h}</p>
+                {sec.sub && <p style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700, marginBottom: 3 }}>{sec.sub}</p>}
+                {sec.intro && <p style={{ marginBottom: 6 }}>{sec.intro}</p>}
+                {sec.items && (
+                  <ul style={{ paddingLeft: 16, listStyle: sec.ordered ? 'decimal' : 'disc', margin: 0 }}>
+                    {sec.items.map((it, i) => <li key={i} style={{ marginBottom: 3 }}>{it}</li>)}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </details>
 
         <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '4px 0 8px' }}>
           ¡Participa, acumula puntos y conviértete en ganador! ⚽🏆
