@@ -5,7 +5,7 @@ import api from '../utils/api';
 import { supabase } from '../utils/supabase';
 import { trackPage } from '../utils/trackPage';
 import { isExcluded } from '../utils/users';
-import { computeTeams, isChampionRevealed, CHAMPION_REVEAL } from '../utils/aliveTeams';
+import { computeTeams, isChampionRevealed, CHAMPION_REVEAL, CHAMPION_CLOSED } from '../utils/aliveTeams';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Avatar from '../components/Avatar';
 import { Trophy, Plane, UtensilsCrossed, HeartPulse, Building2, BookOpen, Flame, Globe2, Gift, Lock, Sparkles } from 'lucide-react';
@@ -284,10 +284,13 @@ export default function Prizes() {
       for (const m of finishedChrono) { if (hitsByUser[uid]?.has(m.id)) { cur++; if (cur > best) best = cur; } else cur = 0; }
       return best;
     };
+    // Puntos por usuario (para desempatar la racha: a igual racha, gana quien tenga más puntos)
+    const pointsById = {};
+    for (const e of leaderboard) pointsById[e.id] = e.total_points || 0;
     const streakBoard = users
       .map((u) => ({ u, streak: maxStreakOf(u.id) }))
       .filter((x) => x.streak >= 2 && !isTop3(x.u)) // excluye a los 1°/2°/3° individuales
-      .sort((a, b) => b.streak - a.streak)
+      .sort((a, b) => (b.streak - a.streak) || ((pointsById[b.u.id] || 0) - (pointsById[a.u.id] || 0)))
       .slice(0, 3);
 
     // Campeón del Mundial
@@ -428,7 +431,7 @@ export default function Prizes() {
                 <p style={{ color: revealed ? '#a7f3d0' : '#bfdbfe', fontSize: 11.5, fontWeight: 600 }}>
                   {revealed
                     ? 'Los pronósticos ya son visibles para todos 👀'
-                    : 'Los pronósticos se revelan el sábado, cuando cierra el sorteo. ¡Ve el sábado para descubrir qué puso cada quién! 🤫'}
+                    : 'El ingreso de pronósticos ya cerró (empezaron los octavos). Se revelan el sábado — ¡ve el sábado para descubrir qué puso cada quién! 🤫'}
                 </p>
               </div>
 
@@ -454,11 +457,11 @@ export default function Prizes() {
                 </div>
               ))}
 
-              {/* Aún no pronostican */}
+              {/* No participaron / aún no pronostican */}
               {derived.notPredicted.length > 0 && (
                 <>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '12px 2px 4px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
-                    ⏳ Aún no pronostican ({derived.notPredicted.length})
+                  <p style={{ color: CHAMPION_CLOSED ? 'rgba(248,113,113,0.85)' : 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '12px 2px 4px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                    {CHAMPION_CLOSED ? '🚫 No participaron' : '⏳ Aún no pronostican'} ({derived.notPredicted.length})
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {derived.notPredicted.map((u) => (

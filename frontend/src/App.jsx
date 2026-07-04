@@ -30,6 +30,7 @@ import Album from './pages/Album';
 import Prizes from './pages/Prizes';
 import ChampionPredictionModal from './components/ChampionPredictionModal';
 import { useChampionPrediction } from './hooks/useChampionPrediction';
+import { CHAMPION_CLOSED } from './utils/aliveTeams';
 
 function ProtectedLayout() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -44,7 +45,7 @@ function ProtectedLayout() {
 
   // Pronóstico obligatorio del campeón — para TODOS los usuarios
   const champion = useChampionPrediction(user?.id);
-  const forceChampion = !champion.loading && !champion.prediction && champion.aliveTeams.length > 0;
+  const forceChampion = !CHAMPION_CLOSED && !champion.loading && !champion.prediction && champion.aliveTeams.length > 0;
 
   if (loading) {
     return (

@@ -15,6 +15,10 @@ export const isStageLocked = (stage) => LOCKED_STAGES.includes(stage);
 export const CHAMPION_REVEAL = new Date('2026-07-04T05:00:00Z');
 export const isChampionRevealed = () => Date.now() >= CHAMPION_REVEAL.getTime();
 
+// Ingreso de pronósticos de campeón CERRADO (los octavos ya empezaron).
+// Quien no pronosticó quedó fuera de ese premio.
+export const CHAMPION_CLOSED = true;
+
 // Un nombre es de un equipo REAL si no es un placeholder ("Ganador …", "Perdedor …")
 export function isRealTeam(name) {
   if (!name) return false;
