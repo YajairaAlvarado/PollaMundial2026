@@ -322,8 +322,8 @@ export default function Album() {
                   {!onlyNoConocen && !isDT(r.username) && (errCount[r.username] > 0) && (
                     <button onClick={() => openErrModal(r)} title="Ver con quién se equivocó"
                       className="text-xs font-black px-2 py-1 rounded-full flex items-center gap-1"
-                      style={{ background: 'rgba(248,113,113,0.16)', color: '#f87171', touchAction: 'manipulation' }}>
-                      ❌ {errCount[r.username]}
+                      style={{ background: 'rgba(248,113,113,0.16)', color: '#f87171', border: '1px solid rgba(248,113,113,0.4)', touchAction: 'manipulation' }}>
+                      ❌ {errCount[r.username]} <span style={{ fontSize: 11 }}>👁️</span>
                     </button>
                   )}
 
