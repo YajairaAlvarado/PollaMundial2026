@@ -50,4 +50,8 @@ export const GIFS = [
   { url: 'https://media.tenor.com/D1eCb9NKyGIAAAAM/messi-que-miras-bobo.gif', label: '¿Qué mirás, bobo?' },
   { url: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmd3dTdma3E2a292dTJzZjlnaHM3bHl6M3B2c2R6bmRndGhwZXNyNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/kXNYthbiZZWda/giphy.gif', label: 'Sacando la lengua' },
   { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExem5jZnlrMTYwa2I2ZXB6YTA3dXM0MHJjb2RrYWpiYTkxeDVzZzRqZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/qYlV78hZixVRoLTKuH/giphy.gif', label: 'Yo comiendo' },
+  { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExOWEwZnRzZmIzc2swYjlrNzk2eDViNnBoZ3NjajU3ZWhtNXNuNm1sYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wYNlzAAcTnSuodzMIO/giphy.gif', label: 'Te venero 1' },
+  { url: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDA1cmVhM3kyNXgwZndqcGFwZzVwZGw2NDFuZDY5d3l0MjkwcG45YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/8lHqTTwLufYt2/giphy.gif', label: 'Te venero 2' },
+  { url: 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExc2V6bXhyeTZncGhwMnZja2g2ZW83ajE1M21tMHFnczd1Z2ZvOXM4aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ghTosDxIm1ab3DkCBV/giphy.gif', label: 'Te venero 3' },
+  { url: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExcjU3cjB4NGVmM24yeHMzd285MThxeWE2amthYjJ6ZGV1Z2ZnMnFwMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/C4GRjxvEnscmd1EZf8/giphy.gif', label: 'Te venero 4' },
 ];
