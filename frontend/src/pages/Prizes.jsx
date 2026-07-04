@@ -418,7 +418,7 @@ export default function Prizes() {
                 <WinnerRow key={s.u.id} pos={1} name={s.u.display_name} sub={`Racha de ${s.streak} aciertos`} avatarUser={s.u.username} initials={s.u.avatar_initials}
                   right={<span style={{ color: '#fb923c', fontWeight: 900, fontSize: 14 }}>🔥 {s.streak}</span>} />
               )) : <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Aún sin rachas</p>}
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Solo <b>1 ganador</b>: la mejor racha de aciertos <b>consecutivos</b>. En caso de <b>empate en la racha</b>, gana quien tenga <b>más marcadores exactos</b>; si persiste → sorteo.</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>Solo <b>1 ganador</b>: la mejor racha de aciertos <b>consecutivos</b>. En caso de <b>empate</b>, gana quien haya acumulado la <b>mayor cantidad de puntos en rachas de aciertos</b>; si persiste → sorteo.</p>
             </PrizeCard>
 
             {/* Campeón del Mundial */}
