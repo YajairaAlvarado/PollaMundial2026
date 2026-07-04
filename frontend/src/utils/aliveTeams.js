@@ -7,7 +7,7 @@ const KO_STAGES = ['r32', 'r16', 'qf', 'sf', 'third_place', 'final'];
 
 // Etapas donde AÚN no se permite predecir (se abrirán cuando se defina el puntaje).
 // Para reabrir octavos, quita 'r16' de esta lista.
-export const LOCKED_STAGES = ['r16', 'qf', 'sf', 'third_place', 'final'];
+export const LOCKED_STAGES = ['qf', 'sf', 'third_place', 'final'];
 export const isStageLocked = (stage) => LOCKED_STAGES.includes(stage);
 
 // Fecha/hora desde la que se revelan los pronósticos de campeón (sábado 04/07/2026,
