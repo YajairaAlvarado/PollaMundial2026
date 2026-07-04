@@ -212,9 +212,11 @@ export default function Prizes() {
   const [champSearch, setChampSearch] = useState('');
   const [openChamps, setOpenChamps] = useState({});   // campeón -> abierto
   const [openRunners, setOpenRunners] = useState({}); // "campeón|subcampeón" -> abierto
+  const [openScores, setOpenScores] = useState({});   // "campeón|subcampeón|marcador" -> abierto
   const revealed = isChampionRevealed();
   const toggleChamp = (k) => setOpenChamps((p) => ({ ...p, [k]: !p[k] }));
   const toggleRunner = (k) => setOpenRunners((p) => ({ ...p, [k]: !p[k] }));
+  const toggleScore = (k) => setOpenScores((p) => ({ ...p, [k]: !p[k] }));
 
   useEffect(() => {
     if (user?.id) trackPage(user.id, 'premios');
@@ -344,18 +346,27 @@ export default function Prizes() {
     if (!derived) return [];
     const q = champSearch.trim().toLowerCase();
     const pred = q ? derived.predicted.filter((p) => (p.u.display_name || '').toLowerCase().includes(q)) : derived.predicted;
+    const byName = (a, b) => (a.u.display_name || '').localeCompare(b.u.display_name || '');
     const map = {};
     for (const c of pred) {
       const g = (map[c.champion] ||= { champion: c.champion, code: c.champion_code, runners: {}, count: 0 });
       g.count += 1;
-      const r = (g.runners[c.runner_up] ||= { runner: c.runner_up, code: c.runner_up_code, people: [] });
-      r.people.push(c);
+      const r = (g.runners[c.runner_up] ||= { runner: c.runner_up, code: c.runner_up_code, scores: {}, count: 0 });
+      r.count += 1;
+      const sk = `${c.champ_score}-${c.runner_score}`;
+      const s = (r.scores[sk] ||= { key: sk, score: `${c.champ_score}–${c.runner_score}`, people: [] });
+      s.people.push(c);
     }
     const groups = Object.values(map).map((g) => ({
       ...g,
       runnersArr: Object.values(g.runners)
-        .map((r) => ({ ...r, people: r.people.slice().sort((a, b) => (a.u.display_name || '').localeCompare(b.u.display_name || '')) }))
-        .sort((a, b) => b.people.length - a.people.length || a.runner.localeCompare(b.runner)),
+        .map((r) => ({
+          ...r,
+          scoresArr: Object.values(r.scores)
+            .map((s) => ({ ...s, people: s.people.slice().sort(byName) }))
+            .sort((a, b) => b.people.length - a.people.length || a.score.localeCompare(b.score)), // más repetido primero
+        }))
+        .sort((a, b) => b.count - a.count || a.runner.localeCompare(b.runner)),
     }));
     groups.sort((a, b) => b.count - a.count || a.champion.localeCompare(b.champion));
     return groups;
@@ -524,25 +535,38 @@ export default function Prizes() {
                               <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: 12, lineHeight: 1.2 }}>
                                 …y que <b style={{ color: 'white' }}>{r.runner}</b> será subcampeón
                               </span>
-                              <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', fontWeight: 800, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{r.people.length}</span>
+                              <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', fontWeight: 800, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{r.count}</span>
                             </button>
 
-                            {rOpen && r.people.map((c) => (
-                              <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 12px 6px 32px', opacity: (c.out || c.excluded) ? 0.55 : 1 }}>
-                                <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={26} colorClass={colorFor(c.u.username)} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.u.display_name}</p>
-                                  {c.excluded
-                                    ? <p style={{ color: '#93c5fd', fontSize: 10, fontWeight: 700 }}>🏅 No participa (podio individual)</p>
-                                    : c.out && <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (campeón eliminado)</p>}
+                            {rOpen && r.scoresArr.map((s) => {
+                              const skey = `${g.champion}|${r.runner}|${s.key}`;
+                              const sOpen = searching || openScores[skey];
+                              return (
+                                <div key={skey} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                                  {/* Acordeón nivel 3: marcador */}
+                                  <button onClick={() => toggleScore(skey)}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 7, padding: '7px 12px 7px 32px', background: 'rgba(52,211,153,0.05)', textAlign: 'left', touchAction: 'manipulation' }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, width: 12 }}>{sOpen ? '▾' : '▸'}</span>
+                                    <span style={{ fontSize: 11 }}>⚽</span>
+                                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11.5 }}>final</span>
+                                    <span style={{ color: '#34d399', fontWeight: 900, fontSize: 14 }}>{s.score}</span>
+                                    <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(52,211,153,0.15)', color: '#6ee7b7', fontWeight: 800, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{s.people.length}</span>
+                                  </button>
+
+                                  {sOpen && s.people.map((c) => (
+                                    <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '5px 12px 5px 44px', opacity: (c.out || c.excluded) ? 0.55 : 1 }}>
+                                      <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={24} colorClass={colorFor(c.u.username)} />
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.u.display_name}</p>
+                                        {c.excluded
+                                          ? <p style={{ color: '#93c5fd', fontSize: 10, fontWeight: 700 }}>🏅 No participa (podio individual)</p>
+                                          : c.out && <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (campeón eliminado)</p>}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                                {/* Marcador de la final */}
-                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 8, padding: '3px 9px' }}>
-                                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9 }}>final</span>
-                                  <span style={{ color: '#34d399', fontWeight: 900, fontSize: 13 }}>{c.champ_score}–{c.runner_score}</span>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         );
                       })}
