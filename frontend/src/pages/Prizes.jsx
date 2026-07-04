@@ -210,7 +210,11 @@ export default function Prizes() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [champSearch, setChampSearch] = useState('');
+  const [openChamps, setOpenChamps] = useState({});   // campeón -> abierto
+  const [openRunners, setOpenRunners] = useState({}); // "campeón|subcampeón" -> abierto
   const revealed = isChampionRevealed();
+  const toggleChamp = (k) => setOpenChamps((p) => ({ ...p, [k]: !p[k] }));
+  const toggleRunner = (k) => setOpenRunners((p) => ({ ...p, [k]: !p[k] }));
 
   useEffect(() => {
     if (user?.id) trackPage(user.id, 'premios');
@@ -335,22 +339,25 @@ export default function Prizes() {
     return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated, top3Names };
   }, [data]);
 
-  // Pronósticos de campeón agrupados por campeón (con buscador de persona)
+  // Pronósticos de campeón agrupados: campeón → subcampeón → personas (con buscador)
   const champGroups = useMemo(() => {
     if (!derived) return [];
     const q = champSearch.trim().toLowerCase();
+    const pred = q ? derived.predicted.filter((p) => (p.u.display_name || '').toLowerCase().includes(q)) : derived.predicted;
     const map = {};
-    for (const c of derived.predicted) {
-      (map[c.champion] ||= { champion: c.champion, code: c.champion_code, people: [] }).people.push(c);
+    for (const c of pred) {
+      const g = (map[c.champion] ||= { champion: c.champion, code: c.champion_code, runners: {}, count: 0 });
+      g.count += 1;
+      const r = (g.runners[c.runner_up] ||= { runner: c.runner_up, code: c.runner_up_code, people: [] });
+      r.people.push(c);
     }
-    let groups = Object.values(map);
-    if (q) {
-      groups = groups
-        .map((g) => ({ ...g, people: g.people.filter((p) => (p.u.display_name || '').toLowerCase().includes(q)) }))
-        .filter((g) => g.people.length > 0);
-    }
-    groups.forEach((g) => g.people.sort((a, b) => (a.u.display_name || '').localeCompare(b.u.display_name || '')));
-    groups.sort((a, b) => b.people.length - a.people.length || a.champion.localeCompare(b.champion));
+    const groups = Object.values(map).map((g) => ({
+      ...g,
+      runnersArr: Object.values(g.runners)
+        .map((r) => ({ ...r, people: r.people.slice().sort((a, b) => (a.u.display_name || '').localeCompare(b.u.display_name || '')) }))
+        .sort((a, b) => b.people.length - a.people.length || a.runner.localeCompare(b.runner)),
+    }));
+    groups.sort((a, b) => b.count - a.count || a.champion.localeCompare(b.champion));
     return groups;
   }, [derived, champSearch]);
 
@@ -487,35 +494,61 @@ export default function Prizes() {
                     style={{ width: '100%', margin: '4px 0 10px', padding: '9px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', fontSize: 13, outline: 'none' }}
                   />
                   {champGroups.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '4px 2px' }}>Sin coincidencias</p>}
-                  {champGroups.map((g) => (
-                    <div key={g.champion} style={{ marginBottom: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, overflow: 'hidden' }}>
-                      {/* Cabecera del grupo (campeón) */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(245,158,11,0.1)', borderBottom: '1px solid rgba(245,158,11,0.2)' }}>
+                  {champGroups.map((g) => {
+                    const searching = champSearch.trim() !== '';
+                    const cOpen = searching || openChamps[g.champion];
+                    return (
+                    <div key={g.champion} style={{ marginBottom: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, overflow: 'hidden' }}>
+                      {/* Acordeón nivel 1: campeón */}
+                      <button onClick={() => toggleChamp(g.champion)}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'rgba(245,158,11,0.12)', textAlign: 'left', touchAction: 'manipulation' }}>
+                        <span style={{ color: '#F59E0B', fontSize: 12, width: 12 }}>{cOpen ? '▾' : '▸'}</span>
                         <Flag code={g.code} size={26} />
-                        <span style={{ color: '#FCD34D', fontWeight: 900, fontSize: 14 }}>{g.champion}</span>
-                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700 }}>· {g.people.length} {g.people.length === 1 ? 'persona' : 'personas'}</span>
-                      </div>
-                      {/* Personas que lo pusieron */}
-                      {g.people.map((c) => (
-                        <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px', opacity: (c.out || c.excluded) ? 0.55 : 1 }}>
-                          <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={28} colorClass={colorFor(c.u.username)} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.u.display_name}</p>
-                            {c.excluded
-                              ? <p style={{ color: '#93c5fd', fontSize: 10, fontWeight: 700 }}>🏅 No participa (podio individual)</p>
-                              : c.out && <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (campeón eliminado)</p>}
+                        <span style={{ color: 'white', fontWeight: 800, fontSize: 13, lineHeight: 1.2 }}>
+                          Creen que <span style={{ color: '#FCD34D', fontWeight: 900 }}>{g.champion}</span> será campeón
+                        </span>
+                        <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(245,158,11,0.2)', color: '#FCD34D', fontWeight: 900, fontSize: 12, padding: '2px 9px', borderRadius: 20 }}>{g.count}</span>
+                      </button>
+
+                      {cOpen && g.runnersArr.map((r) => {
+                        const key = `${g.champion}|${r.runner}`;
+                        const rOpen = searching || openRunners[key];
+                        return (
+                          <div key={key} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            {/* Acordeón nivel 2: subcampeón */}
+                            <button onClick={() => toggleRunner(key)}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px 8px 20px', background: 'rgba(255,255,255,0.02)', textAlign: 'left', touchAction: 'manipulation' }}>
+                              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, width: 12 }}>{rOpen ? '▾' : '▸'}</span>
+                              <span style={{ fontSize: 11 }}>🥈</span>
+                              <Flag code={r.code} size={20} />
+                              <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: 12, lineHeight: 1.2 }}>
+                                …y que <b style={{ color: 'white' }}>{r.runner}</b> será subcampeón
+                              </span>
+                              <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', fontWeight: 800, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{r.people.length}</span>
+                            </button>
+
+                            {rOpen && r.people.map((c) => (
+                              <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 12px 6px 32px', opacity: (c.out || c.excluded) ? 0.55 : 1 }}>
+                                <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={26} colorClass={colorFor(c.u.username)} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.u.display_name}</p>
+                                  {c.excluded
+                                    ? <p style={{ color: '#93c5fd', fontSize: 10, fontWeight: 700 }}>🏅 No participa (podio individual)</p>
+                                    : c.out && <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (campeón eliminado)</p>}
+                                </div>
+                                {/* Marcador de la final */}
+                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 8, padding: '3px 9px' }}>
+                                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9 }}>final</span>
+                                  <span style={{ color: '#34d399', fontWeight: 900, fontSize: 13 }}>{c.champ_score}–{c.runner_score}</span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          {/* Subcampeón + marcador (bien claro) */}
-                          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '3px 8px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>🥈</span>
-                            <Flag code={c.runner_up_code} size={18} />
-                            <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 700 }}>{c.runner_up}</span>
-                            <span style={{ color: '#34d399', fontWeight: 900, fontSize: 13, marginLeft: 2 }}>{c.champ_score}–{c.runner_score}</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                  ))}
+                    );
+                  })}
                 </>
               ) : (
                 derived.predicted.map((c) => (
