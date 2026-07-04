@@ -21,7 +21,12 @@ function fmt(ms) {
 // Hora (Ecuador) de la última ficha, para el desempate del premio del álbum
 function fmtStickerTime(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleString('es-EC', { timeZone: 'America/Guayaquil', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const TZ = 'America/Guayaquil';
+  const d = new Date(iso);
+  const day = d.toLocaleString('es-EC', { timeZone: TZ, day: 'numeric' });
+  const month = d.toLocaleString('es-EC', { timeZone: TZ, month: 'long' });
+  const time = d.toLocaleString('es-EC', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}, ${time}`;
 }
 
 export default function Album() {

@@ -94,7 +94,15 @@ const LEGAL_SECTIONS = [
 
 const AVATAR_COLORS = ['bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600','bg-orange-600','bg-teal-600','bg-indigo-600','bg-pink-600'];
 const colorFor = (u) => AVATAR_COLORS[(u?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
-const fmtTime = (iso) => iso ? new Date(iso).toLocaleString('es-EC', { timeZone: 'America/Guayaquil', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+const fmtTime = (iso) => {
+  if (!iso) return '';
+  const TZ = 'America/Guayaquil';
+  const d = new Date(iso);
+  const day = d.toLocaleString('es-EC', { timeZone: TZ, day: 'numeric' });
+  const month = d.toLocaleString('es-EC', { timeZone: TZ, month: 'long' });
+  const time = d.toLocaleString('es-EC', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}, ${time}`;
+};
 
 function Flag({ code, size = 26 }) {
   const h = Math.round(size * 0.75);
