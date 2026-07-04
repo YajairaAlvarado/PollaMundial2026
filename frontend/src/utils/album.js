@@ -22,7 +22,7 @@ export const DEPARTMENT_DTS = {
   'Impuestos':             'alfredo.bustos',
   'Economía Y Empresa':    'francisco.briones',
   'Consultoria':           'pablo.guevara',
-  'Patrocinio':            'mario.orelllana',
+  'Patrocinio':            'mario.orellana',
   'Contabilidad/Finanzas': 'sofia.carranza',
   'Administracion':        'raissa.aguila',
 };
