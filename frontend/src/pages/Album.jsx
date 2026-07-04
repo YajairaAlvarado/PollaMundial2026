@@ -79,6 +79,61 @@ export default function Album() {
   const [rankLimit, setRankLimit] = useState(10);
   const [onlyHolders, setOnlyHolders] = useState(false);
   const [onlyNoConocen, setOnlyNoConocen] = useState(false);
+
+  // Errores por persona (informativo) + con quién · intentos usados hoy
+  const [errCount, setErrCount] = useState({});       // username -> #errores
+  const [errTargets, setErrTargets] = useState({});   // username -> { target: count }
+  const [attemptsByUser, setAttemptsByUser] = useState({}); // username -> intentos hoy
+  const [errModal, setErrModal] = useState(null);     // popup "se equivocó con…"
+
+  useEffect(() => {
+    (async () => {
+      // Errores = retos que NO fueron 'win' (lose / timeout), con su objetivo
+      const ec = {}, et = {};
+      let f = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { data: pg } = await supabase.from('album_challenges')
+          .select('username, target_username, result').neq('result', 'win').range(f, f + 999);
+        if (!pg || pg.length === 0) break;
+        for (const r of pg) {
+          ec[r.username] = (ec[r.username] || 0) + 1;
+          if (r.target_username) {
+            (et[r.username] ||= {});
+            et[r.username][r.target_username] = (et[r.username][r.target_username] || 0) + 1;
+          }
+        }
+        if (pg.length < 1000) break;
+        f += 1000;
+      }
+      setErrCount(ec); setErrTargets(et);
+
+      // Intentos usados HOY (hora de Ecuador) por persona → para saber cuántos les quedan
+      const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Guayaquil' }).format(new Date());
+      const startISO = new Date(`${ymd}T00:00:00-05:00`).toISOString();
+      const at = {};
+      let f2 = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { data: pg } = await supabase.from('album_challenges')
+          .select('username').gte('created_at', startISO).range(f2, f2 + 999);
+        if (!pg || pg.length === 0) break;
+        for (const r of pg) at[r.username] = (at[r.username] || 0) + 1;
+        if (pg.length < 1000) break;
+        f2 += 1000;
+      }
+      setAttemptsByUser(at);
+    })();
+  }, []);
+
+  const openErrModal = (r) => {
+    const t = errTargets[r.username] || {};
+    const targets = Object.entries(t)
+      .map(([username, count]) => ({ username, count, displayName: USER_BY_NAME[username]?.displayName || username }))
+      .sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
+    setErrModal({ username: r.username, displayName: r.displayName, targets });
+  };
+
   useEffect(() => {
     (async () => {
       // Paginar: Supabase devuelve máx 1000 filas por consulta y ya hay más
@@ -241,7 +296,14 @@ export default function Album() {
                   <Avatar username={r.username} initials={u?.avatarInitials} displayName={r.displayName} size={30} clickable={false} />
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold text-white truncate block">{r.displayName}</span>
-                    {r.last && <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>🕐 última ficha {fmtStickerTime(r.last)}</span>}
+                    {(() => {
+                      const left = Math.max(0, ATTEMPT_LIMIT - (attemptsByUser[r.username] || 0));
+                      return (
+                        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                          {r.last && <>🕐 última {fmtStickerTime(r.last)} · </>}🎯 {left} intento{left === 1 ? '' : 's'} hoy
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   {onlyNoConocen && (
@@ -254,6 +316,15 @@ export default function Album() {
                     <span title="Tiene tu ficha" className="text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(52,211,153,0.16)', color: '#34d399' }}>
                       📸 te tiene
                     </span>
+                  )}
+
+                  {/* Errores (informativo) — NO se muestra para los DT (socios) 😅 */}
+                  {!onlyNoConocen && !isDT(r.username) && (errCount[r.username] > 0) && (
+                    <button onClick={() => openErrModal(r)} title="Ver con quién se equivocó"
+                      className="text-xs font-black px-2 py-1 rounded-full flex items-center gap-1"
+                      style={{ background: 'rgba(248,113,113,0.16)', color: '#f87171', touchAction: 'manipulation' }}>
+                      ❌ {errCount[r.username]}
+                    </button>
                   )}
 
                   {!onlyNoConocen && (
@@ -308,6 +379,32 @@ export default function Album() {
 
       {viewer && (
         <AlbumViewerModal username={viewer.username} displayName={viewer.displayName} onClose={() => setViewer(null)} />
+      )}
+
+      {/* Popup: con quién se equivocó 😅 */}
+      {errModal && (
+        <div onClick={() => setErrModal(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ width: 360, maxWidth: '92vw', maxHeight: '80vh', overflow: 'auto', background: '#0a1730', border: '2px solid rgba(248,113,113,0.4)', borderRadius: 18, padding: 18, boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}>
+            <p style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>😅 {errModal.displayName} se equivocó con:</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 10 }}>Retos fallados (nombre incorrecto o tiempo agotado)</p>
+            {errModal.targets.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Sin datos</p>}
+            {errModal.targets.map((t) => (
+              <div key={t.username} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 2px' }}>
+                <Avatar username={t.username} initials={USER_BY_NAME[t.username]?.avatarInitials} displayName={t.displayName} size={30} clickable={false} />
+                <span style={{ color: 'white', fontWeight: 700, fontSize: 13, flex: 1 }}>{t.displayName}</span>
+                {t.count > 1 && (
+                  <span style={{ background: 'rgba(248,113,113,0.18)', color: '#f87171', fontWeight: 900, fontSize: 12, padding: '2px 9px', borderRadius: 20 }}>×{t.count}</span>
+                )}
+              </div>
+            ))}
+            <button onClick={() => setErrModal(null)}
+              style={{ width: '100%', marginTop: 14, padding: 11, borderRadius: 10, background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 700, fontSize: 13 }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

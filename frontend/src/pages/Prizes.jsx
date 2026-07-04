@@ -5,6 +5,7 @@ import api from '../utils/api';
 import { supabase } from '../utils/supabase';
 import { trackPage } from '../utils/trackPage';
 import { isExcluded } from '../utils/users';
+import { isDT } from '../utils/album';
 import { computeTeams, isChampionRevealed, CHAMPION_REVEAL, CHAMPION_CLOSED } from '../utils/aliveTeams';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Avatar from '../components/Avatar';
@@ -208,6 +209,7 @@ export default function Prizes() {
   const { avatars } = useAvatars();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [champSearch, setChampSearch] = useState('');
   const revealed = isChampionRevealed();
 
   useEffect(() => {
@@ -327,10 +329,30 @@ export default function Prizes() {
         const rb = b.excluded ? 2 : b.out ? 1 : 0;
         return ra - rb || (a.u.display_name || '').localeCompare(b.u.display_name || '');
       });
-    const notPredicted = users.filter((u) => !predByUser[u.id]);
+    // En "No participaron" no mostramos ni contamos a los DT (socios) que no jugaron
+    const notPredicted = users.filter((u) => !predByUser[u.id] && !isDT(u.username));
 
     return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated, top3Names };
   }, [data]);
+
+  // Pronósticos de campeón agrupados por campeón (con buscador de persona)
+  const champGroups = useMemo(() => {
+    if (!derived) return [];
+    const q = champSearch.trim().toLowerCase();
+    const map = {};
+    for (const c of derived.predicted) {
+      (map[c.champion] ||= { champion: c.champion, code: c.champion_code, people: [] }).people.push(c);
+    }
+    let groups = Object.values(map);
+    if (q) {
+      groups = groups
+        .map((g) => ({ ...g, people: g.people.filter((p) => (p.u.display_name || '').toLowerCase().includes(q)) }))
+        .filter((g) => g.people.length > 0);
+    }
+    groups.forEach((g) => g.people.sort((a, b) => (a.u.display_name || '').localeCompare(b.u.display_name || '')));
+    groups.sort((a, b) => b.people.length - a.people.length || a.champion.localeCompare(b.champion));
+    return groups;
+  }, [derived, champSearch]);
 
   if (loading) return <LoadingSpinner size="lg" text="Cargando premios..." />;
 
@@ -454,22 +476,61 @@ export default function Prizes() {
                 ✅ Ya pronosticaron ({derived.predicted.length})
               </p>
               {derived.predicted.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '4px 2px' }}>Nadie todavía</p>}
-              {derived.predicted.map((c) => (
-                <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: (c.out || c.excluded) ? 0.5 : 1 }}>
-                  <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={30} colorClass={colorFor(c.u.username)} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: 'white', fontWeight: 700, fontSize: 13, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none' }}>{c.u.display_name}</p>
-                    {c.excluded
-                      ? <p style={{ color: '#93c5fd', fontSize: 10.5, fontWeight: 700 }}>🏅 No participa · va en el podio individual</p>
-                      : c.out && <p style={{ color: '#f87171', fontSize: 10.5, fontWeight: 700 }}>❌ Fuera · su campeón quedó eliminado</p>}
+
+              {revealed ? (
+                <>
+                  {/* Buscador de persona */}
+                  <input
+                    value={champSearch}
+                    onChange={(e) => setChampSearch(e.target.value)}
+                    placeholder="🔍 Buscar persona por nombre…"
+                    style={{ width: '100%', margin: '4px 0 10px', padding: '9px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', fontSize: 13, outline: 'none' }}
+                  />
+                  {champGroups.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '4px 2px' }}>Sin coincidencias</p>}
+                  {champGroups.map((g) => (
+                    <div key={g.champion} style={{ marginBottom: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, overflow: 'hidden' }}>
+                      {/* Cabecera del grupo (campeón) */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(245,158,11,0.1)', borderBottom: '1px solid rgba(245,158,11,0.2)' }}>
+                        <Flag code={g.code} size={26} />
+                        <span style={{ color: '#FCD34D', fontWeight: 900, fontSize: 14 }}>{g.champion}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700 }}>· {g.people.length} {g.people.length === 1 ? 'persona' : 'personas'}</span>
+                      </div>
+                      {/* Personas que lo pusieron */}
+                      {g.people.map((c) => (
+                        <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px', opacity: (c.out || c.excluded) ? 0.55 : 1 }}>
+                          <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={28} colorClass={colorFor(c.u.username)} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.u.display_name}</p>
+                            {c.excluded
+                              ? <p style={{ color: '#93c5fd', fontSize: 10, fontWeight: 700 }}>🏅 No participa (podio individual)</p>
+                              : c.out && <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (campeón eliminado)</p>}
+                          </div>
+                          {/* Subcampeón + marcador (bien claro) */}
+                          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '3px 8px' }}>
+                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>🥈</span>
+                            <Flag code={c.runner_up_code} size={18} />
+                            <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 700 }}>{c.runner_up}</span>
+                            <span style={{ color: '#34d399', fontWeight: 900, fontSize: 13, marginLeft: 2 }}>{c.champ_score}–{c.runner_score}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </>
+              ) : (
+                derived.predicted.map((c) => (
+                  <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', opacity: (c.out || c.excluded) ? 0.5 : 1 }}>
+                    <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={30} colorClass={colorFor(c.u.username)} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{c.u.display_name}</p>
+                    </div>
+                    <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, filter: 'blur(7px)', userSelect: 'none', pointerEvents: 'none' }}>
+                      <Flag code={c.decoy.code} size={24} />
+                      <span style={{ color: '#FCD34D', fontWeight: 800, fontSize: 12 }}>{c.decoy.team}</span>
+                    </div>
                   </div>
-                  <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, filter: revealed ? 'none' : 'blur(7px)', userSelect: revealed ? 'auto' : 'none', pointerEvents: revealed ? 'auto' : 'none' }}>
-                    {/* Antes del sábado mostramos un equipo SEÑUELO (ya eliminado) para despistar 😈 */}
-                    <Flag code={revealed ? c.champion_code : c.decoy.code} size={24} />
-                    <span style={{ color: '#FCD34D', fontWeight: 800, fontSize: 12 }}>{revealed ? c.champion : c.decoy.team}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
 
               {/* No participaron / aún no pronostican */}
               {derived.notPredicted.length > 0 && (
