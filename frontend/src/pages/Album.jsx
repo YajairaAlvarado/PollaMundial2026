@@ -300,7 +300,7 @@ export default function Album() {
                       const left = Math.max(0, ATTEMPT_LIMIT - (attemptsByUser[r.username] || 0));
                       return (
                         <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                          {r.last && <>🕐 última {fmtStickerTime(r.last)} · </>}🎯 {left} intento{left === 1 ? '' : 's'} hoy
+                          {r.last && <>🕐 última {fmtStickerTime(r.last)} · </>}🎯 le quedan {left} intento{left === 1 ? '' : 's'} hoy
                         </span>
                       );
                     })()}
