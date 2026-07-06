@@ -137,9 +137,7 @@ const EMPLOYEE_DATA = [
   { username: 'solange.zambrano', password: '0928814722', department: 'Contabilidad/Finanzas', sex: 'F' },
   { username: 'daniela.zorrilla', password: '0953292240', department: 'Impuestos', sex: 'F' },
   { username: 'german.zuniga', password: '0930861281', department: 'Administracion', sex: 'M' },
-  // 'name' opcional: usar cuando el nombre a mostrar NO se deriva del username
-  // (p. ej. el correo es vely.romo pero se llama "Velyalline Romo").
-  { username: 'vely.romo', password: 'Mundial2026', department: 'Patrocinio', sex: 'F', name: 'Velyalline Romo' },
+  { username: 'velyalline.romo', password: 'Mundial2026', department: 'Patrocinio', sex: 'F' },
 ];
 
 export const USERS = EMPLOYEE_DATA.map((e, i) => {
