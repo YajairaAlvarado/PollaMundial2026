@@ -288,57 +288,58 @@ export default function Album() {
               const u = USER_BY_NAME[r.username];
               const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : null;
               const tieneMiFicha = holdersSet.has(r.username);
+              const left = Math.max(0, ATTEMPT_LIMIT - (attemptsByUser[r.username] || 0));
               return (
-                <div key={r.username} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg" style={{ background: (r.rank && r.rank <= 3) ? 'rgba(255,209,0,0.06)' : 'transparent' }}>
-                  <span style={{ width: 22, textAlign: 'center', fontWeight: 900, fontSize: 13, color: r.rank === 1 ? '#FFD700' : r.rank === 2 ? '#C7CDD6' : r.rank === 3 ? '#cd7f32' : 'rgba(255,255,255,0.4)' }}>
-                    {medal || r.rank || '·'}
-                  </span>
-                  <Avatar username={r.username} initials={u?.avatarInitials} displayName={r.displayName} size={30} clickable={false} />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-white truncate block">{r.displayName}</span>
-                    {(() => {
-                      const left = Math.max(0, ATTEMPT_LIMIT - (attemptsByUser[r.username] || 0));
-                      return (
-                        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                          {r.last && <>🕐 última {fmtStickerTime(r.last)} · </>}🎯 le quedan {left} intento{left === 1 ? '' : 's'} hoy
-                        </span>
-                      );
-                    })()}
+                <div key={r.username} className="px-2 py-1.5 rounded-lg" style={{ background: (r.rank && r.rank <= 3) ? 'rgba(255,209,0,0.06)' : 'transparent' }}>
+                  {/* Línea 1: rank + avatar + nombre + botón abrir álbum */}
+                  <div className="flex items-center gap-2.5">
+                    <span style={{ width: 22, flexShrink: 0, textAlign: 'center', fontWeight: 900, fontSize: 13, color: r.rank === 1 ? '#FFD700' : r.rank === 2 ? '#C7CDD6' : r.rank === 3 ? '#cd7f32' : 'rgba(255,255,255,0.4)' }}>
+                      {medal || r.rank || '·'}
+                    </span>
+                    <Avatar username={r.username} initials={u?.avatarInitials} displayName={r.displayName} size={30} clickable={false} />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-semibold text-white truncate block">{r.displayName}</span>
+                      <span className="text-[10px] truncate block" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                        {r.last && <>🕐 {fmtStickerTime(r.last)} · </>}🎯 {left} intento{left === 1 ? '' : 's'} hoy
+                      </span>
+                    </div>
+                    {r.username !== me && (
+                      <button onClick={() => setViewer({ username: r.username, displayName: r.displayName })}
+                        title={`Ver el álbum de ${r.displayName}`}
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.4)', touchAction: 'manipulation' }}>
+                        📖
+                      </button>
+                    )}
                   </div>
 
-                  {onlyNoConocen && (
-                    <span title="Veces que se equivocó contigo" className="text-xs font-black px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(248,113,113,0.18)', color: '#f87171' }}>
-                      ❌ {noConocen[r.username]}× {noConocen[r.username] === 1 ? 'vez' : 'veces'}
-                    </span>
-                  )}
+                  {/* Línea 2: insignias (envuelven en móvil, alineadas bajo el nombre) */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1" style={{ paddingLeft: 54 }}>
+                    {onlyNoConocen && (
+                      <span title="Veces que se equivocó contigo" className="text-xs font-black px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap" style={{ background: 'rgba(248,113,113,0.18)', color: '#f87171' }}>
+                        ❌ {noConocen[r.username]}× {noConocen[r.username] === 1 ? 'vez' : 'veces'}
+                      </span>
+                    )}
 
-                  {!onlyNoConocen && tieneMiFicha && r.username !== me && (
-                    <span title="Tiene tu ficha" className="text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(52,211,153,0.16)', color: '#34d399' }}>
-                      📸 te tiene
-                    </span>
-                  )}
+                    {!onlyNoConocen && tieneMiFicha && r.username !== me && (
+                      <span title="Tiene tu ficha" className="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap" style={{ background: 'rgba(52,211,153,0.16)', color: '#34d399' }}>
+                        📸 te tiene
+                      </span>
+                    )}
 
-                  {/* Errores (informativo) — NO se muestra para los DT (socios) 😅 */}
-                  {!onlyNoConocen && !isDT(r.username) && (errCount[r.username] > 0) && (
-                    <button onClick={() => openErrModal(r)} title="Ver con quién se equivocó"
-                      className="text-xs font-black px-2 py-1 rounded-full flex items-center gap-1"
-                      style={{ background: 'rgba(248,113,113,0.16)', color: '#f87171', border: '1px solid rgba(248,113,113,0.4)', touchAction: 'manipulation' }}>
-                      ❌ {errCount[r.username]} <span style={{ fontSize: 11 }}>👁️</span>
-                    </button>
-                  )}
+                    {/* Errores (informativo) — NO se muestra para los DT (socios) 😅 */}
+                    {!onlyNoConocen && !isDT(r.username) && (errCount[r.username] > 0) && (
+                      <button onClick={() => openErrModal(r)} title="Ver con quién se equivocó"
+                        className="text-xs font-black px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap"
+                        style={{ background: 'rgba(248,113,113,0.16)', color: '#f87171', border: '1px solid rgba(248,113,113,0.4)', touchAction: 'manipulation' }}>
+                        ❌ {errCount[r.username]} <span style={{ fontSize: 11 }}>👁️</span>
+                      </button>
+                    )}
 
-                  {!onlyNoConocen && (
-                    <span className="text-xs font-black px-2 py-1 rounded-full" style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100' }}>{r.count} 📒</span>
-                  )}
-
-                  {r.username !== me && (
-                    <button onClick={() => setViewer({ username: r.username, displayName: r.displayName })}
-                      title={`Ver el álbum de ${r.displayName}`}
-                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.4)', touchAction: 'manipulation' }}>
-                      📖
-                    </button>
-                  )}
+                    {!onlyNoConocen && (
+                      <span className="text-xs font-black px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100' }}>{r.count} 📒</span>
+                    )}
+                  </div>
                 </div>
               );
             })}
