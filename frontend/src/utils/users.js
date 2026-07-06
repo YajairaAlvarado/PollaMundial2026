@@ -137,6 +137,9 @@ const EMPLOYEE_DATA = [
   { username: 'solange.zambrano', password: '0928814722', department: 'Contabilidad/Finanzas', sex: 'F' },
   { username: 'daniela.zorrilla', password: '0953292240', department: 'Impuestos', sex: 'F' },
   { username: 'german.zuniga', password: '0930861281', department: 'Administracion', sex: 'M' },
+  // 'name' opcional: usar cuando el nombre a mostrar NO se deriva del username
+  // (p. ej. el correo es vely.romo pero se llama "Velyalline Romo").
+  { username: 'vely.romo', password: 'Mundial2026', department: 'Patrocinio', sex: 'F', name: 'Velyalline Romo' },
 ];
 
 export const USERS = EMPLOYEE_DATA.map((e, i) => {
@@ -145,7 +148,7 @@ export const USERS = EMPLOYEE_DATA.map((e, i) => {
     id: i + 1,
     username: e.username,
     password: e.password,
-    displayName: parts.map(cap).join(' '),
+    displayName: e.name || parts.map(cap).join(' '),
     email: `${e.username}@ec.andersen.com`,
     avatarInitials: parts.map(p => p[0].toUpperCase()).join('').slice(0, 2),
     department: e.department,
