@@ -50,6 +50,48 @@ export default function KnowledgeRanking() {
           </p>
         </div>
 
+        {/* Cómo funciona la campaña */}
+        <div style={{ background: 'linear-gradient(160deg,#B3001F,#7d0016)', borderRadius: 16, padding: '16px 18px', marginBottom: 16, boxShadow: '0 8px 24px rgba(179,0,31,0.3)' }}>
+          <p style={{ color: 'white', fontWeight: 900, fontStyle: 'italic', fontSize: 17 }}>🏆 TRIVIA ANDERSEN</p>
+          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12.5, lineHeight: 1.5, marginTop: 6 }}>
+            Contesta hasta <b>4 preguntas diarias</b> sobre Andersen Global y Andersen Ecuador. Cada acierto suma <b>+1 punto</b> a tu marcador del Pronóstico Mundialista.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+            {[['🎯', '4 preguntas / día'], ['⭐', 'Hasta 20 pts extra'], ['📅', 'Hasta el 17 de Julio'], ['⚡', 'Responde rápido']].map(([e, t]) => (
+              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)', color: 'white', fontSize: 11.5, fontWeight: 700, padding: '5px 11px', borderRadius: 20 }}>
+                {e} {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Datos curiosos de Andersen */}
+        <p style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px 10px' }}>
+          💡 ¿Sabías que…?
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginBottom: 22 }}>
+          {[
+            ['🌎', 'Presencia global', 'Andersen está en más de 180 países.'],
+            ['🤝', 'Socios en el mundo', 'Más de 3.000 socios a nivel mundial.'],
+            ['🏛️', 'Casa matriz', 'La matriz está en San Francisco, EE.UU.'],
+            ['👔', 'CEO global', 'Liderada por Mark L. Vorsatz.'],
+            ['🇪🇨', 'En Ecuador', 'Más de 21 años de experiencia conjunta.'],
+            ['🏢', 'Oficinas', '3 oficinas: Quito, Guayaquil y Cuenca.'],
+            ['👥', 'Equipo local', 'Más de 220 profesionales en Ecuador.'],
+            ['🌱', 'Sostenibilidad', 'Línea NZCA: Net Zero & Climate Assets.'],
+          ].map(([e, t, d]) => (
+            <div key={t} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 13px' }}>
+              <div style={{ fontSize: 22 }}>{e}</div>
+              <p style={{ color: '#FFD100', fontWeight: 800, fontSize: 12, marginTop: 5 }}>{t}</p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, lineHeight: 1.4, marginTop: 2 }}>{d}</p>
+            </div>
+          ))}
+        </div>
+
+        <p style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px 10px' }}>
+          📊 Tabla de conocimiento
+        </p>
+
         {sorted.length === 0 ? (
           <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40 }}>Aún nadie ha contestado.</p>
         ) : (

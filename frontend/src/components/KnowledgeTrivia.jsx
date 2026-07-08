@@ -48,12 +48,12 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     return data;
   }
 
-  // ── Prompt de 7 segundos ───────────────────────────────────────────────────
+  // ── Prompt de 20 segundos ──────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'prompt') return;
-    setTimeLeft(7);
+    setTimeLeft(20);
     const iv = setInterval(() => setTimeLeft((t) => (t > 0 ? t - 1 : 0)), 1000);
-    const to = setTimeout(() => setPhase(null), 7000); // no responde → se cierra
+    const to = setTimeout(() => setPhase(null), 20000); // no responde → se cierra
     return () => { clearInterval(iv); clearTimeout(to); };
   }, [phase]);
 
@@ -174,7 +174,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
 
             {/* Tiempo */}
             <div style={{ height: 6, borderRadius: 3, background: '#e6e6e6', overflow: 'hidden', margin: '16px 0 6px' }}>
-              <div style={{ height: '100%', width: `${(timeLeft / 7) * 100}%`, background: RED, transition: 'width 1s linear' }} />
+              <div style={{ height: '100%', width: `${(timeLeft / 20) * 100}%`, background: RED, transition: 'width 1s linear' }} />
             </div>
             <p style={{ color: '#999', fontSize: 11, fontWeight: 700 }}>Se cierra en {timeLeft}s…</p>
 
