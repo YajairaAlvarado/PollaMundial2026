@@ -221,7 +221,11 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     const pct = q.seconds ? (timeLeft / q.seconds) * 100 : 0;
     return (
       <div style={OVERLAY}>
-        <div style={CARD}>
+        <div style={{ ...CARD, userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', WebkitTouchCallout: 'none' }}
+          onContextMenu={(e) => e.preventDefault()}
+          onCopy={(e) => e.preventDefault()}
+          onCut={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}>
           {/* Banner: gana punto o no */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
             background: willWin ? 'rgba(255,209,0,0.12)' : 'rgba(255,255,255,0.06)',
@@ -241,8 +245,8 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
           </div>
           <p style={{ textAlign: 'right', color: timeLeft <= 2 ? '#f87171' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 800, marginBottom: 10 }}>{timeLeft}s</p>
 
-          <p style={{ color: 'rgba(248,113,113,0.85)', fontSize: 10, fontWeight: 700, marginBottom: 8 }}>
-            🚫 No salgas de la ventana ni cambies de pestaña · se detecta el uso de IA y contaría como incorrecta.
+          <p style={{ color: 'rgba(248,113,113,0.9)', fontSize: 10, fontWeight: 700, marginBottom: 8, lineHeight: 1.35 }}>
+            🚫 Estamos <b>monitoreando el uso de IA</b>. Salir de la ventana, cambiar de pestaña o usar ayudas externas puede <b>descalificarte</b> · si sales, cuenta como incorrecta.
           </p>
           <p style={{ color: 'white', fontSize: 15, fontWeight: 800, lineHeight: 1.3, marginBottom: 14 }}>{q.question}</p>
 

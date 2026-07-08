@@ -73,7 +73,7 @@ export default function KnowledgeRanking() {
             ['⭐', 'Tope de 20', 'Puedes ganar hasta 20 puntos por actividades adicionales.'],
             ['📅', 'Hasta el 17 de Julio', 'Aprovecha antes de que se acabe este beneficio.'],
             ['🧠', 'Conoce la firma', 'Repasa sobre Andersen Global y Andersen Ecuador.'],
-            ['🤝', 'Juego limpio', 'Se detecta el uso de IA: si sales de la ventana o cambias de pestaña con una pregunta abierta, cuenta como incorrecta.'],
+            ['🤝', 'Juego limpio', 'Monitoreamos el uso de IA. Salir de la ventana o usar ayudas externas puede descalificarte; salir cuenta como incorrecta.'],
           ].map(([e, t, d]) => (
             <div key={t} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 13px' }}>
               <div style={{ fontSize: 22 }}>{e}</div>
