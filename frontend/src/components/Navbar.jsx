@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck, BookOpen, Gift, Brain } from 'lucide-react';
+import { Menu, X, Trophy, Calendar, User, LogOut, LayoutDashboard, Network, ShieldCheck, BookOpen, Gift, Star } from 'lucide-react';
 import { isAlbumBeta } from '../utils/album';
 import { useAlbumCtx } from '../contexts/AlbumContext';
 import andersenLogo from '../assets/andersen-logo-white-red.png';
@@ -33,7 +33,7 @@ export default function Navbar({ unread = 0, onBellOpen }) {
     { to: '/vs',          label: 'Vs 👊⚡👊',   icon: null },
     { to: '/bracket',     label: 'Llaves',     icon: <Network size={14} /> },
     { to: '/prizes',      label: 'Premios 🎁', icon: <Gift size={14} />, highlight: true },
-    { to: '/knowledge',   label: 'Quién sabe 🧠', icon: <Brain size={14} /> },
+    { to: '/knowledge',   label: 'Puntos ⭐', icon: <Star size={14} /> },
     ...(isAlbumBeta(user?.username) ? [
       { to: '/album',   label: 'Álbum 📒', icon: <BookOpen size={14} />, alert: albumAlert },
     ] : []),

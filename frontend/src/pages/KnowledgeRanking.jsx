@@ -17,19 +17,20 @@ export default function KnowledgeRanking() {
     if (user?.id) trackPage(user.id, 'conocimiento');
     (async () => {
       const { data } = await supabase
-        .from('andersen_trivia_ranking')
+        .from('andersen_points_board')
         .select('*')
-        .order('correct_count', { ascending: false });
+        .order('recognized_pts', { ascending: false });
       setRows((data || []).filter((r) => !isExcluded(r.username)));
     })();
   }, [user?.id]);
 
   if (!rows) return <LoadingSpinner size="lg" text="Cargando estadísticas..." />;
 
-  // Orden estadístico: más aciertos primero; a igualdad, quien respondió más rápido (menor promedio)
+  // Orden: más puntos reconocidos primero; luego total; luego correctas
   const sorted = [...rows].sort((a, b) =>
+    (b.recognized_pts - a.recognized_pts) ||
+    (b.total_pts - a.total_pts) ||
     (b.correct_count - a.correct_count) ||
-    ((a.avg_ms ?? 9e9) - (b.avg_ms ?? 9e9)) ||
     (a.display_name || '').localeCompare(b.display_name || '')
   );
 
@@ -37,10 +38,10 @@ export default function KnowledgeRanking() {
     <div style={{ minHeight: 'calc(100vh - 3.5rem)', background: 'radial-gradient(120% 60% at 50% 0%, #1a1330 0%, #0a0a1a 55%)' }}>
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <div style={{ fontSize: 44 }}>🧠</div>
-          <h1 style={{ color: 'white', fontWeight: 900, fontSize: 22, lineHeight: 1.1 }}>Quién más sabe de Andersen</h1>
+          <div style={{ fontSize: 44 }}>⭐</div>
+          <h1 style={{ color: 'white', fontWeight: 900, fontSize: 22, lineHeight: 1.1 }}>Puntos Adicionales</h1>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 6 }}>
-            Estadísticas de la campaña de conocimiento. 🤫 (no se muestran las preguntas)
+            Trivia Mundialista + Trivia de conocimiento Andersen · máximo <b style={{ color: '#FFD100' }}>20 puntos</b> reconocidos. 🤫 (no se muestran las preguntas)
           </p>
         </div>
 
@@ -83,25 +84,32 @@ export default function KnowledgeRanking() {
         </div>
 
         <p style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px 10px' }}>
-          📊 Tabla de conocimiento
+          📊 Tabla de puntos adicionales
         </p>
 
         {sorted.length === 0 ? (
-          <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40 }}>Aún nadie ha contestado.</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40 }}>Aún nadie tiene puntos adicionales.</p>
         ) : (
           <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 620 }}>
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
-                  <th style={th('left', 34)}>#</th>
-                  <th style={th('left')}>Jugador</th>
-                  <th style={th('center')}>Contestadas</th>
+                  <th rowSpan={2} style={th('center', 34)}>#</th>
+                  <th rowSpan={2} style={th('left')}>Jugador</th>
+                  <th rowSpan={2} style={th('center')}>Trivia<br/>Mundialista</th>
+                  <th colSpan={2} style={{ ...th('center'), borderLeft: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Conocimiento Andersen</th>
+                  <th rowSpan={2} style={{ ...th('center'), borderLeft: '1px solid rgba(255,255,255,0.1)' }}>Total</th>
+                  <th rowSpan={2} style={th('center')}>Puntos<br/>reconocidos</th>
+                </tr>
+                <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <th style={{ ...th('center'), borderLeft: '1px solid rgba(255,255,255,0.1)' }}>Contestadas</th>
                   <th style={th('center')}>Correctas</th>
                 </tr>
               </thead>
               <tbody>
                 {sorted.map((r, i) => {
                   const me = r.id === user?.id;
+                  const capped = r.total_pts > 20;
                   return (
                     <tr key={r.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: me ? 'rgba(255,209,0,0.08)' : 'transparent' }}>
                       <td style={td('center')}><span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>{i + 1}</span></td>
@@ -114,8 +122,14 @@ export default function KnowledgeRanking() {
                           </div>
                         </div>
                       </td>
-                      <td style={td('center')}><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>{r.answered_count}</span></td>
-                      <td style={td('center')}><span style={{ color: '#34d399', fontWeight: 900, fontSize: 15 }}>{r.correct_count}</span></td>
+                      <td style={td('center')}><span style={{ color: r.mundialista_pts ? '#FFD100' : 'rgba(255,255,255,0.3)', fontWeight: 800 }}>{r.mundialista_pts}</span></td>
+                      <td style={{ ...td('center'), borderLeft: '1px solid rgba(255,255,255,0.06)' }}><span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>{r.answered_count}</span></td>
+                      <td style={td('center')}><span style={{ color: '#34d399', fontWeight: 900 }}>{r.correct_count}</span></td>
+                      <td style={{ ...td('center'), borderLeft: '1px solid rgba(255,255,255,0.06)' }}><span style={{ color: 'white', fontWeight: 900, fontSize: 15 }}>{r.total_pts}</span></td>
+                      <td style={td('center')}>
+                        <span style={{ color: '#FFD100', fontWeight: 900, fontSize: 15 }}>{r.recognized_pts}</span>
+                        {capped && <span style={{ display: 'block', color: '#f59e0b', fontSize: 9, fontWeight: 700 }}>tope 20</span>}
+                      </td>
                     </tr>
                   );
                 })}
@@ -124,7 +138,7 @@ export default function KnowledgeRanking() {
           </div>
         )}
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, textAlign: 'center', marginTop: 12 }}>
-          Orden: más correctas primero; a igualdad, menor tiempo promedio de respuesta.
+          Orden: más puntos reconocidos primero. Se reconocen como máximo <b>20 puntos</b> por actividades adicionales.
         </p>
       </div>
     </div>
