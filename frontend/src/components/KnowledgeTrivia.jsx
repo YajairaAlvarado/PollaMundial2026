@@ -28,6 +28,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   const [result, setResult] = useState(null);   // respuesta enviada
   const [selected, setSelected] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [consentChecked, setConsentChecked] = useState(false);
   const startedRef = useRef(false);
   const answeredRef = useRef(false);
   const qStartRef = useRef(0);
@@ -124,8 +125,21 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setPhase('result');
   }
 
-  // Abre (reserva) una pregunta: queda registrada apenas se muestra (anti-F5)
+  // Primero verifica el consentimiento de ética del día; si no lo dio, lo pide.
   async function openQuestion() {
+    const { data: consented } = await supabase.rpc('andersen_consent', { p_user: userId, p_accept: false });
+    if (!consented) { setConsentChecked(false); setPhase('consent'); return; }
+    reserveAndScan();
+  }
+
+  // Registra el consentimiento y continúa
+  async function acceptConsent() {
+    await supabase.rpc('andersen_consent', { p_user: userId, p_accept: true });
+    reserveAndScan();
+  }
+
+  // Abre (reserva) una pregunta: queda registrada apenas se muestra (anti-F5)
+  async function reserveAndScan() {
     const { data, error } = await supabase.rpc('open_andersen_trivia', { p_user: userId });
     if (error || !data || !data.has_question) {
       setMeta((m) => ({ ...(m || {}), attempts_left: data?.attempts_left ?? 0 }));
@@ -231,6 +245,39 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
                 ¡JUGAR AHORA! 🎯
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'consent') {
+    const RED = '#B3001F';
+    return (
+      <div style={OVERLAY}>
+        <div style={{ ...CARD, textAlign: 'center' }}>
+          <div style={{ fontSize: 40 }}>🤝</div>
+          <p style={{ color: 'white', fontWeight: 900, fontSize: 18 }}>Compromiso de juego limpio</p>
+          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11.5, marginTop: 4 }}>Solo una vez al día, antes de empezar.</p>
+
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left', marginTop: 16,
+            background: 'rgba(255,255,255,0.05)', border: `1px solid ${consentChecked ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.15)'}`,
+            borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={consentChecked} onChange={(e) => setConsentChecked(e.target.checked)}
+              style={{ width: 20, height: 20, marginTop: 1, accentColor: '#34d399', flexShrink: 0, cursor: 'pointer' }} />
+            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, lineHeight: 1.5 }}>
+              Declaro que responderé por mis propios conocimientos. Entiendo que <b style={{ color: '#ff8a8a' }}>usar IA o recibir ayuda de otras personas es una falta grave a los principios de ética de la firma</b>, que todas mis respuestas quedan registradas, y que hacerlo puede <b>descalificarme</b> de la campaña.
+            </span>
+          </label>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <button onClick={close} style={btn('ghost')}>Ahora no</button>
+            <button onClick={acceptConsent} disabled={!consentChecked}
+              style={{ flex: 1.6, padding: '12px', borderRadius: 14, fontWeight: 900, fontSize: 14.5,
+                background: consentChecked ? RED : '#5a5a5a', color: 'white', border: 'none',
+                opacity: consentChecked ? 1 : 0.6, cursor: consentChecked ? 'pointer' : 'not-allowed', touchAction: 'manipulation' }}>
+              Acepto y continúo
+            </button>
           </div>
         </div>
       </div>
