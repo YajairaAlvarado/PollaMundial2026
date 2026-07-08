@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../utils/supabase';
 import detective from '../assets/detective.png';
+import detectiveAlert from '../assets/detective-alert.png';
 
 // Campaña "Gana puntos sobre Andersen":
 // - Arranca el 9-jul-2026 (00:00 Ecuador) para todos.
@@ -30,6 +31,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   const startedRef = useRef(false);
   const answeredRef = useRef(false);
   const qStartRef = useRef(0);
+  const alertRef = useRef(false);
 
   // ── Entrada a la app: una sola vez por sesión ──────────────────────────────
   useEffect(() => {
@@ -59,10 +61,10 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     return () => { clearInterval(iv); clearTimeout(to); };
   }, [phase]);
 
-  // ── "Scanner" de 2s antes de cada pregunta (detective 🕵️) ───────────────────
+  // ── "Scanner" de 4s antes de cada pregunta (detective 🕵️) ───────────────────
   useEffect(() => {
     if (phase !== 'scan') return;
-    const to = setTimeout(() => setPhase('q'), 2000);
+    const to = setTimeout(() => setPhase(alertRef.current ? 'scanalert' : 'q'), 4000);
     return () => clearTimeout(to);
   }, [phase]);
 
@@ -133,6 +135,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setMeta({ attempts_left: data.attempts_left, total_bonus: data.total_bonus, at_cap: data.at_cap });
     setQ(data.question);
     setResult(null);
+    alertRef.current = Math.random() < 0.1; // ~1 de cada 10: alerta "despiste"
     setPhase('scan');
   }
 
@@ -250,6 +253,27 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
             Nada de IA 😏 Prepárate… tu pregunta está por aparecer.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'scanalert') {
+    return (
+      <div style={OVERLAY}>
+        <div style={{ ...CARD, textAlign: 'center', border: '3px solid #ff3b3b', boxShadow: '0 0 60px rgba(255,59,59,0.5), 0 24px 60px rgba(0,0,0,0.7)' }}>
+          <img src={detectiveAlert} alt="" style={{ width: 150, height: 150, objectFit: 'contain', margin: '2px auto 4px', animation: 'trophyBounce 1.3s ease-in-out infinite', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))' }} />
+          <p style={{ color: '#ff5566', fontWeight: 900, fontSize: 16, letterSpacing: '0.02em' }}>⚠️ ALERTA DE VIGILANCIA</p>
+          <p style={{ color: 'white', fontSize: 13.5, fontWeight: 700, marginTop: 8, lineHeight: 1.45 }}>
+            Hemos detectado <b style={{ color: '#ff8a8a' }}>páginas de IA abiertas</b>. Por favor ciérralas antes de continuar.
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11.5, marginTop: 8, lineHeight: 1.4 }}>
+            Recuerda que <b>todo queda registrado</b> y el uso de ayudas externas puede descalificarte.
+          </p>
+          <button onClick={() => setPhase('q')} style={{ width: '100%', marginTop: 16, padding: '13px', borderRadius: 14, fontWeight: 900, fontSize: 15,
+            background: 'linear-gradient(90deg,#ff3b3b,#c40024)', color: 'white', border: 'none', boxShadow: '0 6px 18px rgba(255,59,59,0.45)', touchAction: 'manipulation' }}>
+            Ya las cerré · Continuar
+          </button>
         </div>
       </div>
     );
