@@ -5,8 +5,9 @@ import { supabase } from '../utils/supabase';
 // - Arranca el 9-jul-2026 (00:00 Ecuador) para todos.
 // - daniel.leon la ve desde antes (preview).
 const START = new Date('2026-07-09T05:00:00Z');
+const PREVIEW = ['daniel.leon', 'yajaira.alvarado', 'kleber.padilla'];
 const canSee = (username) =>
-  Date.now() >= START.getTime() || (username || '').toLowerCase() === 'daniel.leon';
+  Date.now() >= START.getTime() || PREVIEW.includes((username || '').toLowerCase());
 
 const OVERLAY = {
   position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(5,2,20,0.86)',

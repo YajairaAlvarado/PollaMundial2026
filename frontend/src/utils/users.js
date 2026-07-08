@@ -156,7 +156,7 @@ export const USERS = EMPLOYEE_DATA.map((e, i) => {
 
 // Ex-empleados: ya no aparecen en ningún lado (álbum, posiciones, fichas).
 // Sus datos siguen en la base, pero se ocultan en el front.
-export const EXCLUDED_USERS = ['gabriela.guerrero', 'angelica.lainez', 'luciana.salame'];
+export const EXCLUDED_USERS = ['gabriela.guerrero', 'angelica.lainez', 'luciana.salame', 'luis.escudero'];
 export const isExcluded = (username) => EXCLUDED_USERS.includes((username || '').toLowerCase());
 
 export function findUser(username, password) {
