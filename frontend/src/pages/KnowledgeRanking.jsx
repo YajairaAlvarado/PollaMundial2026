@@ -26,12 +26,6 @@ export default function KnowledgeRanking() {
 
   if (!rows) return <LoadingSpinner size="lg" text="Cargando estadísticas..." />;
 
-  const fmtTime = (ms) => {
-    if (!ms && ms !== 0) return '—';
-    const s = ms / 1000;
-    return s < 10 ? `${s.toFixed(1)}s` : `${Math.round(s)}s`;
-  };
-
   // Orden estadístico: más aciertos primero; a igualdad, quien respondió más rápido (menor promedio)
   const sorted = [...rows].sort((a, b) =>
     (b.correct_count - a.correct_count) ||
@@ -103,7 +97,6 @@ export default function KnowledgeRanking() {
                   <th style={th('left')}>Jugador</th>
                   <th style={th('center')}>Contestadas</th>
                   <th style={th('center')}>Correctas</th>
-                  <th style={th('center')}>Tiempo prom.</th>
                 </tr>
               </thead>
               <tbody>
@@ -123,7 +116,6 @@ export default function KnowledgeRanking() {
                       </td>
                       <td style={td('center')}><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>{r.answered_count}</span></td>
                       <td style={td('center')}><span style={{ color: '#34d399', fontWeight: 900, fontSize: 15 }}>{r.correct_count}</span></td>
-                      <td style={td('center')}><span style={{ color: '#60a5fa', fontWeight: 700 }}>{fmtTime(r.avg_ms)}</span></td>
                     </tr>
                   );
                 })}

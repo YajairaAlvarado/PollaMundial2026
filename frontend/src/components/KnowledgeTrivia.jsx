@@ -98,10 +98,18 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setPhase('result');
   }
 
-  async function nextQuestion() {
-    const st = await fetchState();
-    if (st && st.has_question && st.attempts_left > 0) { setResult(null); setPhase('q'); }
-    else setPhase('nomore');
+  // Abre (reserva) una pregunta: queda registrada apenas se muestra (anti-F5)
+  async function openQuestion() {
+    const { data, error } = await supabase.rpc('open_andersen_trivia', { p_user: userId });
+    if (error || !data || !data.has_question) {
+      setMeta((m) => ({ ...(m || {}), attempts_left: data?.attempts_left ?? 0 }));
+      setPhase('nomore');
+      return;
+    }
+    setMeta({ attempts_left: data.attempts_left, total_bonus: data.total_bonus, at_cap: data.at_cap });
+    setQ(data.question);
+    setResult(null);
+    setPhase('q');
   }
 
   const close = () => { setPhase(null); setResult(null); };
@@ -183,7 +191,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
                 background: '#efefef', color: '#666', border: '1px solid #ddd', touchAction: 'manipulation' }}>
                 Ahora no
               </button>
-              <button onClick={() => setPhase('q')} style={{ flex: 1.6, padding: '13px', borderRadius: 13, fontWeight: 900, fontSize: 15.5,
+              <button onClick={openQuestion} style={{ flex: 1.6, padding: '13px', borderRadius: 13, fontWeight: 900, fontSize: 15.5,
                 background: RED, color: 'white', border: 'none', boxShadow: '0 6px 18px rgba(179,0,31,0.4)', touchAction: 'manipulation' }}>
                 ¡JUGAR AHORA! 🎯
               </button>
@@ -270,7 +278,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button onClick={close} style={btn('ghost')}>No, salir</button>
-            <button onClick={nextQuestion} style={btn('gold')}>¡Sí, otra! 🎯</button>
+            <button onClick={openQuestion} style={btn('gold')}>¡Sí, otra! 🎯</button>
           </div>
         </div>
       </div>
