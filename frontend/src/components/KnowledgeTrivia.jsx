@@ -27,6 +27,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const startedRef = useRef(false);
   const answeredRef = useRef(false);
+  const qStartRef = useRef(0);
 
   // ── Entrada a la app: una sola vez por sesión ──────────────────────────────
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     answeredRef.current = false;
     setSelected(null);
     setTimeLeft(q.seconds);
+    qStartRef.current = Date.now();
     const iv = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) { clearInterval(iv); submit(-1); return 0; }
@@ -86,8 +88,10 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     if (answeredRef.current) return;
     answeredRef.current = true;
     setSelected(idx);
+    const maxMs = (q.seconds || 0) * 1000;
+    const ms = idx === -1 ? maxMs : Math.min(maxMs || 999999, Date.now() - qStartRef.current);
     const { data } = await supabase.rpc('submit_andersen_trivia',
-      { p_user: userId, p_question: q.id, p_selected: idx });
+      { p_user: userId, p_question: q.id, p_selected: idx, p_ms: ms });
     if (!data || data.error) { setPhase(null); return; }
     setResult(data);
     setMeta((m) => ({ ...(m || {}), total_bonus: data.total_bonus, at_cap: data.at_cap, attempts_left: data.attempts_left }));
