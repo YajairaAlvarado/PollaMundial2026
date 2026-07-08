@@ -59,20 +59,20 @@ export default function KnowledgeRanking() {
           </div>
         </div>
 
-        {/* Datos curiosos de Andersen */}
+        {/* Tips (sin revelar respuestas) */}
         <p style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px 10px' }}>
-          💡 ¿Sabías que…?
+          💡 Cómo ganar
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginBottom: 22 }}>
           {[
-            ['🌎', 'Presencia global', 'Andersen está en más de 180 países.'],
-            ['🤝', 'Socios en el mundo', 'Más de 3.000 socios a nivel mundial.'],
-            ['🏛️', 'Casa matriz', 'La matriz está en San Francisco, EE.UU.'],
-            ['👔', 'CEO global', 'Liderada por Mark L. Vorsatz.'],
-            ['🇪🇨', 'En Ecuador', 'Más de 21 años de experiencia conjunta.'],
-            ['🏢', 'Oficinas', '3 oficinas: Quito, Guayaquil y Cuenca.'],
-            ['👥', 'Equipo local', 'Más de 220 profesionales en Ecuador.'],
-            ['🌱', 'Sostenibilidad', 'Línea NZCA: Net Zero & Climate Assets.'],
+            ['🎯', 'Juega cada día', 'Tienes 4 preguntas nuevas por día. ¡No las dejes pasar!'],
+            ['⚡', 'Responde a tiempo', 'Cada pregunta tiene su cronómetro: lee y elige sin demorar.'],
+            ['📈', 'Sube posiciones', 'Cada acierto suma +1 a tu marcador del Pronóstico Mundialista.'],
+            ['🔁', 'Sin repetir', 'Una pregunta que ya viste no vuelve a salir.'],
+            ['⭐', 'Tope de 20', 'Puedes ganar hasta 20 puntos por actividades adicionales.'],
+            ['📅', 'Hasta el 17 de Julio', 'Aprovecha antes de que cierre la campaña.'],
+            ['🧠', 'Conoce la firma', 'Repasa sobre Andersen Global y Andersen Ecuador.'],
+            ['🤝', 'Juego limpio', 'Salir o refrescar cuenta la pregunta como respondida.'],
           ].map(([e, t, d]) => (
             <div key={t} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 13px' }}>
               <div style={{ fontSize: 22 }}>{e}</div>
