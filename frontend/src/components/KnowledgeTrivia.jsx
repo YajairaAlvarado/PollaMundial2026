@@ -90,14 +90,11 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   //    abierta, se marca como INCORRECTA automáticamente ────────────────────────
   useEffect(() => {
     if (phase !== 'q') return;
-    const leave = () => { if (!answeredRef.current) submit(-1); };
-    const onVis = () => { if (document.hidden) leave(); };
-    window.addEventListener('blur', leave);
+    // Solo 'visibilitychange' (cambio real de pestaña/app). NO usamos 'blur' porque
+    // en móvil da falsos positivos al tocar la pantalla.
+    const onVis = () => { if (document.hidden && !answeredRef.current) submit(-1); };
     document.addEventListener('visibilitychange', onVis);
-    return () => {
-      window.removeEventListener('blur', leave);
-      document.removeEventListener('visibilitychange', onVis);
-    };
+    return () => document.removeEventListener('visibilitychange', onVis);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, q]);
 
@@ -117,9 +114,15 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setSelected(idx);
     const maxMs = (q.seconds || 0) * 1000;
     const ms = idx === -1 ? maxMs : Math.min(maxMs || 999999, Date.now() - qStartRef.current);
-    const { data } = await supabase.rpc('submit_andersen_trivia',
+    const { data, error } = await supabase.rpc('submit_andersen_trivia',
       { p_user: userId, p_question: q.id, p_selected: idx, p_ms: ms });
-    if (!data || data.error) { setPhase(null); return; }
+    if (error || !data || data.error) {
+      // No cerrar en blanco: reintentar el flujo con "¿otra pregunta?"
+      console.error('submit trivia error:', error || data?.error);
+      answeredRef.current = false;
+      setPhase('choice');
+      return;
+    }
     setResult(data);
     setMeta((m) => ({ ...(m || {}), total_bonus: data.total_bonus, at_cap: data.at_cap, attempts_left: data.attempts_left }));
     setPhase('result');
