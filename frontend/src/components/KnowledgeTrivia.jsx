@@ -149,7 +149,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
                 <p style={{ color: RED, fontWeight: 900, fontSize: 13.5, marginBottom: 5 }}>👥 ¿Cómo participar?</p>
                 <ul style={{ color: '#333', fontSize: 12, lineHeight: 1.6, paddingLeft: 16, listStyle: 'disc', margin: 0 }}>
                   <li>Ingresa a Andersen Mundialista</li>
-                  <li>Responde las <b>4 preguntas diarias</b></li>
+                  <li>Responde las <b>4 preguntas diarias</b>, cada pregunta vale un punto.</li>
                 </ul>
               </div>
               <div style={{ flex: '1 1 160px' }}>
@@ -167,7 +167,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
               </p>
               <p style={{ color: '#555', fontSize: 12, lineHeight: 1.45 }}>
                 {willWin
-                  ? 'Si no estás en los primeros lugares, responde correctamente y gana puntos adicionales para mejorar tu posición.'
+                  ? 'Participa en la Trivia Andersen, responde correctamente las preguntas y gana puntos adicionales para mejorar tu posición.'
                   : 'Ya llegaste al tope de 20 puntos adicionales. Puedes seguir jugando por diversión (vale 0). 😎'}
               </p>
             </div>
