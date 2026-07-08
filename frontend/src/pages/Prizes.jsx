@@ -619,7 +619,7 @@ export default function Prizes() {
                   <span title={champSummary(c)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'default', background: 'rgba(255,255,255,0.05)', border: `1px solid ${dead ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)'}`, borderRadius: 20, padding: '3px 10px 3px 4px' }}>
                     <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={22} colorClass={colorFor(c.u.username)} />
-                    <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11, textDecoration: dead ? 'line-through' : 'none' }}>{c.u.display_name?.split(' ')[0]} {c.u.display_name?.split(' ')[1]?.[0] || ''}{c.u.display_name?.split(' ')[1] ? '.' : ''}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11 }}>{c.u.display_name?.split(' ')[0]} {c.u.display_name?.split(' ')[1]?.[0] || ''}{c.u.display_name?.split(' ')[1] ? '.' : ''}</span>
                   </span>
                 );
                 return (
