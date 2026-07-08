@@ -48,12 +48,12 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     return data;
   }
 
-  // ── Prompt de 3 segundos ───────────────────────────────────────────────────
+  // ── Prompt de 7 segundos ───────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'prompt') return;
-    setTimeLeft(3);
+    setTimeLeft(7);
     const iv = setInterval(() => setTimeLeft((t) => (t > 0 ? t - 1 : 0)), 1000);
-    const to = setTimeout(() => setPhase(null), 3000); // no responde → se cierra
+    const to = setTimeout(() => setPhase(null), 7000); // no responde → se cierra
     return () => { clearInterval(iv); clearTimeout(to); };
   }, [phase]);
 
@@ -113,22 +113,52 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   if (phase === 'prompt') {
     return (
       <div style={OVERLAY}>
-        <div style={CARD}>
-          <p style={{ fontSize: 40, textAlign: 'center' }}>🧠</p>
-          <p style={{ color: 'white', fontSize: 18, fontWeight: 900, textAlign: 'center', lineHeight: 1.2 }}>
-            ¿Deseas ganar un punto adicional?
-          </p>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12.5, textAlign: 'center', marginTop: 6 }}>
-            {willWin
-              ? <>Contesta bien una pregunta sobre Andersen y suma <b style={{ color: '#FFD100' }}>+1 punto</b>.</>
-              : <>Ya llegaste a los <b style={{ color: '#FFD100' }}>20 puntos</b> · seguir es solo por diversión (vale 0).</>}
-          </p>
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, textAlign: 'center', marginTop: 8 }}>
-            Se cierra en {timeLeft}s…
-          </p>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={close} style={btn('ghost')}>Ahora no</button>
-            <button onClick={() => setPhase('q')} style={btn('gold')}>¡Sí! 🎯</button>
+        <div style={{ width: 460, maxWidth: '94vw', borderRadius: 26, overflow: 'hidden', position: 'relative',
+          background: 'linear-gradient(160deg,#E4002B 0%,#b3001f 42%,#12183a 100%)',
+          border: '3px solid #FFD100', boxShadow: '0 0 70px rgba(255,209,0,0.45), 0 24px 70px rgba(0,0,0,0.75)' }}>
+
+          {/* Cinta superior */}
+          <div style={{ background: 'linear-gradient(90deg,#FFD100,#ffb700,#FFD100)', color: '#3a2200', textAlign: 'center',
+            fontWeight: 900, fontSize: 12.5, letterSpacing: '0.12em', padding: '6px 0' }}>
+            ⭐ ANDERSEN MUNDIALISTA · RETO EXPRÉS ⭐
+          </div>
+
+          <div style={{ padding: '22px 24px 24px', textAlign: 'center', position: 'relative' }}>
+            {/* Monedas */}
+            <div style={{ fontSize: 52, lineHeight: 1, animation: 'trophyBounce 2s ease-in-out infinite' }}>🎁</div>
+            <div style={{ position: 'absolute', top: 18, left: 26, fontSize: 26, animation: 'trophyBounce 2.4s ease-in-out infinite' }}>🪙</div>
+            <div style={{ position: 'absolute', top: 24, right: 28, fontSize: 22, animation: 'trophyBounce 2.7s ease-in-out infinite' }}>✨</div>
+
+            <h2 style={{ color: '#FFD100', fontWeight: 900, fontSize: 30, lineHeight: 1, margin: '10px 0 2px', textShadow: '0 2px 10px rgba(0,0,0,0.4)' }}>
+              ¡GANA UN PUNTO!
+            </h2>
+            <p style={{ color: 'white', fontSize: 16, fontWeight: 800, lineHeight: 1.25 }}>
+              {willWin ? '¿Deseas ganar un punto adicional?' : '¡Sigue jugando por diversión!'}
+            </p>
+
+            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13.5, lineHeight: 1.45, margin: '10px auto 0', maxWidth: 340 }}>
+              {willWin
+                ? <>Contesta <b style={{ color: '#FFD100' }}>1 pregunta</b> sobre Andersen y suma <b style={{ color: '#FFD100' }}>+1 punto</b> a tu marcador. ¡Cada punto te acerca a los premios! 🚀</>
+                : <>Ya llegaste al tope de <b style={{ color: '#FFD100' }}>20 puntos</b> extra. Puedes seguir contestando por diversión (vale 0). 😎</>}
+            </p>
+
+            {/* Barra de tiempo del prompt */}
+            <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.18)', overflow: 'hidden', margin: '18px 0 6px' }}>
+              <div style={{ height: '100%', width: `${(timeLeft / 7) * 100}%`, background: '#FFD100', transition: 'width 1s linear' }} />
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 700 }}>Se cierra en {timeLeft}s…</p>
+
+            <div style={{ display: 'flex', gap: 11, marginTop: 16 }}>
+              <button onClick={close} style={{ flex: 1, padding: '13px', borderRadius: 15, fontWeight: 800, fontSize: 13.5,
+                background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.25)', touchAction: 'manipulation' }}>
+                Ahora no
+              </button>
+              <button onClick={() => setPhase('q')} style={{ flex: 1.6, padding: '13px', borderRadius: 15, fontWeight: 900, fontSize: 16,
+                background: 'linear-gradient(90deg,#FFD100,#ffb200)', color: '#3a2200', border: 'none',
+                boxShadow: '0 6px 20px rgba(255,209,0,0.5)', touchAction: 'manipulation' }}>
+                ¡SÍ, JUGAR! 🎯
+              </button>
+            </div>
           </div>
         </div>
       </div>
