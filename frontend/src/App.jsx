@@ -29,6 +29,8 @@ import Vs from './pages/Vs';
 import Album from './pages/Album';
 import Prizes from './pages/Prizes';
 import ChampionPredictionModal from './components/ChampionPredictionModal';
+import KnowledgeRanking from './pages/KnowledgeRanking';
+import KnowledgeTrivia from './components/KnowledgeTrivia';
 import { useChampionPrediction } from './hooks/useChampionPrediction';
 import { CHAMPION_CLOSED } from './utils/aliveTeams';
 
@@ -127,6 +129,9 @@ function ProtectedLayout() {
       {forceChampion && (
         <ChampionPredictionModal aliveTeams={champion.aliveTeams} onSave={champion.save} />
       )}
+
+      {/* Campaña: gana puntos contestando sobre Andersen (no aparece sobre el modal de campeón) */}
+      <KnowledgeTrivia userId={user?.id} username={user?.username} enabled={!forceChampion && !album.challenge} />
     </>
   );
 }
@@ -158,6 +163,7 @@ function AppRoutes() {
         <Route path="/vs" element={<Vs />} />
         <Route path="/album" element={<Album />} />
         <Route path="/prizes" element={<Prizes />} />
+        <Route path="/knowledge" element={<KnowledgeRanking />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
       </Route>
