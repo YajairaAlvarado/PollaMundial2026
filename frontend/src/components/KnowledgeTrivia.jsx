@@ -135,7 +135,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setMeta({ attempts_left: data.attempts_left, total_bonus: data.total_bonus, at_cap: data.at_cap });
     setQ(data.question);
     setResult(null);
-    alertRef.current = Math.random() < 0.1; // ~1 de cada 10: alerta "despiste"
+    alertRef.current = Math.random() < 0.2; // ~1 de cada 5 (20%): alerta "despiste"
     setPhase('scan');
   }
 
