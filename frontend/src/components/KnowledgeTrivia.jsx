@@ -33,6 +33,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   const answeredRef = useRef(false);
   const qStartRef = useRef(0);
   const alertRef = useRef(false);
+  const advanceRef = useRef(null);
 
   // ── Entrada a la app: una sola vez por sesión ──────────────────────────────
   useEffect(() => {
@@ -98,15 +99,8 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, q]);
 
-  // ── Tras el resultado: mostrar y pasar a "¿otra?" ──────────────────────────
-  useEffect(() => {
-    if (phase !== 'result' || !result) return;
-    const delay = result.is_correct ? 1600 : 2000; // mal → 2s viendo la correcta
-    const to = setTimeout(() => {
-      setPhase((result.attempts_left ?? 0) > 0 ? 'choice' : 'nomore');
-    }, delay);
-    return () => clearTimeout(to);
-  }, [phase, result]);
+  // Limpieza del temporizador de avance al desmontar
+  useEffect(() => () => clearTimeout(advanceRef.current), []);
 
   async function submit(idx) {
     if (answeredRef.current) return;
@@ -126,6 +120,12 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setResult(data);
     setMeta((m) => ({ ...(m || {}), total_bonus: data.total_bonus, at_cap: data.at_cap, attempts_left: data.attempts_left }));
     setPhase('result');
+    // Avance determinista: mostrar el resultado su tiempo completo y luego seguir
+    clearTimeout(advanceRef.current);
+    const delay = data.is_correct ? 1600 : 2200; // mal → más tiempo para ver la correcta
+    advanceRef.current = setTimeout(() => {
+      setPhase((data.attempts_left ?? 0) > 0 ? 'choice' : 'nomore');
+    }, delay);
   }
 
   // Primero verifica el consentimiento de ética del día; si no lo dio, lo pide.
@@ -143,6 +143,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
 
   // Abre (reserva) una pregunta: queda registrada apenas se muestra (anti-F5)
   async function reserveAndScan() {
+    clearTimeout(advanceRef.current);
     const { data, error } = await supabase.rpc('open_andersen_trivia', { p_user: userId });
     if (error || !data || !data.has_question) {
       setMeta((m) => ({ ...(m || {}), attempts_left: data?.attempts_left ?? 0 }));
