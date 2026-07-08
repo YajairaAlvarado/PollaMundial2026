@@ -95,6 +95,14 @@ const LEGAL_SECTIONS = [
 
 const AVATAR_COLORS = ['bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600','bg-orange-600','bg-teal-600','bg-indigo-600','bg-pink-600'];
 const colorFor = (u) => AVATAR_COLORS[(u?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+
+// Resumen del pronóstico de campeón para el tooltip (hover): campeón, subcampeón y marcador de la final.
+const champSummary = (c) => {
+  const parts = [`Cree campeón: ${c.champion}`];
+  if (c.runner_up) parts.push(`Final vs ${c.runner_up}`);
+  if (c.champ_score != null && c.runner_score != null) parts.push(`${c.champ_score}–${c.runner_score}`);
+  return parts.join(' · ');
+};
 const fmtTime = (iso) => {
   if (!iso) return '';
   const TZ = 'America/Guayaquil';
@@ -502,35 +510,6 @@ export default function Prizes() {
                 </p>
               </div>
 
-              {/* Eliminados: pusieron un campeón que ya quedó fuera */}
-              {revealed && derived.eliminatedGroups.length > 0 && (
-                <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 12, padding: '10px 12px', marginBottom: 12 }}>
-                  <p style={{ color: '#f87171', fontSize: 11.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
-                    💀 Eliminados de este premio ({derived.eliminatedCount})
-                  </p>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, lineHeight: 1.4, marginBottom: 10 }}>
-                    Pusieron como campeón a un país que <b>ya quedó eliminado</b>, así que quedan fuera del premio.
-                  </p>
-                  {derived.eliminatedGroups.map((g) => (
-                    <div key={g.champion} style={{ marginBottom: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
-                        <span style={{ display: 'inline-flex', filter: 'grayscale(1)' }}><Flag code={g.code} size={20} /></span>
-                        <span style={{ color: '#fca5a5', fontWeight: 800, fontSize: 12, textDecoration: 'line-through' }}>{g.champion}</span>
-                        <span style={{ marginLeft: 'auto', background: 'rgba(248,113,113,0.18)', color: '#f87171', fontWeight: 900, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{g.people.length}</span>
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 27 }}>
-                        {g.people.map((c) => (
-                          <span key={c.user_id} title={c.u.display_name} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '3px 10px 3px 4px' }}>
-                            <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={22} colorClass={colorFor(c.u.username)} />
-                            <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, textDecoration: 'line-through' }}>{c.u.display_name}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               {/* Ya pronosticaron */}
               <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px' }}>
                 ✅ Ya pronosticaron ({derived.predicted.length})
@@ -631,6 +610,40 @@ export default function Prizes() {
                   </div>
                 ))
               )}
+
+              {/* Paneles resumen: con vida / eliminados (solo nombres · detalle al pasar el mouse) */}
+              {revealed && (() => {
+                const alive = derived.predicted.filter((c) => !c.out && !c.excluded);
+                const elim  = derived.predicted.filter((c) => c.out && !c.excluded);
+                const Chip = ({ c, dead }) => (
+                  <span title={champSummary(c)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'default', background: 'rgba(255,255,255,0.05)', border: `1px solid ${dead ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)'}`, borderRadius: 20, padding: '3px 10px 3px 4px' }}>
+                    <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={22} colorClass={colorFor(c.u.username)} />
+                    <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11, textDecoration: dead ? 'line-through' : 'none' }}>{c.u.display_name?.split(' ')[0]} {c.u.display_name?.split(' ')[1]?.[0] || ''}{c.u.display_name?.split(' ')[1] ? '.' : ''}</span>
+                  </span>
+                );
+                return (
+                  <>
+                    {/* Con vida */}
+                    <p style={{ color: '#34d399', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '14px 2px 4px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                      💚 Aún con vida ({alive.length})
+                    </p>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10.5, margin: '0 2px 6px' }}>Su campeón sigue en carrera · pasa el mouse para ver su pronóstico</p>
+                    {alive.length === 0
+                      ? <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '2px 2px' }}>Nadie</p>
+                      : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{alive.map((c) => <Chip key={c.user_id} c={c} />)}</div>}
+
+                    {/* Eliminados */}
+                    <p style={{ color: '#f87171', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '14px 2px 4px' }}>
+                      💀 Eliminados ({elim.length})
+                    </p>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10.5, margin: '0 2px 6px' }}>Su campeón ya quedó fuera · pasa el mouse para ver su pronóstico</p>
+                    {elim.length === 0
+                      ? <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '2px 2px' }}>Nadie</p>
+                      : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{elim.map((c) => <Chip key={c.user_id} c={c} dead />)}</div>}
+                  </>
+                );
+              })()}
 
               {/* No participaron / aún no pronostican */}
               {derived.notPredicted.length > 0 && (
