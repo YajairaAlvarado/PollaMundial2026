@@ -111,52 +111,81 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
 
   // ── UI ──────────────────────────────────────────────────────────────────────
   if (phase === 'prompt') {
+    const RED = '#B3001F';
     return (
       <div style={OVERLAY}>
-        <div style={{ width: 460, maxWidth: '94vw', borderRadius: 26, overflow: 'hidden', position: 'relative',
-          background: 'linear-gradient(160deg,#E4002B 0%,#b3001f 42%,#12183a 100%)',
-          border: '3px solid #FFD100', boxShadow: '0 0 70px rgba(255,209,0,0.45), 0 24px 70px rgba(0,0,0,0.75)' }}>
+        <div style={{ width: 480, maxWidth: '94vw', maxHeight: '92vh', overflowY: 'auto', borderRadius: 22, position: 'relative',
+          background: '#fbfbfb', boxShadow: '0 24px 70px rgba(0,0,0,0.6)', border: '1px solid rgba(0,0,0,0.06)' }}>
 
-          {/* Cinta superior */}
-          <div style={{ background: 'linear-gradient(90deg,#FFD100,#ffb700,#FFD100)', color: '#3a2200', textAlign: 'center',
-            fontWeight: 900, fontSize: 12.5, letterSpacing: '0.12em', padding: '6px 0' }}>
-            ⭐ ANDERSEN MUNDIALISTA · RETO EXPRÉS ⭐
+          {/* Cabecera roja */}
+          <div style={{ background: `linear-gradient(90deg,${RED},#8f0018)`, padding: '14px 0 12px', textAlign: 'center' }}>
+            <div style={{ color: 'white', fontWeight: 900, fontSize: 13, letterSpacing: '0.22em' }}>ANDERSEN</div>
+            <div style={{ height: 2, width: 60, background: '#fff', opacity: 0.85, margin: '5px auto 0', borderRadius: 2 }} />
           </div>
 
-          <div style={{ padding: '22px 24px 24px', textAlign: 'center', position: 'relative' }}>
-            {/* Monedas */}
-            <div style={{ fontSize: 52, lineHeight: 1, animation: 'trophyBounce 2s ease-in-out infinite' }}>🎁</div>
-            <div style={{ position: 'absolute', top: 18, left: 26, fontSize: 26, animation: 'trophyBounce 2.4s ease-in-out infinite' }}>🪙</div>
-            <div style={{ position: 'absolute', top: 24, right: 28, fontSize: 22, animation: 'trophyBounce 2.7s ease-in-out infinite' }}>✨</div>
-
-            <h2 style={{ color: '#FFD100', fontWeight: 900, fontSize: 30, lineHeight: 1, margin: '10px 0 2px', textShadow: '0 2px 10px rgba(0,0,0,0.4)' }}>
-              ¡GANA UN PUNTO!
+          <div style={{ padding: '18px 22px 22px', textAlign: 'center' }}>
+            <h2 style={{ color: '#1a1a1a', fontWeight: 900, fontStyle: 'italic', fontSize: 30, lineHeight: 1, letterSpacing: '0.01em' }}>
+              TRIVIA ANDERSEN
             </h2>
-            <p style={{ color: 'white', fontSize: 16, fontWeight: 800, lineHeight: 1.25 }}>
-              {willWin ? '¿Deseas ganar un punto adicional?' : '¡Sigue jugando por diversión!'}
+            <p style={{ color: RED, fontWeight: 900, fontStyle: 'italic', fontSize: 15, marginTop: 6, letterSpacing: '0.02em' }}>
+              ¿CUÁNTO SABES DE ANDERSEN?
             </p>
 
-            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13.5, lineHeight: 1.45, margin: '10px auto 0', maxWidth: 340 }}>
-              {willWin
-                ? <>Contesta <b style={{ color: '#FFD100' }}>1 pregunta</b> sobre Andersen y suma <b style={{ color: '#FFD100' }}>+1 punto</b> a tu marcador. ¡Cada punto te acerca a los premios! 🚀</>
-                : <>Ya llegaste al tope de <b style={{ color: '#FFD100' }}>20 puntos</b> extra. Puedes seguir contestando por diversión (vale 0). 😎</>}
+            <p style={{ color: '#444', fontSize: 13, lineHeight: 1.45, margin: '10px auto 0', maxWidth: 380 }}>
+              Pon a prueba tus conocimientos sobre <b>Andersen Global</b> y <b>Andersen Ecuador</b> y gana puntos adicionales para mejorar tu posición en el ranking del Pronóstico Mundialista.
             </p>
 
-            {/* Barra de tiempo del prompt */}
-            <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.18)', overflow: 'hidden', margin: '18px 0 6px' }}>
-              <div style={{ height: '100%', width: `${(timeLeft / 7) * 100}%`, background: '#FFD100', transition: 'width 1s linear' }} />
+            {/* Cómo participar + premio */}
+            <div style={{ display: 'flex', gap: 14, textAlign: 'left', margin: '16px 0 4px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 160px' }}>
+                <p style={{ color: RED, fontWeight: 900, fontSize: 13.5, marginBottom: 5 }}>👥 ¿Cómo participar?</p>
+                <ul style={{ color: '#333', fontSize: 12, lineHeight: 1.6, paddingLeft: 16, listStyle: 'disc', margin: 0 }}>
+                  <li>Ingresa a Andersen Mundialista</li>
+                  <li>Responde las <b>4 preguntas diarias</b></li>
+                </ul>
+              </div>
+              <div style={{ flex: '1 1 160px' }}>
+                <p style={{ color: RED, fontWeight: 900, fontSize: 13, marginBottom: 6, lineHeight: 1.2 }}>🏆 ¡Gana hasta 20 puntos adicionales!</p>
+                <div style={{ background: RED, color: 'white', fontWeight: 900, fontSize: 12.5, textAlign: 'center', padding: '8px 10px', borderRadius: 8 }}>
+                  📅 Fecha máxima: 17 de Julio
+                </div>
+              </div>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 700 }}>Se cierra en {timeLeft}s…</p>
 
-            <div style={{ display: 'flex', gap: 11, marginTop: 16 }}>
-              <button onClick={close} style={{ flex: 1, padding: '13px', borderRadius: 15, fontWeight: 800, fontSize: 13.5,
-                background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.25)', touchAction: 'manipulation' }}>
+            {/* Ánimo a los que van atrás */}
+            <div style={{ borderTop: '1px solid #e6e6e6', margin: '14px 0 10px', paddingTop: 12 }}>
+              <p style={{ color: RED, fontWeight: 900, fontStyle: 'italic', fontSize: 13.5, marginBottom: 4 }}>
+                ¡AÚN ESTÁS A TIEMPO DE ESCALAR POSICIONES!
+              </p>
+              <p style={{ color: '#555', fontSize: 12, lineHeight: 1.45 }}>
+                {willWin
+                  ? 'Si no estás en los primeros lugares, responde correctamente y gana puntos adicionales para mejorar tu posición.'
+                  : 'Ya llegaste al tope de 20 puntos adicionales. Puedes seguir jugando por diversión (vale 0). 😎'}
+              </p>
+            </div>
+
+            {/* Recuerda */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0f0f0', borderRadius: 10, padding: '9px 12px', textAlign: 'left' }}>
+              <span style={{ fontSize: 16 }}>⭐</span>
+              <p style={{ color: '#555', fontSize: 11, lineHeight: 1.35 }}>
+                <b style={{ color: '#333' }}>Recuerda:</b> el puntaje acumulado por actividades adicionales no podrá superar los <b>20 puntos</b>{typeof meta?.total_bonus === 'number' ? ` (llevas ${meta.total_bonus}/20)` : ''}.
+              </p>
+            </div>
+
+            {/* Tiempo */}
+            <div style={{ height: 6, borderRadius: 3, background: '#e6e6e6', overflow: 'hidden', margin: '16px 0 6px' }}>
+              <div style={{ height: '100%', width: `${(timeLeft / 7) * 100}%`, background: RED, transition: 'width 1s linear' }} />
+            </div>
+            <p style={{ color: '#999', fontSize: 11, fontWeight: 700 }}>Se cierra en {timeLeft}s…</p>
+
+            <div style={{ display: 'flex', gap: 11, marginTop: 14 }}>
+              <button onClick={close} style={{ flex: 1, padding: '13px', borderRadius: 13, fontWeight: 800, fontSize: 13.5,
+                background: '#efefef', color: '#666', border: '1px solid #ddd', touchAction: 'manipulation' }}>
                 Ahora no
               </button>
-              <button onClick={() => setPhase('q')} style={{ flex: 1.6, padding: '13px', borderRadius: 15, fontWeight: 900, fontSize: 16,
-                background: 'linear-gradient(90deg,#FFD100,#ffb200)', color: '#3a2200', border: 'none',
-                boxShadow: '0 6px 20px rgba(255,209,0,0.5)', touchAction: 'manipulation' }}>
-                ¡SÍ, JUGAR! 🎯
+              <button onClick={() => setPhase('q')} style={{ flex: 1.6, padding: '13px', borderRadius: 13, fontWeight: 900, fontSize: 15.5,
+                background: RED, color: 'white', border: 'none', boxShadow: '0 6px 18px rgba(179,0,31,0.4)', touchAction: 'manipulation' }}>
+                ¡JUGAR AHORA! 🎯
               </button>
             </div>
           </div>
