@@ -74,6 +74,21 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, q]);
 
+  // ── Anti-IA: si sale de la ventana / cambia de pestaña con la pregunta
+  //    abierta, se marca como INCORRECTA automáticamente ────────────────────────
+  useEffect(() => {
+    if (phase !== 'q') return;
+    const leave = () => { if (!answeredRef.current) submit(-1); };
+    const onVis = () => { if (document.hidden) leave(); };
+    window.addEventListener('blur', leave);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('blur', leave);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, q]);
+
   // ── Tras el resultado: mostrar y pasar a "¿otra?" ──────────────────────────
   useEffect(() => {
     if (phase !== 'result' || !result) return;
@@ -226,6 +241,9 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
           </div>
           <p style={{ textAlign: 'right', color: timeLeft <= 2 ? '#f87171' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 800, marginBottom: 10 }}>{timeLeft}s</p>
 
+          <p style={{ color: 'rgba(248,113,113,0.85)', fontSize: 10, fontWeight: 700, marginBottom: 8 }}>
+            🚫 No salgas de la ventana ni cambies de pestaña · se detecta el uso de IA y contaría como incorrecta.
+          </p>
           <p style={{ color: 'white', fontSize: 15, fontWeight: 800, lineHeight: 1.3, marginBottom: 14 }}>{q.question}</p>
 
           <div style={{ display: 'grid', gap: 8 }}>
