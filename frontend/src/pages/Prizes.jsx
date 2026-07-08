@@ -338,7 +338,20 @@ export default function Prizes() {
     // En "No participaron" no mostramos ni contamos a los DT (socios) que no jugaron
     const notPredicted = users.filter((u) => !predByUser[u.id] && !isDT(u.username));
 
-    return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated, top3Names };
+    // Eliminados: pusieron como campeón a un país que YA quedó eliminado (y no son top3).
+    // Agrupados por el campeón que eligieron.
+    const elimMap = {};
+    for (const c of predicted) {
+      if (c.out && !c.excluded) {
+        (elimMap[c.champion] ||= { champion: c.champion, code: c.champion_code, people: [] }).people.push(c);
+      }
+    }
+    const eliminatedGroups = Object.values(elimMap)
+      .map((g) => ({ ...g, people: g.people.slice().sort((a, b) => (a.u.display_name || '').localeCompare(b.u.display_name || '')) }))
+      .sort((a, b) => b.people.length - a.people.length || a.champion.localeCompare(b.champion));
+    const eliminatedCount = eliminatedGroups.reduce((n, g) => n + g.people.length, 0);
+
+    return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated, top3Names, eliminatedGroups, eliminatedCount };
   }, [data]);
 
   // Pronósticos de campeón agrupados: campeón → subcampeón → personas (con buscador)
@@ -349,7 +362,7 @@ export default function Prizes() {
     const byName = (a, b) => (a.u.display_name || '').localeCompare(b.u.display_name || '');
     const map = {};
     for (const c of pred) {
-      const g = (map[c.champion] ||= { champion: c.champion, code: c.champion_code, runners: {}, count: 0 });
+      const g = (map[c.champion] ||= { champion: c.champion, code: c.champion_code, elim: derived.eliminated.has(c.champion), runners: {}, count: 0 });
       g.count += 1;
       const r = (g.runners[c.runner_up] ||= { runner: c.runner_up, code: c.runner_up_code, scores: {}, count: 0 });
       r.count += 1;
@@ -489,6 +502,35 @@ export default function Prizes() {
                 </p>
               </div>
 
+              {/* Eliminados: pusieron un campeón que ya quedó fuera */}
+              {revealed && derived.eliminatedGroups.length > 0 && (
+                <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 12, padding: '10px 12px', marginBottom: 12 }}>
+                  <p style={{ color: '#f87171', fontSize: 11.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
+                    💀 Eliminados de este premio ({derived.eliminatedCount})
+                  </p>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, lineHeight: 1.4, marginBottom: 10 }}>
+                    Pusieron como campeón a un país que <b>ya quedó eliminado</b>, así que quedan fuera del premio.
+                  </p>
+                  {derived.eliminatedGroups.map((g) => (
+                    <div key={g.champion} style={{ marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+                        <span style={{ display: 'inline-flex', filter: 'grayscale(1)' }}><Flag code={g.code} size={20} /></span>
+                        <span style={{ color: '#fca5a5', fontWeight: 800, fontSize: 12, textDecoration: 'line-through' }}>{g.champion}</span>
+                        <span style={{ marginLeft: 'auto', background: 'rgba(248,113,113,0.18)', color: '#f87171', fontWeight: 900, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{g.people.length}</span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 27 }}>
+                        {g.people.map((c) => (
+                          <span key={c.user_id} title={c.u.display_name} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '3px 10px 3px 4px' }}>
+                            <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={22} colorClass={colorFor(c.u.username)} />
+                            <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, textDecoration: 'line-through' }}>{c.u.display_name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Ya pronosticaron */}
               <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px' }}>
                 ✅ Ya pronosticaron ({derived.predicted.length})
@@ -512,13 +554,14 @@ export default function Prizes() {
                     <div key={g.champion} style={{ marginBottom: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, overflow: 'hidden' }}>
                       {/* Acordeón nivel 1: campeón */}
                       <button onClick={() => toggleChamp(g.champion)}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'rgba(245,158,11,0.12)', textAlign: 'left', touchAction: 'manipulation' }}>
-                        <span style={{ color: '#F59E0B', fontSize: 12, width: 12 }}>{cOpen ? '▾' : '▸'}</span>
-                        <Flag code={g.code} size={26} />
-                        <span style={{ color: 'white', fontWeight: 800, fontSize: 13, lineHeight: 1.2 }}>
-                          Creen que <span style={{ color: '#FCD34D', fontWeight: 900 }}>{g.champion}</span> será campeón
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: g.elim ? 'rgba(248,113,113,0.12)' : 'rgba(245,158,11,0.12)', textAlign: 'left', touchAction: 'manipulation', opacity: g.elim ? 0.75 : 1 }}>
+                        <span style={{ color: g.elim ? '#f87171' : '#F59E0B', fontSize: 12, width: 12 }}>{cOpen ? '▾' : '▸'}</span>
+                        <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0, filter: g.elim ? 'grayscale(1)' : 'none' }}><Flag code={g.code} size={26} /></span>
+                        <span style={{ color: 'white', fontWeight: 800, fontSize: 13, lineHeight: 1.2, textDecoration: g.elim ? 'line-through' : 'none' }}>
+                          Creen que <span style={{ color: g.elim ? '#fca5a5' : '#FCD34D', fontWeight: 900 }}>{g.champion}</span> será campeón
                         </span>
-                        <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(245,158,11,0.2)', color: '#FCD34D', fontWeight: 900, fontSize: 12, padding: '2px 9px', borderRadius: 20 }}>{g.count}</span>
+                        {g.elim && <span style={{ flexShrink: 0, background: 'rgba(248,113,113,0.2)', color: '#f87171', fontWeight: 900, fontSize: 9.5, padding: '2px 7px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.03em' }}>❌ Eliminado</span>}
+                        <span style={{ marginLeft: g.elim ? 6 : 'auto', flexShrink: 0, background: g.elim ? 'rgba(248,113,113,0.18)' : 'rgba(245,158,11,0.2)', color: g.elim ? '#fca5a5' : '#FCD34D', fontWeight: 900, fontSize: 12, padding: '2px 9px', borderRadius: 20 }}>{g.count}</span>
                       </button>
 
                       {cOpen && g.runnersArr.map((r) => {

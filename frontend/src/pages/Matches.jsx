@@ -9,6 +9,7 @@ import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toZonedTime } from 'date-fns-tz';
 import canchaBg from '../assets/andersen-cancha.jpg';
+import { isRealTeam } from '../utils/aliveTeams';
 
 const AVATAR_COLORS = [
   'bg-purple-600','bg-blue-600','bg-emerald-600','bg-rose-600',
@@ -233,6 +234,9 @@ export default function Matches() {
       };
 
       let allMatches = matchRes.data;
+      // Ocultar partidos con equipos aún por definir (semifinales/final/3er puesto
+      // con "Ganador CF…"): no deben aparecer para pronosticar hasta que se sepan.
+      allMatches = allMatches.filter((m) => isRealTeam(m.home_team) && isRealTeam(m.away_team));
       if (filter === 'live')      allMatches = allMatches.filter((m) => isMatchLive(m));
       if (filter === 'finished')  allMatches = allMatches.filter((m) => m.status === 'finished');
       if (filter === 'scheduled') allMatches = allMatches.filter((m) => m.status === 'scheduled' && !isMatchLive(m));
