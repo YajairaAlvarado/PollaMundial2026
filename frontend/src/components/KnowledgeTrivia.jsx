@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../utils/supabase';
+import detective from '../assets/detective.png';
 
 // Campaña "Gana puntos sobre Andersen":
 // - Arranca el 9-jul-2026 (00:00 Ecuador) para todos.
@@ -56,6 +57,13 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     const iv = setInterval(() => setTimeLeft((t) => (t > 0 ? t - 1 : 0)), 1000);
     const to = setTimeout(() => setPhase(null), 20000); // no responde → se cierra
     return () => { clearInterval(iv); clearTimeout(to); };
+  }, [phase]);
+
+  // ── "Scanner" de 2s antes de cada pregunta (detective 🕵️) ───────────────────
+  useEffect(() => {
+    if (phase !== 'scan') return;
+    const to = setTimeout(() => setPhase('q'), 2000);
+    return () => clearTimeout(to);
   }, [phase]);
 
   // ── Cronómetro de la pregunta ──────────────────────────────────────────────
@@ -125,7 +133,7 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setMeta({ attempts_left: data.attempts_left, total_bonus: data.total_bonus, at_cap: data.at_cap });
     setQ(data.question);
     setResult(null);
-    setPhase('q');
+    setPhase('scan');
   }
 
   const close = () => { setPhase(null); setResult(null); };
@@ -196,8 +204,16 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
               </p>
             </div>
 
+            {/* Intentos restantes hoy (grande) */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#fff4f5', border: `2px solid ${RED}`, borderRadius: 12, padding: '10px 14px', margin: '14px 0 4px' }}>
+              <span style={{ fontSize: 32, fontWeight: 900, color: RED, lineHeight: 1 }}>{meta?.attempts_left ?? 0}</span>
+              <span style={{ textAlign: 'left', color: '#333', fontSize: 12.5, fontWeight: 800, lineHeight: 1.15 }}>
+                pregunta{(meta?.attempts_left ?? 0) === 1 ? '' : 's'}<br />te quedan hoy
+              </span>
+            </div>
+
             {/* Tiempo */}
-            <div style={{ height: 6, borderRadius: 3, background: '#e6e6e6', overflow: 'hidden', margin: '16px 0 6px' }}>
+            <div style={{ height: 6, borderRadius: 3, background: '#e6e6e6', overflow: 'hidden', margin: '12px 0 6px' }}>
               <div style={{ height: '100%', width: `${(timeLeft / 20) * 100}%`, background: RED, transition: 'width 1s linear' }} />
             </div>
             <p style={{ color: '#999', fontSize: 11, fontWeight: 700 }}>Se cierra en {timeLeft}s…</p>
@@ -213,6 +229,27 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'scan') {
+    return (
+      <div style={OVERLAY}>
+        <div style={{ ...CARD, textAlign: 'center', border: '2px solid rgba(179,0,31,0.6)' }}>
+          <div style={{ position: 'relative', width: 150, height: 150, margin: '4px auto 6px' }}>
+            <img src={detective} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', animation: 'trophyBounce 1.6s ease-in-out infinite', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))' }} />
+            {/* Línea de escaneo */}
+            <div style={{ position: 'absolute', left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,transparent,#ff3b3b,transparent)', boxShadow: '0 0 10px #ff3b3b', animation: 'triviaScan 1.4s linear infinite' }} />
+          </div>
+          <p style={{ color: '#ff5566', fontWeight: 900, fontSize: 15, letterSpacing: '0.02em' }}>🔍 MODO VIGILANCIA</p>
+          <p style={{ color: 'white', fontSize: 13.5, fontWeight: 700, marginTop: 6 }}>
+            Monitoreando pestañas abiertas y cámara<span style={{ animation: 'triviaBlink 1s steps(1) infinite' }}>…</span>
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
+            Nada de IA 😏 Prepárate… tu pregunta está por aparecer.
+          </p>
         </div>
       </div>
     );

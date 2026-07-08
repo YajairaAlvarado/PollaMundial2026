@@ -427,6 +427,17 @@ body.nudge-shaking {
   50%      { transform: translateY(-8px) rotate(3deg); }
 }
 
+@keyframes triviaScan {
+  0%   { top: 6%;  opacity: 0.2; }
+  50%  { opacity: 1; }
+  100% { top: 92%; opacity: 0.2; }
+}
+
+@keyframes triviaBlink {
+  0%, 50%  { opacity: 1; }
+  51%,100% { opacity: 0; }
+}
+
 @keyframes planeFloat {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
   50%      { transform: translate(3px, -4px) rotate(-6deg); }
