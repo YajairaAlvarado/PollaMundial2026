@@ -55,8 +55,8 @@ export default function Navbar({ unread = 0, onBellOpen }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
 
-          {/* ── Logo ── */}
-          <Link to="/dashboard" className="flex items-center group min-w-0">
+          {/* ── Logo (tooltip con la versión) ── */}
+          <Link to="/dashboard" className="flex items-center group min-w-0" title={`Andersen Mundialista · v ${currentVersionLabel}`}>
             <div className="flex flex-col items-start leading-none">
               <img src={andersenLogo} alt="Andersen" className="h-7 w-auto" />
               <img src={mundialistaLogo} alt="Mundialista" className="h-5 w-auto" style={{ marginTop: '-2px' }} />
@@ -65,12 +65,6 @@ export default function Navbar({ unread = 0, onBellOpen }) {
 
           {/* ── Desktop nav ── */}
           <div className="hidden md:flex items-center gap-0">
-            {/* Versión */}
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded mr-2 select-none"
-              style={{ color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-              title="Versión de la app">
-              v {currentVersionLabel}
-            </span>
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -141,6 +135,12 @@ export default function Navbar({ unread = 0, onBellOpen }) {
                       <LogOut size={14} />
                       Cerrar Sesión
                     </button>
+                  </div>
+                  {/* Versión de la app */}
+                  <div className="px-4 py-2 select-none" style={{ borderTop: '1px solid rgba(228,0,43,0.12)' }}>
+                    <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.32)' }}>
+                      v {currentVersionLabel}
+                    </span>
                   </div>
                 </div>
               )}

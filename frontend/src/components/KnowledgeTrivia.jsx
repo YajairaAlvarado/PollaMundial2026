@@ -174,86 +174,66 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   // ── UI ──────────────────────────────────────────────────────────────────────
   if (phase === 'prompt') {
     const RED = '#B3001F';
+    const chips = [['🎯', '4 al día'], ['⭐', '+1 c/u'], ['🏆', 'hasta 20'], ['📅', '17 Jul']];
     return (
       <div style={OVERLAY}>
-        <div style={{ width: 480, maxWidth: '94vw', maxHeight: '92vh', overflowY: 'auto', borderRadius: 22, position: 'relative',
+        <div style={{ width: 420, maxWidth: '94vw', maxHeight: '94vh', overflowY: 'auto', borderRadius: 20, position: 'relative',
           background: '#fbfbfb', boxShadow: '0 24px 70px rgba(0,0,0,0.6)', border: '1px solid rgba(0,0,0,0.06)' }}>
 
           {/* Cabecera roja */}
-          <div style={{ background: `linear-gradient(90deg,${RED},#8f0018)`, padding: '14px 0 12px', textAlign: 'center' }}>
-            <div style={{ color: 'white', fontWeight: 900, fontSize: 13, letterSpacing: '0.22em' }}>ANDERSEN</div>
-            <div style={{ height: 2, width: 60, background: '#fff', opacity: 0.85, margin: '5px auto 0', borderRadius: 2 }} />
+          <div style={{ background: `linear-gradient(90deg,${RED},#8f0018)`, padding: '10px 0 8px', textAlign: 'center' }}>
+            <div style={{ color: 'white', fontWeight: 900, fontSize: 12, letterSpacing: '0.22em' }}>ANDERSEN</div>
+            <div style={{ height: 2, width: 50, background: '#fff', opacity: 0.85, margin: '4px auto 0', borderRadius: 2 }} />
           </div>
 
-          <div style={{ padding: '18px 22px 22px', textAlign: 'center' }}>
-            <h2 style={{ color: '#1a1a1a', fontWeight: 900, fontStyle: 'italic', fontSize: 30, lineHeight: 1, letterSpacing: '0.01em' }}>
+          <div style={{ padding: '14px 20px 18px', textAlign: 'center' }}>
+            <h2 style={{ color: '#1a1a1a', fontWeight: 900, fontStyle: 'italic', fontSize: 25, lineHeight: 1, letterSpacing: '0.01em' }}>
               TRIVIA ANDERSEN
             </h2>
-            <p style={{ color: RED, fontWeight: 900, fontStyle: 'italic', fontSize: 15, marginTop: 6, letterSpacing: '0.02em' }}>
+            <p style={{ color: RED, fontWeight: 900, fontStyle: 'italic', fontSize: 13, marginTop: 4, letterSpacing: '0.02em' }}>
               ¿CUÁNTO SABES DE ANDERSEN?
             </p>
 
-            <p style={{ color: '#444', fontSize: 13, lineHeight: 1.45, margin: '10px auto 0', maxWidth: 380 }}>
-              Pon a prueba tus conocimientos sobre <b>Andersen Global</b> y <b>Andersen Ecuador</b> y gana puntos adicionales para mejorar tu posición en el ranking del Pronóstico Mundialista.
+            <p style={{ color: '#555', fontSize: 12.5, lineHeight: 1.4, margin: '8px auto 0', maxWidth: 360 }}>
+              Responde preguntas sobre <b>Andersen Global</b> y <b>Andersen Ecuador</b> y gana puntos para escalar en el ranking.
             </p>
 
-            {/* Cómo participar + premio */}
-            <div style={{ display: 'flex', gap: 14, textAlign: 'left', margin: '16px 0 4px', flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 160px' }}>
-                <p style={{ color: RED, fontWeight: 900, fontSize: 13.5, marginBottom: 5 }}>👥 ¿Cómo participar?</p>
-                <ul style={{ color: '#333', fontSize: 12, lineHeight: 1.6, paddingLeft: 16, listStyle: 'disc', margin: 0 }}>
-                  <li>Ingresa a Andersen Mundialista</li>
-                  <li>Responde las <b>4 preguntas diarias</b>, cada pregunta vale un punto.</li>
-                </ul>
-              </div>
-              <div style={{ flex: '1 1 160px' }}>
-                <p style={{ color: RED, fontWeight: 900, fontSize: 13, marginBottom: 6, lineHeight: 1.2 }}>🏆 ¡Gana hasta 20 puntos adicionales!</p>
-                <div style={{ background: RED, color: 'white', fontWeight: 900, fontSize: 12.5, textAlign: 'center', padding: '8px 10px', borderRadius: 8 }}>
-                  📅 Fecha máxima: 17 de Julio
-                </div>
-              </div>
-            </div>
-
-            {/* Ánimo a los que van atrás */}
-            <div style={{ borderTop: '1px solid #e6e6e6', margin: '14px 0 10px', paddingTop: 12 }}>
-              <p style={{ color: RED, fontWeight: 900, fontStyle: 'italic', fontSize: 13.5, marginBottom: 4 }}>
-                ¡AÚN ESTÁS A TIEMPO DE ESCALAR POSICIONES!
-              </p>
-              <p style={{ color: '#555', fontSize: 12, lineHeight: 1.45 }}>
-                {willWin
-                  ? 'Participa en la Trivia Andersen, responde correctamente las preguntas y gana puntos adicionales para mejorar tu posición.'
-                  : 'Ya llegaste al tope de 20 puntos adicionales. Puedes seguir jugando por diversión (vale 0). 😎'}
-              </p>
-            </div>
-
-            {/* Recuerda */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0f0f0', borderRadius: 10, padding: '9px 12px', textAlign: 'left' }}>
-              <span style={{ fontSize: 16 }}>⭐</span>
-              <p style={{ color: '#555', fontSize: 11, lineHeight: 1.35 }}>
-                <b style={{ color: '#333' }}>Recuerda:</b> el puntaje acumulado por actividades adicionales no podrá superar los <b>20 puntos</b>{typeof meta?.total_bonus === 'number' ? ` (llevas ${meta.total_bonus}/20)` : ''}.
-              </p>
+            {/* Chips compactos: reglas del juego de un vistazo */}
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap', margin: '12px 0 0' }}>
+              {chips.map(([e, t]) => (
+                <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#fff', border: `1px solid ${RED}33`,
+                  color: '#333', fontSize: 11.5, fontWeight: 800, padding: '5px 10px', borderRadius: 20 }}>
+                  <span>{e}</span>{t}
+                </span>
+              ))}
             </div>
 
             {/* Intentos restantes hoy (grande) */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#fff4f5', border: `2px solid ${RED}`, borderRadius: 12, padding: '10px 14px', margin: '14px 0 4px' }}>
-              <span style={{ fontSize: 32, fontWeight: 900, color: RED, lineHeight: 1 }}>{meta?.attempts_left ?? 0}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#fff4f5', border: `2px solid ${RED}`, borderRadius: 12, padding: '9px 14px', margin: '14px 0 0' }}>
+              <span style={{ fontSize: 30, fontWeight: 900, color: RED, lineHeight: 1 }}>{meta?.attempts_left ?? 0}</span>
               <span style={{ textAlign: 'left', color: '#333', fontSize: 12.5, fontWeight: 800, lineHeight: 1.15 }}>
                 pregunta{(meta?.attempts_left ?? 0) === 1 ? '' : 's'}<br />te quedan hoy
               </span>
             </div>
 
+            <p style={{ color: '#888', fontSize: 11, lineHeight: 1.35, margin: '8px 0 0' }}>
+              {willWin
+                ? <>Tope de <b>20 puntos</b> por actividades adicionales{typeof meta?.total_bonus === 'number' ? ` · llevas ${meta.total_bonus}/20` : ''}.</>
+                : <>Ya llegaste al tope de <b>20 puntos</b>. Puedes seguir por diversión (vale 0). 😎</>}
+            </p>
+
             {/* Tiempo */}
-            <div style={{ height: 6, borderRadius: 3, background: '#e6e6e6', overflow: 'hidden', margin: '12px 0 6px' }}>
+            <div style={{ height: 5, borderRadius: 3, background: '#e6e6e6', overflow: 'hidden', margin: '12px 0 5px' }}>
               <div style={{ height: '100%', width: `${(timeLeft / 20) * 100}%`, background: RED, transition: 'width 1s linear' }} />
             </div>
-            <p style={{ color: '#999', fontSize: 11, fontWeight: 700 }}>Se cierra en {timeLeft}s…</p>
+            <p style={{ color: '#999', fontSize: 10.5, fontWeight: 700 }}>Se cierra en {timeLeft}s…</p>
 
-            <div style={{ display: 'flex', gap: 11, marginTop: 14 }}>
-              <button onClick={close} style={{ flex: 1, padding: '13px', borderRadius: 13, fontWeight: 800, fontSize: 13.5,
+            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+              <button onClick={close} style={{ flex: 1, padding: '12px', borderRadius: 13, fontWeight: 800, fontSize: 13,
                 background: '#efefef', color: '#666', border: '1px solid #ddd', touchAction: 'manipulation' }}>
                 Ahora no
               </button>
-              <button onClick={openQuestion} style={{ flex: 1.6, padding: '13px', borderRadius: 13, fontWeight: 900, fontSize: 15.5,
+              <button onClick={openQuestion} style={{ flex: 1.6, padding: '12px', borderRadius: 13, fontWeight: 900, fontSize: 15,
                 background: RED, color: 'white', border: 'none', boxShadow: '0 6px 18px rgba(179,0,31,0.4)', touchAction: 'manipulation' }}>
                 ¡JUGAR AHORA! 🎯
               </button>
