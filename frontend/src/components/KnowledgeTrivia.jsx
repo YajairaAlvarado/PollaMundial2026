@@ -108,11 +108,15 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     setSelected(idx);
     const maxMs = (q.seconds || 0) * 1000;
     const ms = idx === -1 ? maxMs : Math.min(maxMs || 999999, Date.now() - qStartRef.current);
-    const { data, error } = await supabase.rpc('submit_andersen_trivia',
-      { p_user: userId, p_question: q.id, p_selected: idx, p_ms: ms });
+    const args = { p_user: userId, p_question: q.id, p_selected: idx, p_ms: ms };
+    let { data, error } = await supabase.rpc('submit_andersen_trivia', args);
     if (error || !data || data.error) {
-      // No cerrar en blanco: reintentar el flujo con "¿otra pregunta?"
-      console.error('submit trivia error:', error || data?.error);
+      // Reintentar una vez (la función es idempotente: si ya se grabó, devuelve el resultado)
+      console.error('submit trivia error (reintentando):', error || data?.error);
+      ({ data, error } = await supabase.rpc('submit_andersen_trivia', args));
+    }
+    if (error || !data || data.error) {
+      console.error('submit trivia error definitivo:', error || data?.error);
       answeredRef.current = false;
       setPhase('choice');
       return;
