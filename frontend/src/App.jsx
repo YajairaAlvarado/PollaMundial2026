@@ -30,7 +30,7 @@ import Album from './pages/Album';
 import Prizes from './pages/Prizes';
 import ChampionPredictionModal from './components/ChampionPredictionModal';
 import KnowledgeRanking from './pages/KnowledgeRanking';
-import KnowledgeTrivia from './components/KnowledgeTrivia';
+import KnowledgeTrivia, { canSeeKnowledge } from './components/KnowledgeTrivia';
 import { useChampionPrediction } from './hooks/useChampionPrediction';
 import { CHAMPION_CLOSED } from './utils/aliveTeams';
 
@@ -163,7 +163,7 @@ function AppRoutes() {
         <Route path="/vs" element={<Vs />} />
         <Route path="/album" element={<Album />} />
         <Route path="/prizes" element={<Prizes />} />
-        <Route path="/knowledge" element={<KnowledgeRanking />} />
+        <Route path="/knowledge" element={canSeeKnowledge(user?.username) ? <KnowledgeRanking /> : <Navigate to="/dashboard" replace />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
       </Route>

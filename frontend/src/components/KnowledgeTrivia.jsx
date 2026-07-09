@@ -4,12 +4,12 @@ import detective from '../assets/detective.png';
 import detectiveAlert from '../assets/detective-alert.png';
 
 // Campaña "Gana puntos sobre Andersen":
-// - Arranca el 9-jul-2026 (00:00 Ecuador) para todos.
-// - daniel.leon la ve desde antes (preview).
-const START = new Date('2026-07-09T05:00:00Z');
-const PREVIEW = ['daniel.leon', 'yajaira.alvarado', 'kleber.padilla'];
-const canSee = (username) =>
-  Date.now() >= START.getTime() || PREVIEW.includes((username || '').toLowerCase());
+// - Por ahora SOLO usuarios de prueba. Para abrir a todos: KNOWLEDGE_OPEN = true.
+export const KNOWLEDGE_OPEN = false;
+export const KNOWLEDGE_BETA = ['daniel.leon', 'yajaira.alvarado', 'kleber.padilla'];
+export const canSeeKnowledge = (username) =>
+  KNOWLEDGE_OPEN || KNOWLEDGE_BETA.includes((username || '').toLowerCase());
+const canSee = canSeeKnowledge;
 
 const OVERLAY = {
   position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(5,2,20,0.86)',
