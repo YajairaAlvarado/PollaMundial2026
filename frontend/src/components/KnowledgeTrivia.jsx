@@ -29,6 +29,8 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   const [selected, setSelected] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [consentChecked, setConsentChecked] = useState(false);
+  const [errMsg, setErrMsg] = useState('');
+  const lastIdxRef = useRef(null);
   const startedRef = useRef(false);
   const answeredRef = useRef(false);
   const qStartRef = useRef(0);
@@ -105,20 +107,27 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
   async function submit(idx) {
     if (answeredRef.current) return;
     answeredRef.current = true;
+    lastIdxRef.current = idx;
     setSelected(idx);
-    const maxMs = (q.seconds || 0) * 1000;
+    const maxMs = (q?.seconds || 0) * 1000;
     const ms = idx === -1 ? maxMs : Math.min(maxMs || 999999, Date.now() - qStartRef.current);
     const args = { p_user: userId, p_question: q.id, p_selected: idx, p_ms: ms };
-    let { data, error } = await supabase.rpc('submit_andersen_trivia', args);
-    if (error || !data || data.error) {
-      // Reintentar una vez (la función es idempotente: si ya se grabó, devuelve el resultado)
-      console.error('submit trivia error (reintentando):', error || data?.error);
+    let data, error;
+    try {
       ({ data, error } = await supabase.rpc('submit_andersen_trivia', args));
+      if (error || !data || data.error) {
+        // Reintentar una vez (la función es idempotente: si ya se grabó, devuelve el resultado)
+        ({ data, error } = await supabase.rpc('submit_andersen_trivia', args));
+      }
+    } catch (e) {
+      error = { message: String(e?.message || e) };
     }
     if (error || !data || data.error) {
-      console.error('submit trivia error definitivo:', error || data?.error);
-      answeredRef.current = false;
-      setPhase('choice');
+      // Mostrar el error en pantalla (no perder el flujo) y permitir reintentar
+      const msg = error?.message || data?.error || 'sin respuesta del servidor';
+      console.error('submit trivia error definitivo:', msg);
+      setErrMsg(msg);
+      setPhase('error');
       return;
     }
     setResult(data);
@@ -418,6 +427,29 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
               <button onClick={close} style={{ ...btn('gold'), marginTop: 10, width: '100%' }}>Entendido</button>
             </>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'error') {
+    return (
+      <div style={OVERLAY}>
+        <div style={{ ...CARD, textAlign: 'center', border: '2px solid rgba(251,191,36,0.5)' }}>
+          <p style={{ fontSize: 38 }}>📡</p>
+          <p style={{ color: '#fbbf24', fontWeight: 900, fontSize: 16 }}>No se pudo grabar tu respuesta</p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8, lineHeight: 1.4 }}>
+            Tu respuesta quedó seleccionada, solo falta confirmarla. Toca <b>Reintentar</b>.
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 8, wordBreak: 'break-word' }}>
+            Detalle técnico: {errMsg}
+          </p>
+          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            <button onClick={close} style={btn('ghost')}>Salir</button>
+            <button onClick={() => { answeredRef.current = false; submit(lastIdxRef.current ?? -1); }} style={btn('gold')}>
+              Reintentar 🔄
+            </button>
+          </div>
         </div>
       </div>
     );
