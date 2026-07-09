@@ -119,13 +119,9 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     }
     setResult(data);
     setMeta((m) => ({ ...(m || {}), total_bonus: data.total_bonus, at_cap: data.at_cap, attempts_left: data.attempts_left }));
+    // SIN temporizadores: el resultado se queda en pantalla con sus botones
+    // (así nunca se lo salta, sin importar cuántas preguntas seguidas juegue)
     setPhase('result');
-    // Avance determinista: mostrar el resultado su tiempo completo y luego seguir
-    clearTimeout(advanceRef.current);
-    const delay = data.is_correct ? 1600 : 2200; // mal → más tiempo para ver la correcta
-    advanceRef.current = setTimeout(() => {
-      setPhase((data.attempts_left ?? 0) > 0 ? 'choice' : 'nomore');
-    }, delay);
   }
 
   // Primero verifica el consentimiento de ética del día; si no lo dio, lo pide.
@@ -378,8 +374,9 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
     );
   }
 
-  if (phase === 'result' && result && q) {
+  if (phase === 'result' && result) {
     const ok = result.is_correct;
+    const left = result.attempts_left ?? meta?.attempts_left ?? 0;
     return (
       <div style={OVERLAY}>
         <div style={{ ...CARD, border: `2px solid ${ok ? 'rgba(52,211,153,0.5)' : 'rgba(248,113,113,0.5)'}` }}>
@@ -394,9 +391,29 @@ export default function KnowledgeTrivia({ userId, username, enabled = true }) {
             : <div style={{ marginTop: 8, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: 10, padding: '9px 12px' }}>
                 <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 700, marginBottom: 3 }}>Respuesta correcta:</p>
                 <p style={{ color: '#6ee7b7', fontSize: 13.5, fontWeight: 800 }}>
-                  <b style={{ marginRight: 6 }}>{'ABCD'[result.correct_index]}</b>{q.options[result.correct_index]}
+                  <b style={{ marginRight: 6 }}>{'ABCD'[result.correct_index]}</b>{q?.options?.[result.correct_index] ?? ''}
                 </p>
               </div>}
+
+          {/* Botones en la misma tarjeta (sin auto-avance) */}
+          {left > 0 ? (
+            <>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', marginTop: 14 }}>
+                Te quedan <b style={{ color: '#FFD100' }}>{left}</b> pregunta{left === 1 ? '' : 's'} hoy. ¿Otra?
+              </p>
+              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                <button onClick={close} style={btn('ghost')}>No, salir</button>
+                <button onClick={openQuestion} style={btn('gold')}>¡Sí, otra! 🎯</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', marginTop: 14 }}>
+                Ya usaste tus preguntas del día. <b>Vuelve mañana</b> 🧠
+              </p>
+              <button onClick={close} style={{ ...btn('gold'), marginTop: 10, width: '100%' }}>Entendido</button>
+            </>
+          )}
         </div>
       </div>
     );
