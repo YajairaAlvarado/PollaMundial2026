@@ -36,8 +36,8 @@ export default function KnowledgeRanking() {
 
   return (
     <div style={{ minHeight: 'calc(100vh - 3.5rem)', background: 'radial-gradient(120% 60% at 50% 0%, #1a1330 0%, #0a0a1a 55%)' }}>
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <div style={{ textAlign: 'center', marginBottom: 18 }}>
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: 18 }}>
           <div style={{ fontSize: 44 }}>⭐</div>
           <h1 style={{ color: 'white', fontWeight: 900, fontSize: 22, lineHeight: 1.1 }}>Puntos Adicionales</h1>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 6 }}>
@@ -45,6 +45,7 @@ export default function KnowledgeRanking() {
           </p>
         </div>
 
+        <div className="max-w-2xl mx-auto">
         {/* Cómo funciona la campaña */}
         <div style={{ background: 'linear-gradient(160deg,#B3001F,#7d0016)', borderRadius: 16, padding: '16px 18px', marginBottom: 16, boxShadow: '0 8px 24px rgba(179,0,31,0.3)' }}>
           <p style={{ color: 'white', fontWeight: 900, fontStyle: 'italic', fontSize: 17 }}>🏆 TRIVIA ANDERSEN</p>
@@ -81,6 +82,8 @@ export default function KnowledgeRanking() {
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, lineHeight: 1.4, marginTop: 2 }}>{d}</p>
             </div>
           ))}
+        </div>
+
         </div>
 
         <p style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px 10px' }}>
@@ -144,7 +147,7 @@ export default function KnowledgeRanking() {
             </table>
           </div>
         )}
-        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, textAlign: 'center', marginTop: 12 }}>
+        <p className="max-w-2xl mx-auto" style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, textAlign: 'center', marginTop: 12 }}>
           Orden: más puntos reconocidos primero. Se reconocen como máximo <b>20 puntos</b> por actividades adicionales.
         </p>
       </div>
