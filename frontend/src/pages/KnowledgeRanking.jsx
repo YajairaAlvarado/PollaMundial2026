@@ -91,15 +91,16 @@ export default function KnowledgeRanking() {
           <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40 }}>Aún nadie tiene puntos adicionales.</p>
         ) : (
           <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 620 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 740 }}>
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
                   <th rowSpan={2} style={th('center', 34)}>#</th>
                   <th rowSpan={2} style={th('left')}>Jugador</th>
                   <th rowSpan={2} style={th('center')}>Trivia<br/>Mundialista</th>
                   <th colSpan={2} style={{ ...th('center'), borderLeft: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Conocimiento Andersen</th>
+                  <th rowSpan={2} style={{ ...th('center'), borderLeft: '1px solid rgba(255,255,255,0.1)' }}>Oportunidades<br/>hoy</th>
                   <th rowSpan={2} style={{ ...th('center'), borderLeft: '1px solid rgba(255,255,255,0.1)' }}>Total</th>
-                  <th rowSpan={2} style={th('center')}>Puntos<br/>reconocidos</th>
+                  <th rowSpan={2} style={{ ...th('center', 90), borderLeft: '1px solid rgba(255,255,255,0.1)' }}>Puntos<br/>reconocidos</th>
                 </tr>
                 <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
                   <th style={{ ...th('center'), borderLeft: '1px solid rgba(255,255,255,0.1)' }}>Contestadas</th>
@@ -110,6 +111,7 @@ export default function KnowledgeRanking() {
                 {sorted.map((r, i) => {
                   const me = r.id === user?.id;
                   const capped = r.total_pts > 20;
+                  const oppLeft = Math.max(0, 4 - (r.answered_today || 0));
                   return (
                     <tr key={r.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: me ? 'rgba(255,209,0,0.08)' : 'transparent' }}>
                       <td style={td('center')}><span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>{i + 1}</span></td>
@@ -125,8 +127,13 @@ export default function KnowledgeRanking() {
                       <td style={td('center')}><span style={{ color: r.mundialista_pts ? '#FFD100' : 'rgba(255,255,255,0.3)', fontWeight: 800 }}>{r.mundialista_pts}</span></td>
                       <td style={{ ...td('center'), borderLeft: '1px solid rgba(255,255,255,0.06)' }}><span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>{r.answered_count}</span></td>
                       <td style={td('center')}><span style={{ color: '#34d399', fontWeight: 900 }}>{r.correct_count}</span></td>
+                      <td style={{ ...td('center'), borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
+                        <span style={{ color: oppLeft > 0 ? '#93c5fd' : 'rgba(255,255,255,0.3)', fontWeight: 800, fontSize: 12, whiteSpace: 'nowrap' }}>
+                          🎯 {oppLeft}/4
+                        </span>
+                      </td>
                       <td style={{ ...td('center'), borderLeft: '1px solid rgba(255,255,255,0.06)' }}><span style={{ color: 'white', fontWeight: 900, fontSize: 15 }}>{r.total_pts}</span></td>
-                      <td style={td('center')}>
+                      <td style={{ ...td('center'), borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
                         <span style={{ color: '#FFD100', fontWeight: 900, fontSize: 15 }}>{r.recognized_pts}</span>
                         {capped && <span style={{ display: 'block', color: '#f59e0b', fontSize: 9, fontWeight: 700 }}>tope 20</span>}
                       </td>
@@ -145,5 +152,5 @@ export default function KnowledgeRanking() {
   );
 }
 
-const th = (align, w) => ({ textAlign: align, padding: '9px 10px', color: 'rgba(255,255,255,0.55)', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.03em', width: w });
+const th = (align, w) => ({ textAlign: align, padding: '9px 10px', color: 'rgba(255,255,255,0.55)', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.03em', width: w, whiteSpace: 'nowrap' });
 const td = (align) => ({ textAlign: align, padding: '8px 10px', verticalAlign: 'middle' });
