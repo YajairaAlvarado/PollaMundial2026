@@ -12,6 +12,7 @@ const colorFor = (u) => COLORS[(u?.charCodeAt(0) || 0) % COLORS.length];
 export default function KnowledgeRanking() {
   const { user } = useAuth();
   const [rows, setRows] = useState(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (user?.id) trackPage(user.id, 'conocimiento');
@@ -27,12 +28,17 @@ export default function KnowledgeRanking() {
   if (!rows) return <LoadingSpinner size="lg" text="Cargando estadísticas..." />;
 
   // Orden: más puntos reconocidos primero; luego total; luego correctas
-  const sorted = [...rows].sort((a, b) =>
+  const ordered = [...rows].sort((a, b) =>
     (b.recognized_pts - a.recognized_pts) ||
     (b.total_pts - a.total_pts) ||
     (b.correct_count - a.correct_count) ||
     (a.display_name || '').localeCompare(b.display_name || '')
-  );
+  ).map((r, i) => ({ ...r, pos: i + 1 })); // posición real (se conserva al filtrar)
+
+  const q = query.trim().toLowerCase();
+  const sorted = q
+    ? ordered.filter((r) => (r.display_name || '').toLowerCase().includes(q))
+    : ordered;
 
   return (
     <div style={{ minHeight: 'calc(100vh - 3.5rem)', background: 'radial-gradient(120% 60% at 50% 0%, #1a1330 0%, #0a0a1a 55%)' }}>
@@ -86,12 +92,34 @@ export default function KnowledgeRanking() {
 
         </div>
 
-        <p style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 2px 10px' }}>
-          📊 Tabla de puntos adicionales
-        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10, margin: '4px 2px 10px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            📊 Tabla de puntos adicionales
+          </p>
+          <div style={{ position: 'relative', flex: '0 1 260px', minWidth: 180 }}>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, pointerEvents: 'none' }}>🔍</span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar persona…"
+              style={{ width: '100%', padding: '8px 30px 8px 32px', borderRadius: 20, fontSize: 13,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', outline: 'none' }}
+            />
+            {query && (
+              <button onClick={() => setQuery('')} aria-label="Limpiar"
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none',
+                  color: 'rgba(255,255,255,0.5)', fontSize: 15, cursor: 'pointer', lineHeight: 1, padding: 4 }}>
+                ×
+              </button>
+            )}
+          </div>
+        </div>
 
-        {sorted.length === 0 ? (
+        {ordered.length === 0 ? (
           <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40 }}>Aún nadie tiene puntos adicionales.</p>
+        ) : sorted.length === 0 ? (
+          <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40 }}>Sin coincidencias para “{query}”.</p>
         ) : (
           <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 740 }}>
@@ -111,13 +139,13 @@ export default function KnowledgeRanking() {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((r, i) => {
+                {sorted.map((r) => {
                   const me = r.id === user?.id;
                   const capped = r.total_pts > 20;
                   const oppLeft = Math.max(0, 4 - (r.answered_today || 0));
                   return (
                     <tr key={r.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: me ? 'rgba(255,209,0,0.08)' : 'transparent' }}>
-                      <td style={td('center')}><span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>{i + 1}</span></td>
+                      <td style={td('center')}><span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>{r.pos}</span></td>
                       <td style={td('left')}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                           <Avatar username={r.username} initials={r.avatar_initials} displayName={r.display_name} size={30} colorClass={colorFor(r.username)} />
