@@ -5,7 +5,7 @@ import detectiveAlert from '../assets/detective-alert.png';
 
 // Campaña "Gana puntos sobre Andersen":
 // - Por ahora SOLO usuarios de prueba. Para abrir a todos: KNOWLEDGE_OPEN = true.
-export const KNOWLEDGE_OPEN = false;
+export const KNOWLEDGE_OPEN = true; // Campaña abierta a todos: 10–17 julio 2026
 export const KNOWLEDGE_BETA = ['daniel.leon', 'yajaira.alvarado', 'kleber.padilla'];
 export const canSeeKnowledge = (username) =>
   KNOWLEDGE_OPEN || KNOWLEDGE_BETA.includes((username || '').toLowerCase());
