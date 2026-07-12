@@ -29,6 +29,17 @@ function fmtStickerTime(iso) {
   return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}, ${time}`;
 }
 
+// Fecha COMPLETA con segundos, para el historial de las últimas 6 fichas
+function fmtStickerFull(iso) {
+  if (!iso) return '';
+  const TZ = 'America/Guayaquil';
+  const d = new Date(iso);
+  const day = d.toLocaleString('es-EC', { timeZone: TZ, day: 'numeric' });
+  const month = d.toLocaleString('es-EC', { timeZone: TZ, month: 'long' });
+  const time = d.toLocaleString('es-EC', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)} · ${time}`;
+}
+
 export default function Album() {
   const { user } = useAuth();
   const me = (user?.username || '').toLowerCase();
@@ -132,6 +143,26 @@ export default function Album() {
       .map(([username, count]) => ({ username, count, displayName: USER_BY_NAME[username]?.displayName || username }))
       .sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
     setErrModal({ username: r.username, displayName: r.displayName, targets });
+  };
+
+  // Historial: últimas 6 fichas conseguidas por una persona (con fecha/hora/min/seg)
+  const [histModal, setHistModal] = useState(null);
+  const openHistModal = async (r) => {
+    setHistModal({ displayName: r.displayName, loading: true, items: [] });
+    const { data } = await supabase.from('album_stickers')
+      .select('sticker_username, created_at')
+      .eq('owner_username', r.username)
+      .order('created_at', { ascending: false })
+      .limit(6);
+    setHistModal({
+      displayName: r.displayName,
+      loading: false,
+      items: (data || []).map((x) => ({
+        username: x.sticker_username,
+        name: USER_BY_NAME[x.sticker_username]?.displayName || x.sticker_username,
+        when: x.created_at,
+      })),
+    });
   };
 
   useEffect(() => {
@@ -337,7 +368,11 @@ export default function Album() {
                     )}
 
                     {!onlyNoConocen && (
-                      <span className="text-xs font-black px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100' }}>{r.count} 📒</span>
+                      <button onClick={() => openHistModal(r)} title="Ver sus últimas 6 fichas conseguidas"
+                        className="text-xs font-black px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap"
+                        style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100', border: '1px solid rgba(255,209,0,0.35)', touchAction: 'manipulation' }}>
+                        {r.count} 📒 <span style={{ fontSize: 10 }}>🕐</span>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -401,6 +436,33 @@ export default function Album() {
               </div>
             ))}
             <button onClick={() => setErrModal(null)}
+              style={{ width: '100%', marginTop: 14, padding: 11, borderRadius: 10, background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 700, fontSize: 13 }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Popup: últimas 6 fichas conseguidas (con fecha/hora/min/seg) */}
+      {histModal && (
+        <div onClick={() => setHistModal(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ width: 380, maxWidth: '92vw', maxHeight: '80vh', overflow: 'auto', background: '#0a1730', border: '2px solid rgba(255,209,0,0.4)', borderRadius: 18, padding: 18, boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}>
+            <p style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>📒 Últimas fichas de {histModal.displayName}</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 10 }}>Las 6 más recientes · fecha, hora, minuto y segundo (Ecuador)</p>
+            {histModal.loading && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Cargando…</p>}
+            {!histModal.loading && histModal.items.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Sin fichas todavía</p>}
+            {!histModal.loading && histModal.items.map((it, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 2px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <Avatar username={it.username} initials={USER_BY_NAME[it.username]?.avatarInitials} displayName={it.name} size={32} clickable={false} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{it.name}</p>
+                  <p style={{ color: 'rgba(255,209,0,0.75)', fontSize: 11, fontWeight: 600 }}>🕐 {fmtStickerFull(it.when)}</p>
+                </div>
+              </div>
+            ))}
+            <button onClick={() => setHistModal(null)}
               style={{ width: '100%', marginTop: 14, padding: 11, borderRadius: 10, background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 700, fontSize: 13 }}>
               Cerrar
             </button>
