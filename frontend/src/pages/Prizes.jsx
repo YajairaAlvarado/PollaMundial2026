@@ -109,7 +109,7 @@ const fmtTime = (iso) => {
   const d = new Date(iso);
   const day = d.toLocaleString('es-EC', { timeZone: TZ, day: 'numeric' });
   const month = d.toLocaleString('es-EC', { timeZone: TZ, month: 'long' });
-  const time = d.toLocaleString('es-EC', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleString('es-EC', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}, ${time}`;
 };
 

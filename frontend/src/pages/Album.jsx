@@ -18,14 +18,16 @@ function fmt(ms) {
   return `${m}:${String(ss).padStart(2, '0')}`;
 }
 
-// Hora (Ecuador) de la última ficha, para el desempate del premio del álbum
+// Hora (Ecuador) de la última ficha, para el desempate del premio del álbum.
+// Incluye SEGUNDOS: en caso de empate en cantidad de fichas, los segundos
+// definen quién llegó primero.
 function fmtStickerTime(iso) {
   if (!iso) return '';
   const TZ = 'America/Guayaquil';
   const d = new Date(iso);
   const day = d.toLocaleString('es-EC', { timeZone: TZ, day: 'numeric' });
   const month = d.toLocaleString('es-EC', { timeZone: TZ, month: 'long' });
-  const time = d.toLocaleString('es-EC', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleString('es-EC', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}, ${time}`;
 }
 
@@ -368,10 +370,16 @@ export default function Album() {
                     )}
 
                     {!onlyNoConocen && (
-                      <button onClick={() => openHistModal(r)} title="Ver sus últimas 6 fichas conseguidas"
+                      <span className="text-xs font-black px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100' }}>
+                        {r.count} 📒
+                      </span>
+                    )}
+
+                    {!onlyNoConocen && (
+                      <button onClick={() => openHistModal(r)} title="Ver sus últimas 6 fichas con hora exacta"
                         className="text-xs font-black px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap"
-                        style={{ background: 'rgba(255,209,0,0.15)', color: '#FFD100', border: '1px solid rgba(255,209,0,0.35)', touchAction: 'manipulation' }}>
-                        {r.count} 📒 <span style={{ fontSize: 10 }}>🕐</span>
+                        style={{ background: 'rgba(96,165,250,0.15)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.35)', touchAction: 'manipulation' }}>
+                        <span style={{ fontSize: 11 }}>👁️</span> 🕐 tiempos
                       </button>
                     )}
                   </div>
