@@ -27,14 +27,21 @@ export const DEPARTMENT_DTS = {
   'Administracion':        'raissa.aguila',
 };
 
-// Orden bonito de los equipos en el álbum
+// Orden bonito de los equipos en el álbum.
+// "Quito" va AL FINAL para que los números de ficha de todos los demás NO cambien.
 export const DEPARTMENT_ORDER = [
   'Nuevos Negocios', 'Comercial', 'Marketing', 'Capital Humano', 'Impuestos',
   'Economía Y Empresa', 'Consultoria', 'Patrocinio', 'Contabilidad/Finanzas', 'Administracion',
+  'Quito',
 ];
 
-// DTs adicionales (un mismo departamento puede tener más de un socio líder)
-export const EXTRA_DTS = ['vicente.pazmino'];
+// DTs adicionales (un mismo departamento puede tener más de un socio líder).
+// Los 7 socios de Quito son todos DT (cromos raros/legendarios).
+export const EXTRA_DTS = [
+  'vicente.pazmino',
+  'ximena.amoroso', 'catalina.carrera', 'fernando.davila', 'gabriel.vivar',
+  'jeffry.illingworth', 'marco.penaloza', 'mauricio.durango',
+];
 
 const ALL_DTS = [...Object.values(DEPARTMENT_DTS), ...EXTRA_DTS];
 export const isDT = (username) => ALL_DTS.includes((username || '').toLowerCase());

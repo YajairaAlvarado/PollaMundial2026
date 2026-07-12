@@ -138,6 +138,14 @@ const EMPLOYEE_DATA = [
   { username: 'daniela.zorrilla', password: '0953292240', department: 'Impuestos', sex: 'F' },
   { username: 'german.zuniga', password: '0930861281', department: 'Administracion', sex: 'M' },
   { username: 'velyalline.romo', password: 'Mundial2026', department: 'Patrocinio', sex: 'F' },
+  // ── Socios de Quito (fichas nuevas del álbum) ──
+  { username: 'ximena.amoroso',     name: 'Ximena Amoroso',     password: 'Mundial2026', department: 'Quito', sex: 'F' },
+  { username: 'catalina.carrera',   name: 'Catalina Carrera',   password: 'Mundial2026', department: 'Quito', sex: 'F' },
+  { username: 'fernando.davila',    name: 'Fernando Dávila',    password: 'Mundial2026', department: 'Quito', sex: 'M' },
+  { username: 'gabriel.vivar',      name: 'Gabriel Vivar',      password: 'Mundial2026', department: 'Quito', sex: 'M' },
+  { username: 'jeffry.illingworth', name: 'Jeffry Illingworth', password: 'Mundial2026', department: 'Quito', sex: 'M' },
+  { username: 'marco.penaloza',     name: 'Marco Peñaloza',     password: 'Mundial2026', department: 'Quito', sex: 'M' },
+  { username: 'mauricio.durango',   name: 'Mauricio Durango',   password: 'Mundial2026', department: 'Quito', sex: 'M' },
 ];
 
 export const USERS = EMPLOYEE_DATA.map((e, i) => {

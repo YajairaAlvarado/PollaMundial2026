@@ -9,7 +9,7 @@ const SIGNED_EXPIRY = 60 * 60 * 24 * 7; // 7 días
 // Caché de las URLs firmadas: reusar las MISMAS urls entre sesiones hace que el
 // navegador cachee las imágenes (antes se generaban urls nuevas cada vez y se
 // re-descargaban todas las fotos → ~52% del egress). TTL < expiry de la firma.
-const AVA_CACHE_KEY = 'wc2026_avatars_v2';
+const AVA_CACHE_KEY = 'wc2026_avatars_v3'; // v3: fuerza recarga de fotos (7 socios de Quito)
 const AVA_CACHE_TTL = 6 * 24 * 60 * 60 * 1000; // 6 días
 
 export function AvatarProvider({ children }) {
