@@ -33,6 +33,7 @@ export default function AlbumChallenge({ challenge, onRecord, onClose }) {
   const [phase, setPhase]     = useState('q');     // 'q' | 'result'
   const [picked, setPicked]   = useState(null);    // valor elegido
   const [result, setResult]   = useState(null);    // 'win' | 'lose' | 'timeout'
+  const [blocked, setBlocked] = useState(false);   // respondió bien pero el servidor NO otorgó (candado 30min/tope)
   const [nowTs, setNowTs]     = useState(Date.now());
   const startRef = useRef(Date.now());
   const doneRef  = useRef(false);
@@ -47,13 +48,16 @@ export default function AlbumChallenge({ challenge, onRecord, onClose }) {
   const elapsed = nowTs - startRef.current;
   const tLeft   = Math.max(0, Math.ceil((ANSWER_MS - elapsed) / 1000));
 
-  const finish = (res, val) => {
+  const finish = async (res, val) => {
     if (doneRef.current) return;
     doneRef.current = true;
     setPicked(val ?? null);
     setResult(res);
     setPhase('result');
-    onRecord(res, target);
+    const awarded = await onRecord(res, target);
+    // Si respondió bien pero el servidor NO otorgó la ficha (candado de 30 min o
+    // tope diario) → marcamos "bloqueado" para no celebrar una ficha que no contó.
+    if (res === 'win' && awarded === false) setBlocked(true);
   };
 
   // Tiempo agotado
@@ -69,15 +73,18 @@ export default function AlbumChallenge({ challenge, onRecord, onClose }) {
 
   // ── Resultado ──
   if (phase === 'result') {
-    const win = result === 'win';
+    const win = result === 'win' && !blocked;       // ganada de verdad (servidor la otorgó)
     const legendary = win && target.isDT;
     return (
       <Shell>
         {win && <Confetti />}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 6 }}>
           <p className={legendary ? 'shimmer-gold' : ''} style={{ fontSize: legendary ? 15 : 13, fontWeight: 900, letterSpacing: '0.08em',
-                      color: legendary ? '#FFD700' : win ? '#FFD700' : '#f87171' }}>
-            {legendary ? '⭐ ¡FICHA LEGENDARIA! ⭐' : win ? '✨ ¡FICHA NUEVA! ✨' : result === 'timeout' ? '⏰ ¡SE ACABÓ EL TIEMPO!' : '😖 ¡CASI!'}
+                      color: legendary ? '#FFD700' : win ? '#FFD700' : blocked ? '#93c5fd' : '#f87171' }}>
+            {legendary ? '⭐ ¡FICHA LEGENDARIA! ⭐'
+              : win ? '✨ ¡FICHA NUEVA! ✨'
+              : blocked ? '✅ ¡RESPUESTA CORRECTA!'
+              : result === 'timeout' ? '⏰ ¡SE ACABÓ EL TIEMPO!' : '😖 ¡CASI!'}
           </p>
           {legendary && (
             <p style={{ fontSize: 11, fontWeight: 800, color: '#FFA500', marginTop: 2 }}>
@@ -87,15 +94,19 @@ export default function AlbumChallenge({ challenge, onRecord, onClose }) {
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: legendary ? '28px 0' : '14px 0', position: 'relative', minHeight: legendary ? 220 : undefined }}>
             {legendary && <span className="legend-halo" />}
             {legendary && <span className="legend-rays" />}
-            <div className={legendary ? 'album-legendary' : win ? 'album-reveal' : 'album-fail'} style={{ position: 'relative', zIndex: 2 }}>
+            <div className={legendary ? 'album-legendary' : win ? 'album-reveal' : 'album-fail'} style={{ position: 'relative', zIndex: 2, opacity: blocked ? 0.55 : 1 }}>
               <StickerCard player={target} owned={true} size="lg" />
             </div>
           </div>
           <p className="text-white" style={{ fontWeight: 900, fontSize: 18 }}>
-            {win ? `¡${target.displayName.split(' ')[0]} es tuyo!` : 'No la conseguiste'}
+            {win ? `¡${target.displayName.split(' ')[0]} es tuyo!`
+              : blocked ? 'Pero esta ficha NO se sumó'
+              : 'No la conseguiste'}
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4 }}>
-            {win ? (legendary ? '¡Ficha estrella pegada en tu álbum! 🌟' : 'Pegada en tu álbum 📒') : 'Te aparecerá otra oportunidad pronto'}
+          <p style={{ color: blocked ? 'rgba(147,197,253,0.9)' : 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4, lineHeight: 1.4 }}>
+            {win ? (legendary ? '¡Ficha estrella pegada en tu álbum! 🌟' : 'Pegada en tu álbum 📒')
+              : blocked ? 'Debes esperar unos minutos entre fichas. Abrir el celular y la PC a la vez no cuenta doble. 😉'
+              : 'Te aparecerá otra oportunidad pronto'}
           </p>
           <button onClick={onClose} className="mt-4 w-full py-3 rounded-2xl font-black"
             style={{ background: win ? 'linear-gradient(135deg,#FFD700,#FFA500)' : 'rgba(255,255,255,0.08)',

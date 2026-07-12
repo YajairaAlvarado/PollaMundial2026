@@ -129,11 +129,15 @@ export function useAlbum(user) {
       // cuando además llega el aviso en tiempo real con el mismo registro.
       await load();
       if (awarded && target) setOwnedSet((prev) => new Set(prev).add(target.username));
-      return;
+      // Devolvemos si el servidor REALMENTE otorgó la ficha (false = bloqueado:
+      // tope diario o antigüedad < 30 min). El popup lo usa para no mentir con
+      // un "¡ganaste!" cuando en verdad no se sumó.
+      return awarded === true;
     }
     const nowIso = new Date().toISOString();
     setChallenges((prev) => [{ created_at: nowIso, result }, ...prev]); // optimista
     await supabase.from('album_challenges').insert({ username, result, target_username: target?.username || null });
+    return null;
   }, [username, load, storageKey]);
 
   const dismissChallenge = useCallback(() => { try { localStorage.removeItem(storageKey); } catch { /* noop */ } setChallenge(null); }, [storageKey]);
