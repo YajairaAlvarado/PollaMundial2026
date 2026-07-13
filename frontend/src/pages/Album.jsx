@@ -154,8 +154,7 @@ export default function Album() {
     const { data } = await supabase.from('album_stickers')
       .select('sticker_username, created_at')
       .eq('owner_username', r.username)
-      .order('created_at', { ascending: false })
-      .limit(6);
+      .order('created_at', { ascending: false });
     setHistModal({
       displayName: r.displayName,
       loading: false,
@@ -376,7 +375,7 @@ export default function Album() {
                     )}
 
                     {!onlyNoConocen && (
-                      <button onClick={() => openHistModal(r)} title="Ver sus últimas 6 fichas con hora exacta"
+                      <button onClick={() => openHistModal(r)} title="Ver todas sus fichas con hora exacta"
                         className="text-xs font-black px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap"
                         style={{ background: 'rgba(96,165,250,0.15)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.35)', touchAction: 'manipulation' }}>
                         <span style={{ fontSize: 11 }}>👁️</span> 🕐 tiempos
@@ -457,8 +456,8 @@ export default function Album() {
           style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={(e) => e.stopPropagation()}
             style={{ width: 380, maxWidth: '92vw', maxHeight: '80vh', overflow: 'auto', background: '#0a1730', border: '2px solid rgba(255,209,0,0.4)', borderRadius: 18, padding: 18, boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}>
-            <p style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>📒 Últimas fichas de {histModal.displayName}</p>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 10 }}>Las 6 más recientes · fecha, hora, minuto y segundo (Ecuador)</p>
+            <p style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>📒 Fichas de {histModal.displayName} {!histModal.loading && `(${histModal.items.length})`}</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 10 }}>Todas, de la más reciente a la más antigua · fecha, hora, minuto y segundo (Ecuador)</p>
             {histModal.loading && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Cargando…</p>}
             {!histModal.loading && histModal.items.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Sin fichas todavía</p>}
             {!histModal.loading && histModal.items.map((it, i) => (
