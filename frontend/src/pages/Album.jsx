@@ -31,7 +31,20 @@ function fmtStickerTime(iso) {
   return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}, ${time}`;
 }
 
-// Fecha COMPLETA con segundos, para el historial de las últimas 6 fichas
+// Tiempo transcurrido entre dos fichas (para detectar rachas sospechosas)
+function fmtGap(ms) {
+  if (ms == null) return '';
+  const s = Math.round(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h >= 24) { const d = Math.floor(h / 24); return `${d}d ${h % 24}h`; }
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+  if (m > 0) return `${m}m ${String(sec).padStart(2, '0')}s`;
+  return `${sec}s`;
+}
+
+// Fecha COMPLETA con segundos, para el historial de fichas
 function fmtStickerFull(iso) {
   if (!iso) return '';
   const TZ = 'America/Guayaquil';
@@ -460,15 +473,31 @@ export default function Album() {
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 10 }}>Todas, de la más reciente a la más antigua · fecha, hora, minuto y segundo (Ecuador)</p>
             {histModal.loading && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Cargando…</p>}
             {!histModal.loading && histModal.items.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Sin fichas todavía</p>}
-            {!histModal.loading && histModal.items.map((it, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 2px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <Avatar username={it.username} initials={USER_BY_NAME[it.username]?.avatarInitials} displayName={it.name} size={32} clickable={false} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{it.name}</p>
-                  <p style={{ color: 'rgba(255,209,0,0.75)', fontSize: 11, fontWeight: 600 }}>🕐 {fmtStickerFull(it.when)}</p>
+            {!histModal.loading && <p style={{ color: 'rgba(248,113,113,0.7)', fontSize: 10.5, marginBottom: 8 }}>🚩 Fila roja + 👁️ = pasó menos de 1 hora desde la ficha anterior (posible truco)</p>}
+            {!histModal.loading && histModal.items.map((it, i) => {
+              const older = histModal.items[i + 1];              // la anterior en el tiempo (más vieja)
+              const gapMs = older ? (new Date(it.when) - new Date(older.when)) : null;
+              const fast = gapMs != null && gapMs < 3600000;      // menos de 1 hora
+              const num = histModal.items.length - i;             // #1 = la más antigua
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 6px', borderRadius: 8,
+                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  background: fast ? 'rgba(248,113,113,0.12)' : 'transparent',
+                  borderLeft: fast ? '3px solid #f87171' : '3px solid transparent' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 900, width: 30, textAlign: 'right' }}>#{num}</span>
+                  <Avatar username={it.username} initials={USER_BY_NAME[it.username]?.avatarInitials} displayName={it.name} size={30} clickable={false} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5 }}>{it.name}</p>
+                    <p style={{ color: 'rgba(255,209,0,0.75)', fontSize: 10.5, fontWeight: 600 }}>🕐 {fmtStickerFull(it.when)}</p>
+                    {gapMs != null && (
+                      <p style={{ color: fast ? '#f87171' : 'rgba(255,255,255,0.4)', fontSize: 10.5, fontWeight: fast ? 800 : 600 }}>
+                        {fast && '👁️ '}⏱ {fmtGap(gapMs)} desde la anterior
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <button onClick={() => setHistModal(null)}
               style={{ width: '100%', marginTop: 14, padding: 11, borderRadius: 10, background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 700, fontSize: 13 }}>
               Cerrar
