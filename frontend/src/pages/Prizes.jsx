@@ -378,17 +378,26 @@ export default function Prizes() {
       const s = (r.scores[sk] ||= { key: sk, score: `${c.champ_score}–${c.runner_score}`, people: [] });
       s.people.push(c);
     }
-    const groups = Object.values(map).map((g) => ({
-      ...g,
-      runnersArr: Object.values(g.runners)
-        .map((r) => ({
-          ...r,
-          scoresArr: Object.values(r.scores)
-            .map((s) => ({ ...s, people: s.people.slice().sort(byName) }))
-            .sort((a, b) => b.people.length - a.people.length || a.score.localeCompare(b.score)), // más repetido primero
-        }))
-        .sort((a, b) => b.count - a.count || a.runner.localeCompare(b.runner)),
-    }));
+    const groups = Object.values(map).map((g) => {
+      // ¿Alguien en este campeón (aún vivo) acertó un subcampeón que sigue en competencia?
+      // Si SÍ, los que pusieron un subcampeón ya eliminado quedan fuera (pierden el desempate).
+      // Si NADIE lo hizo, nadie se separa por subcampeón → todos siguen (caso borde).
+      const hasAliveRunner = !g.elim && Object.values(g.runners).some((r) => !derived.eliminated.has(r.runner));
+      return {
+        ...g,
+        hasAliveRunner,
+        runnersArr: Object.values(g.runners)
+          .map((r) => ({
+            ...r,
+            // Subcampeón fuera: campeón vivo, su subcampeón ya eliminado y existe alternativa viva en el grupo
+            elim: hasAliveRunner && derived.eliminated.has(r.runner),
+            scoresArr: Object.values(r.scores)
+              .map((s) => ({ ...s, people: s.people.slice().sort(byName) }))
+              .sort((a, b) => b.people.length - a.people.length || a.score.localeCompare(b.score)), // más repetido primero
+          }))
+          .sort((a, b) => (a.elim ? 1 : 0) - (b.elim ? 1 : 0) || b.count - a.count || a.runner.localeCompare(b.runner)),
+      };
+    });
     groups.sort((a, b) => b.count - a.count || a.champion.localeCompare(b.champion));
     return groups;
   }, [derived, champSearch]);
@@ -550,14 +559,15 @@ export default function Prizes() {
                           <div key={key} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                             {/* Acordeón nivel 2: subcampeón */}
                             <button onClick={() => toggleRunner(key)}
-                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px 8px 20px', background: 'rgba(255,255,255,0.02)', textAlign: 'left', touchAction: 'manipulation' }}>
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px 8px 20px', background: r.elim ? 'rgba(248,113,113,0.07)' : 'rgba(255,255,255,0.02)', textAlign: 'left', touchAction: 'manipulation', opacity: r.elim ? 0.75 : 1 }}>
                               <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, width: 12 }}>{rOpen ? '▾' : '▸'}</span>
-                              <span style={{ fontSize: 11 }}>🥈</span>
-                              <Flag code={r.code} size={20} />
-                              <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: 12, lineHeight: 1.2 }}>
-                                …y que <b style={{ color: 'white' }}>{r.runner}</b> será subcampeón
+                              <span style={{ fontSize: 11, filter: r.elim ? 'grayscale(1)' : 'none' }}>🥈</span>
+                              <span style={{ filter: r.elim ? 'grayscale(1)' : 'none', display: 'inline-flex' }}><Flag code={r.code} size={20} /></span>
+                              <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: 12, lineHeight: 1.2, textDecoration: r.elim ? 'line-through' : 'none' }}>
+                                …y que <b style={{ color: r.elim ? '#fca5a5' : 'white' }}>{r.runner}</b> será subcampeón
                               </span>
-                              <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', fontWeight: 800, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{r.count}</span>
+                              {r.elim && <span style={{ flexShrink: 0, background: 'rgba(248,113,113,0.2)', color: '#f87171', fontWeight: 900, fontSize: 9, padding: '2px 6px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.03em' }}>❌ Fuera</span>}
+                              <span style={{ marginLeft: r.elim ? 6 : 'auto', flexShrink: 0, background: r.elim ? 'rgba(248,113,113,0.16)' : 'rgba(255,255,255,0.08)', color: r.elim ? '#fca5a5' : 'rgba(255,255,255,0.7)', fontWeight: 800, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{r.count}</span>
                             </button>
 
                             {rOpen && r.scoresArr.map((s) => {
@@ -575,17 +585,22 @@ export default function Prizes() {
                                     <span style={{ marginLeft: 'auto', flexShrink: 0, background: 'rgba(52,211,153,0.15)', color: '#6ee7b7', fontWeight: 800, fontSize: 11, padding: '2px 8px', borderRadius: 20 }}>{s.people.length}</span>
                                   </button>
 
-                                  {sOpen && s.people.map((c) => (
-                                    <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '5px 12px 5px 44px', opacity: (c.out || c.excluded) ? 0.55 : 1 }}>
+                                  {sOpen && s.people.map((c) => {
+                                    const gone = c.out || r.elim; // fuera por campeón o por subcampeón eliminado
+                                    return (
+                                    <div key={c.user_id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '5px 12px 5px 44px', opacity: (gone || c.excluded) ? 0.55 : 1 }}>
                                       <Avatar username={c.u.username} initials={c.u.avatar_initials || '?'} displayName={c.u.display_name} size={24} colorClass={colorFor(c.u.username)} />
                                       <div style={{ flex: 1, minWidth: 0 }}>
-                                        <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5, textDecoration: (c.out || c.excluded) ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.u.display_name}</p>
+                                        <p style={{ color: 'white', fontWeight: 700, fontSize: 12.5, textDecoration: (gone || c.excluded) ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.u.display_name}</p>
                                         {c.excluded
                                           ? <p style={{ color: '#93c5fd', fontSize: 10, fontWeight: 700 }}>🏅 No participa (podio individual)</p>
-                                          : c.out && <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (campeón eliminado)</p>}
+                                          : c.out
+                                            ? <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (campeón eliminado)</p>
+                                            : r.elim && <p style={{ color: '#f87171', fontSize: 10, fontWeight: 700 }}>❌ Fuera (subcampeón eliminado)</p>}
                                       </div>
                                     </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               );
                             })}
