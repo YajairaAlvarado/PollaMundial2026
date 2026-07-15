@@ -343,6 +343,18 @@ export default function Prizes() {
         const rb = b.excluded ? 2 : b.out ? 1 : 0;
         return ra - rb || (a.u.display_name || '').localeCompare(b.u.display_name || '');
       });
+    // Subcampeón eliminado: campeón aún vivo pero el subcampeón elegido ya está fuera,
+    // y en su MISMO campeón alguien sí acertó un subcampeón todavía en carrera (si nadie
+    // lo hizo, el desempate no los separa → todos siguen). Marca a la persona como fuera.
+    const aliveRunnerByChamp = {};
+    for (const c of predicted) {
+      if (c.out || c.excluded) continue;
+      if (!eliminated.has(c.runner_up)) aliveRunnerByChamp[c.champion] = true;
+    }
+    for (const c of predicted) {
+      c.subOut = !c.out && !c.excluded && !!aliveRunnerByChamp[c.champion] && eliminated.has(c.runner_up);
+    }
+
     // En "No participaron" no mostramos ni contamos a los DT (socios) que no jugaron
     const notPredicted = users.filter((u) => !predByUser[u.id] && !isDT(u.username));
 
@@ -628,8 +640,8 @@ export default function Prizes() {
 
               {/* Paneles resumen: con vida / eliminados (solo nombres · detalle al pasar el mouse) */}
               {revealed && (() => {
-                const alive = derived.predicted.filter((c) => !c.out && !c.excluded);
-                const elim  = derived.predicted.filter((c) => c.out && !c.excluded);
+                const alive = derived.predicted.filter((c) => !c.out && !c.subOut && !c.excluded);
+                const elim  = derived.predicted.filter((c) => (c.out || c.subOut) && !c.excluded);
                 const Chip = ({ c, dead }) => (
                   <span title={champSummary(c)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'default', background: 'rgba(255,255,255,0.05)', border: `1px solid ${dead ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)'}`, borderRadius: 20, padding: '3px 10px 3px 4px' }}>
@@ -643,7 +655,7 @@ export default function Prizes() {
                     <p style={{ color: '#34d399', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '14px 2px 4px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
                       💚 Aún con vida ({alive.length})
                     </p>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10.5, margin: '0 2px 6px' }}>Su campeón sigue en carrera · pasa el mouse para ver su pronóstico</p>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10.5, margin: '0 2px 6px' }}>Su campeón y subcampeón siguen en carrera · pasa el mouse para ver su pronóstico</p>
                     {alive.length === 0
                       ? <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '2px 2px' }}>Nadie</p>
                       : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{alive.map((c) => <Chip key={c.user_id} c={c} />)}</div>}
