@@ -201,8 +201,18 @@ function UserPredictionsPanel({ userId }) {
 // ── Tabla de personas expandible ─────────────────────────────────────────────
 const RANK_COLORS = { 1: '#F59E0B', 2: '#94a3b8', 3: '#cd7f32' };
 
+const KNOWLEDGE_EVENT = 'Trivia Conocimientos Andersen';
+// Fecha + hora con segundos en hora de Ecuador → "7/jun/2026 23:11:52"
+const fmtAnswerTime = (iso) => {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Guayaquil' }).replace(/\s/g, '/').replace(/\./g, '');
+  const time = d.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'America/Guayaquil' });
+  return `${date} ${time}`;
+};
+
 function BonusModal({ entry, onClose }) {
   const [events, setEvents] = useState(null);
+  const [answers, setAnswers] = useState(null); // detalle trivia conocimiento
   useEffect(() => {
     supabase
       .from('bonus_points')
@@ -210,12 +220,17 @@ function BonusModal({ entry, onClose }) {
       .eq('user_id', entry.id)
       .order('created_at')
       .then(({ data }) => setEvents(data || []));
+    // Detalle por pregunta de la Trivia de Conocimientos (día/hora de cada respuesta,
+    // sin revelar qué pregunta fue — vía función que solo devuelve índice, hora y punto)
+    supabase
+      .rpc('andersen_answer_times', { p_user: entry.id })
+      .then(({ data }) => setAnswers(data || []));
   }, [entry.id]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}
       style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
-      <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}
+      <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}
         style={{ background: '#0D1B30', border: '1px solid rgba(245,158,11,0.3)' }}>
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div>
@@ -249,6 +264,39 @@ function BonusModal({ entry, onClose }) {
                   <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>pts</p>
                 </div>
               </div>
+
+              {/* Detalle por pregunta (solo Trivia de Conocimientos): número, hora y punto.
+                  NO se muestra qué pregunta fue — el concurso sigue abierto. */}
+              {bp.event.name === KNOWLEDGE_EVENT && answers && answers.length > 0 && (
+                <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(245,158,11,0.2)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    🕵️ Detalle por pregunta (día y hora de respuesta)
+                  </p>
+                  <div className="space-y-1">
+                    {answers.map((a, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-2 py-0.5">
+                        <span className="text-xs font-semibold flex-shrink-0" style={{ color: 'rgba(255,255,255,0.75)', width: 78 }}>
+                          Pregunta {a.idx ?? idx + 1}
+                        </span>
+                        <span className="text-[11px] font-mono flex-1 text-center" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          {fmtAnswerTime(a.answered_at)}
+                        </span>
+                        <span className="text-[11px] font-bold flex-shrink-0" style={{ width: 58, textAlign: 'right', color: a.awarded ? '#34d399' : '#f87171' }}>
+                          {a.awarded ? '1 punto' : '0 punto'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      Total conocimiento ({answers.length} contestada{answers.length === 1 ? '' : 's'})
+                    </span>
+                    <span className="text-sm font-black" style={{ color: '#F59E0B' }}>
+                      +{answers.reduce((n, a) => n + (a.awarded ? 1 : 0), 0)} pts
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
           <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
