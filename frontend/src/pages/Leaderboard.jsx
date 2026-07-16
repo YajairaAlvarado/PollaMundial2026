@@ -748,7 +748,7 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
           <div className="grid grid-cols-12 py-2 text-[9px] font-bold uppercase tracking-wider"
             style={{ color: 'rgba(255,255,255,0.25)' }}>
             <div className="col-span-5">Miembro</div>
-            <div className="col-span-2 text-center" title="Total (partidos + ⭐ extra)">Pts</div>
+            <div className="col-span-2 text-center" title="Puntos de partidos (los ⭐ extra no cuentan para el área)">Pts partidos</div>
             <div className="col-span-2 text-center">Exactos</div>
             {hasTodayMatches
               ? <><div className="col-span-2 text-center">Pronóstico hoy</div><div className="col-span-1 text-center">Estado</div></>
@@ -803,10 +803,10 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                     {isMemberOpen ? <ChevronUp size={11} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={11} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />}
                   </div>
                   <div className="col-span-2 text-center leading-tight">
-                    <span className="text-xs font-black block" style={{ color: pts > 0 ? '#F59E0B' : 'rgba(255,255,255,0.2)' }}>{pts}</span>
+                    <span className="text-xs font-black block" style={{ color: base > 0 ? '#F59E0B' : 'rgba(255,255,255,0.2)' }}>{base}</span>
                     {bonus > 0 && (
-                      <span className="text-[9px] font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                        {base}<span style={{ color: '#FFD100' }}> ⭐+{bonus}</span>
+                      <span className="text-[9px] font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                        <span style={{ color: '#FFD100' }}>⭐+{bonus}</span> no cuenta
                       </span>
                     )}
                   </div>
@@ -876,22 +876,20 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
               </div>
             );
           })}
-          {/* Desglose de puntos del área: partidos + extra = total */}
+          {/* Promedio del área: SOLO puntos de partidos (los adicionales no cuentan) */}
           <div className="mt-2 pt-2 flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-[10px]"
             style={{ borderTop: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)' }}>
+            <span>Promedio:</span>
             <span className="inline-flex items-center gap-1">
-              <span className="font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{dept.sum_base}</span> partidos
+              <span className="font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{dept.sum_base}</span> pts de partidos
             </span>
-            <span>+</span>
-            <span className="inline-flex items-center gap-1">
-              <span className="font-bold" style={{ color: '#FFD100' }}>{dept.sum_bonus}</span> ⭐ extra
-            </span>
-            <span>=</span>
-            <span className="inline-flex items-center gap-1">
-              <span className="font-black" style={{ color }}>{dept.sum_points}</span> total
-            </span>
-            <span className="opacity-60">· ÷ {dept.total_members} =</span>
-            <span className="font-black" style={{ color }}>{dept.avg_points.toFixed(2)} prom.</span>
+            <span>÷ {dept.total_members} =</span>
+            <span className="font-black" style={{ color }}>{dept.avg_points.toFixed(2)}</span>
+            {dept.sum_bonus > 0 && (
+              <span className="w-full text-right" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                (los <span style={{ color: '#FFD100' }}>+{dept.sum_bonus} ⭐ extra</span> no cuentan para la competencia por área)
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -916,12 +914,16 @@ function TabDepartamentos({ leaderboard, allUsers, user, totalGroupMatches, snap
 
     return Object.entries(byDept).map(([department, members]) => {
       const total_members  = members.length;
-      const active_members = members.filter((m) => pointsMap[m.username]?.total_points > 0).length;
       const sum_points     = members.reduce((acc, m) => acc + (pointsMap[m.username]?.total_points ?? 0), 0);
       const sum_bonus      = members.reduce((acc, m) => acc + (pointsMap[m.username]?.bonus_points ?? 0), 0);
-      const sum_base       = sum_points - sum_bonus; // puntos de partidos
+      const sum_base       = sum_points - sum_bonus; // puntos de partidos (lo ÚNICO que cuenta para el área)
+      // La competencia por área es SOLO con puntos de partidos (los adicionales no cuentan).
+      const active_members = members.filter((m) => {
+        const e = pointsMap[m.username];
+        return e && (e.total_points - (e.bonus_points ?? 0)) > 0;
+      }).length;
       const sum_exact      = members.reduce((acc, m) => acc + (pointsMap[m.username]?.exact_scores ?? 0), 0);
-      const avg_points     = total_members > 0 ? sum_points / total_members : 0;
+      const avg_points     = total_members > 0 ? sum_base / total_members : 0; // promedio SOLO de partidos
       const avg_exact      = total_members > 0 ? sum_exact  / total_members : 0;
       const participation  = total_members > 0 ? Math.round((active_members / total_members) * 100) : 0;
       return { department, total_members, active_members, sum_points, sum_base, sum_bonus, avg_points, avg_exact, participation, members };
