@@ -700,7 +700,7 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
           <div className="grid grid-cols-12 py-2 text-[9px] font-bold uppercase tracking-wider"
             style={{ color: 'rgba(255,255,255,0.25)' }}>
             <div className="col-span-5">Miembro</div>
-            <div className="col-span-2 text-center">Pts</div>
+            <div className="col-span-2 text-center" title="Total (partidos + ⭐ extra)">Pts</div>
             <div className="col-span-2 text-center">Exactos</div>
             {hasTodayMatches
               ? <><div className="col-span-2 text-center">Pronóstico hoy</div><div className="col-span-1 text-center">Estado</div></>
@@ -709,6 +709,8 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
           {sortedMembers.map((m, memberIdx) => {
             const entry   = pointsMap[m.username];
             const pts     = entry?.total_points  ?? 0;
+            const bonus   = entry?.bonus_points  ?? 0;
+            const base    = pts - bonus;
             const exact   = entry?.exact_scores  ?? 0;
             const correct = entry?.correct_results ?? 0;
             const participated = pts > 0 || (entry?.total_predictions ?? 0) > 0;
@@ -752,8 +754,13 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
                     <TrendArrow trend={memberTrend} size={9} />
                     {isMemberOpen ? <ChevronUp size={11} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={11} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />}
                   </div>
-                  <div className="col-span-2 text-center">
-                    <span className="text-xs font-black" style={{ color: pts > 0 ? '#F59E0B' : 'rgba(255,255,255,0.2)' }}>{pts}</span>
+                  <div className="col-span-2 text-center leading-tight">
+                    <span className="text-xs font-black block" style={{ color: pts > 0 ? '#F59E0B' : 'rgba(255,255,255,0.2)' }}>{pts}</span>
+                    {bonus > 0 && (
+                      <span className="text-[9px] font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        {base}<span style={{ color: '#FFD100' }}> ⭐+{bonus}</span>
+                      </span>
+                    )}
                   </div>
                   <div className="col-span-2 text-center">
                     <span className="text-xs font-semibold" style={{ color: exact > 0 ? '#34d399' : 'rgba(255,255,255,0.2)' }}>{exact}</span>
@@ -821,13 +828,22 @@ function DeptAccordion({ dept, idx, ranked, user, deptColorMap, pointsMap, total
               </div>
             );
           })}
-          {/* Fórmula del promedio */}
-          <div className="mt-2 pt-2 flex items-center justify-end gap-1 text-[10px]"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)' }}>
-            <span>Promedio:</span>
-            <span className="font-bold" style={{ color }}>{dept.sum_points} pts</span>
-            <span>÷ {dept.total_members} miembros =</span>
-            <span className="font-black" style={{ color }}>{dept.avg_points.toFixed(2)}</span>
+          {/* Desglose de puntos del área: partidos + extra = total */}
+          <div className="mt-2 pt-2 flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-[10px]"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)' }}>
+            <span className="inline-flex items-center gap-1">
+              <span className="font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{dept.sum_base}</span> partidos
+            </span>
+            <span>+</span>
+            <span className="inline-flex items-center gap-1">
+              <span className="font-bold" style={{ color: '#FFD100' }}>{dept.sum_bonus}</span> ⭐ extra
+            </span>
+            <span>=</span>
+            <span className="inline-flex items-center gap-1">
+              <span className="font-black" style={{ color }}>{dept.sum_points}</span> total
+            </span>
+            <span className="opacity-60">· ÷ {dept.total_members} =</span>
+            <span className="font-black" style={{ color }}>{dept.avg_points.toFixed(2)} prom.</span>
           </div>
         </div>
       )}
@@ -854,11 +870,13 @@ function TabDepartamentos({ leaderboard, allUsers, user, totalGroupMatches, snap
       const total_members  = members.length;
       const active_members = members.filter((m) => pointsMap[m.username]?.total_points > 0).length;
       const sum_points     = members.reduce((acc, m) => acc + (pointsMap[m.username]?.total_points ?? 0), 0);
+      const sum_bonus      = members.reduce((acc, m) => acc + (pointsMap[m.username]?.bonus_points ?? 0), 0);
+      const sum_base       = sum_points - sum_bonus; // puntos de partidos
       const sum_exact      = members.reduce((acc, m) => acc + (pointsMap[m.username]?.exact_scores ?? 0), 0);
       const avg_points     = total_members > 0 ? sum_points / total_members : 0;
       const avg_exact      = total_members > 0 ? sum_exact  / total_members : 0;
       const participation  = total_members > 0 ? Math.round((active_members / total_members) * 100) : 0;
-      return { department, total_members, active_members, sum_points, avg_points, avg_exact, participation, members };
+      return { department, total_members, active_members, sum_points, sum_base, sum_bonus, avg_points, avg_exact, participation, members };
     }).sort((a, b) => b.avg_points - a.avg_points || b.participation - a.participation);
   }, [leaderboard, allUsers]);
 
