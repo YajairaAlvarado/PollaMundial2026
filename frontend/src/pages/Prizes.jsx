@@ -6,7 +6,7 @@ import { supabase } from '../utils/supabase';
 import { trackPage } from '../utils/trackPage';
 import { isExcluded } from '../utils/users';
 import { isDT } from '../utils/album';
-import { computeTeams, isChampionRevealed, CHAMPION_REVEAL, CHAMPION_CLOSED } from '../utils/aliveTeams';
+import { computeTeams, matchWinnerLoser, isChampionRevealed, CHAMPION_REVEAL, CHAMPION_CLOSED } from '../utils/aliveTeams';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Avatar from '../components/Avatar';
 import { Trophy, Plane, UtensilsCrossed, HeartPulse, Building2, BookOpen, Flame, Globe2, Gift, Lock, Sparkles } from 'lucide-react';
@@ -117,6 +117,69 @@ function Flag({ code, size = 26 }) {
   const h = Math.round(size * 0.75);
   if (!code) return <span style={{ fontSize: size * 0.7 }}>🏳️</span>;
   return <img src={`https://flagcdn.com/${size}x${h}/${code.toLowerCase()}.png`} alt="" style={{ width: size, height: h, borderRadius: 3, objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle' }} onError={(e) => { e.target.style.display = 'none'; }} />;
+}
+
+// 🎆 Celebración del campeón: bandera flameando + pirotecnia + agradecimiento
+function ChampionBanner({ champion, championCode, runnerUp }) {
+  const sparks = Array.from({ length: 14 });
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 20, padding: '26px 18px 22px',
+      background: 'radial-gradient(120% 130% at 50% 0%, #2a1650 0%, #10091f 70%)',
+      border: '1px solid rgba(255,209,0,0.35)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
+      <style>{`
+        @keyframes flagWave { 0%,100%{transform:perspective(320px) rotateY(-10deg) skewY(-1.5deg)} 50%{transform:perspective(320px) rotateY(10deg) skewY(1.5deg)} }
+        @keyframes fireworkPop { 0%{transform:scale(0);opacity:0} 15%{opacity:1} 60%{opacity:1} 100%{transform:scale(1.9);opacity:0} }
+        @keyframes twinkle { 0%,100%{opacity:0.15;transform:scale(0.7)} 50%{opacity:1;transform:scale(1.15)} }
+        @keyframes floatUp { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+      `}</style>
+      {/* Pirotecnia */}
+      {sparks.map((_, i) => {
+        const left = (i * 37) % 100, top = (i * 53) % 70, delay = (i % 7) * 0.35;
+        const colors = ['#FFD100', '#ff5b7f', '#5bd0ff', '#7CFC9A', '#ff9f43', '#c084fc'];
+        const c = colors[i % colors.length];
+        return (
+          <span key={i} aria-hidden="true" style={{ position: 'absolute', left: `${left}%`, top: `${top}%`,
+            width: 8, height: 8, borderRadius: '50%', background: c,
+            boxShadow: `0 0 10px 2px ${c}`, animation: `fireworkPop ${1.8 + (i % 4) * 0.4}s ease-out ${delay}s infinite` }} />
+        );
+      })}
+      {/* Estrellitas titilando */}
+      {['🎆', '🎇', '✨', '🎉', '⭐', '🥳'].map((e, i) => (
+        <span key={e} aria-hidden="true" style={{ position: 'absolute', fontSize: 22,
+          left: `${[6, 88, 14, 80, 46, 66][i]}%`, top: `${[10, 14, 66, 60, 4, 72][i]}%`,
+          animation: `twinkle ${1.6 + i * 0.3}s ease-in-out ${i * 0.2}s infinite` }}>{e}</span>
+      ))}
+
+      <div style={{ position: 'relative', textAlign: 'center', animation: 'floatUp 0.6s ease-out' }}>
+        <p style={{ color: '#FFD100', fontWeight: 900, fontSize: 12, letterSpacing: '0.28em', textTransform: 'uppercase' }}>
+          Campeón del Mundial 2026
+        </p>
+        {/* Bandera flameando */}
+        <div style={{ display: 'inline-block', margin: '12px 0 6px', transformStyle: 'preserve-3d',
+          animation: 'flagWave 2.6s ease-in-out infinite', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.5))' }}>
+          {championCode
+            ? <img src={`https://flagcdn.com/160x120/${championCode.toLowerCase()}.png`} alt={champion}
+                style={{ width: 132, height: 99, borderRadius: 8, border: '2px solid rgba(255,255,255,0.5)', objectFit: 'cover' }} />
+            : <span style={{ fontSize: 90 }}>🏆</span>}
+        </div>
+        <h2 style={{ color: 'white', fontWeight: 900, fontSize: 30, lineHeight: 1, margin: '6px 0 0',
+          textShadow: '0 2px 12px rgba(255,209,0,0.5)' }}>
+          ¡{(champion || '').toUpperCase()} CAMPEÓN! 🏆
+        </h2>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 8 }}>
+          🥈 Subcampeón: <b style={{ color: 'white' }}>{runnerUp}</b>
+        </p>
+        <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14 }}>
+          <p style={{ color: 'white', fontWeight: 800, fontSize: 14.5 }}>¡Gracias por participar! 🙌</p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12.5, lineHeight: 1.5, marginTop: 5 }}>
+            El Andersen Mundialista 2026 llegó a su fin. Gracias a cada uno por sumarse, pronosticar y hacer de este torneo una fiesta.
+            ¡Nos vemos en la próxima! ⚽🎉
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Cartel animado sostenido por una mano 😄
@@ -330,6 +393,15 @@ export default function Prizes() {
 
     // Campeón del Mundial
     const { eliminated, teamCode } = computeTeams(matches);
+    // Si la FINAL ya se jugó, el subcampeón real es el perdedor de la final.
+    // Antes de la final, "subcampeón válido" = cualquiera que siga en carrera (no eliminado).
+    const finalMatch  = matches.find((m) => m.stage === 'final');
+    const finalWL     = finalMatch && finalMatch.status === 'finished' ? matchWinnerLoser(finalMatch) : null;
+    const finalDone   = !!finalWL;
+    const actualChampion = finalWL ? finalWL.winner : null;
+    const actualRunnerUp = finalWL ? finalWL.loser : null;
+    const championCode = finalMatch ? (actualChampion === finalMatch.home_team ? finalMatch.home_code : finalMatch.away_code) : null;
+    const runnerStillValid = (team) => finalDone ? team === actualRunnerUp : !eliminated.has(team);
     // Señuelos: equipos YA eliminados (con bandera) para despistar antes del sábado
     const decoyPool = [...eliminated].map((t) => ({ team: t, code: teamCode[t] })).filter((x) => x.code);
     const hashStr = (s) => { let h = 0; for (let i = 0; i < (s || '').length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; };
@@ -354,10 +426,10 @@ export default function Prizes() {
     const aliveRunnerByChamp = {};
     for (const c of predicted) {
       if (c.out || c.excluded) continue;
-      if (!eliminated.has(c.runner_up)) aliveRunnerByChamp[c.champion] = true;
+      if (runnerStillValid(c.runner_up)) aliveRunnerByChamp[c.champion] = true;
     }
     for (const c of predicted) {
-      c.subOut = !c.out && !c.excluded && !!aliveRunnerByChamp[c.champion] && eliminated.has(c.runner_up);
+      c.subOut = !c.out && !c.excluded && !!aliveRunnerByChamp[c.champion] && !runnerStillValid(c.runner_up);
     }
 
     // En "No participaron" no mostramos ni contamos a los DT (socios) que no jugaron
@@ -376,7 +448,7 @@ export default function Prizes() {
       .sort((a, b) => b.people.length - a.people.length || a.champion.localeCompare(b.champion));
     const eliminatedCount = eliminatedGroups.reduce((n, g) => n + g.people.length, 0);
 
-    return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated, top3Names, eliminatedGroups, eliminatedCount };
+    return { podium, depts, albumTop, streakBoard, predicted, notPredicted, eliminated, top3Names, eliminatedGroups, eliminatedCount, finalDone, actualRunnerUp, actualChampion, championCode };
   }, [data]);
 
   // Pronósticos de campeón agrupados: campeón → subcampeón → personas (con buscador)
@@ -395,19 +467,22 @@ export default function Prizes() {
       const s = (r.scores[sk] ||= { key: sk, score: `${c.champ_score}–${c.runner_score}`, people: [] });
       s.people.push(c);
     }
+    // Subcampeón válido: si la final ya se jugó, solo el subcampeón real (perdedor de la final);
+    // si no, cualquiera que siga en carrera (no eliminado).
+    const runnerStillValid = (team) => derived.finalDone ? team === derived.actualRunnerUp : !derived.eliminated.has(team);
     const groups = Object.values(map).map((g) => {
       // ¿Alguien en este campeón (aún vivo) acertó un subcampeón que sigue en competencia?
       // Si SÍ, los que pusieron un subcampeón ya eliminado quedan fuera (pierden el desempate).
       // Si NADIE lo hizo, nadie se separa por subcampeón → todos siguen (caso borde).
-      const hasAliveRunner = !g.elim && Object.values(g.runners).some((r) => !derived.eliminated.has(r.runner));
+      const hasAliveRunner = !g.elim && Object.values(g.runners).some((r) => runnerStillValid(r.runner));
       return {
         ...g,
         hasAliveRunner,
         runnersArr: Object.values(g.runners)
           .map((r) => ({
             ...r,
-            // Subcampeón fuera: campeón vivo, su subcampeón ya eliminado y existe alternativa viva en el grupo
-            elim: hasAliveRunner && derived.eliminated.has(r.runner),
+            // Subcampeón fuera: campeón vivo, su subcampeón no es el válido y existe alternativa viva en el grupo
+            elim: hasAliveRunner && !runnerStillValid(r.runner),
             scoresArr: Object.values(r.scores)
               .map((s) => ({ ...s, people: s.people.slice().sort(byName) }))
               .sort((a, b) => b.people.length - a.people.length || a.score.localeCompare(b.score)), // más repetido primero
@@ -425,25 +500,32 @@ export default function Prizes() {
     <div style={{ minHeight: 'calc(100vh - 3.5rem)', background: 'radial-gradient(120% 60% at 50% 0%, #16112e 0%, #0a0a1a 55%)' }}>
       <div className="max-w-3xl mx-auto px-4 py-6" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
+        {/* 🎆 Celebración del campeón (solo cuando la final ya se jugó) */}
+        {derived?.finalDone && (
+          <ChampionBanner champion={derived.actualChampion} championCode={derived.championCode} runnerUp={derived.actualRunnerUp} />
+        )}
+
         {/* Hero */}
         <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
           <div style={{ fontSize: 46, animation: 'trophyBounce 2.2s ease-in-out infinite' }}>🏆</div>
           <h1 style={{ color: 'white', fontWeight: 900, fontSize: 24, lineHeight: 1.1 }}>Premios Andersen<br />Mundialista 2026</h1>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6, maxWidth: 420, margin: '6px auto 0' }}>
-            La firma premia tu esfuerzo. Estos son los reconocimientos en juego y quiénes van ganando ahora mismo ✨
+            {derived?.finalDone
+              ? 'El torneo terminó. Estos son los reconocimientos y los ganadores según los resultados oficiales 🏅'
+              : 'La firma premia tu esfuerzo. Estos son los reconocimientos en juego y quiénes van ganando ahora mismo ✨'}
           </p>
         </div>
 
-        {/* Cartel animado */}
-        <TempSign />
-
-        {/* Aviso: todo es temporal */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.35)', borderRadius: 14, padding: '11px 14px' }}>
-          <span style={{ fontSize: 22 }}>⚠️</span>
-          <p style={{ color: '#fde68a', fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>
-            Estas posiciones son <b>temporales</b> y cambian con cada partido. <b>Nadie ha ganado todavía</b>: los premios se entregan al final del Mundial con los resultados oficiales.
-          </p>
-        </div>
+        {/* Cartel animado / aviso temporal: solo mientras el torneo sigue en curso */}
+        {!derived?.finalDone && <TempSign />}
+        {!derived?.finalDone && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.35)', borderRadius: 14, padding: '11px 14px' }}>
+            <span style={{ fontSize: 22 }}>⚠️</span>
+            <p style={{ color: '#fde68a', fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>
+              Estas posiciones son <b>temporales</b> y cambian con cada partido. <b>Nadie ha ganado todavía</b>: los premios se entregan al final del Mundial con los resultados oficiales.
+            </p>
+          </div>
+        )}
 
         {/* ── Podio individual ── */}
         <div>

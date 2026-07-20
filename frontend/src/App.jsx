@@ -167,8 +167,8 @@ function AppRoutes() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
       </Route>
-      <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
-      <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
+      <Route path="/" element={<Navigate to={isAuthenticated ? '/prizes' : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={isAuthenticated ? '/prizes' : '/login'} replace />} />
     </Routes>
   );
 }
