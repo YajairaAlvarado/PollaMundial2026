@@ -278,16 +278,21 @@ export default function Prizes() {
     const isTop3 = (u) => !!u && (top3Ids.has(u.id) || top3Usernames.has((u.username || '').toLowerCase()));
     const top3Names = podium.map((e) => e.display_name);
 
-    // Departamento campeón (promedio de puntos)
+    // Departamento campeón — MISMA fórmula que la tabla de Posiciones por área:
+    // promedio de puntos SOLO de partidos (sin los adicionales/bonus) entre TODOS
+    // los miembros del departamento.
+    const pointsByUsername = {};
+    for (const e of leaderboard) pointsByUsername[e.username] = e;
     const deptMap = {};
-    for (const e of leaderboard) {
-      const d = e.department || 'Sin departamento';
-      (deptMap[d] ||= { dept: d, total: 0, count: 0 });
-      deptMap[d].total += e.total_points || 0;
+    for (const u of users) {
+      const d = u.department || 'Sin departamento';
+      (deptMap[d] ||= { dept: d, base: 0, count: 0 });
+      const e = pointsByUsername[u.username];
+      deptMap[d].base += e ? ((e.total_points || 0) - (e.bonus_points || 0)) : 0;
       deptMap[d].count += 1;
     }
     const depts = Object.values(deptMap)
-      .map((d) => ({ ...d, avg: d.count ? d.total / d.count : 0 }))
+      .map((d) => ({ ...d, avg: d.count ? d.base / d.count : 0 }))
       .sort((a, b) => b.avg - a.avg);
 
     // Álbum: top coleccionistas (excluye a los 1°/2°/3° individuales → sube el siguiente).
