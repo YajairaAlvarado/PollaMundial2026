@@ -28,6 +28,7 @@ import Profile from './pages/Profile';
 import Vs from './pages/Vs';
 import Album from './pages/Album';
 import Prizes from './pages/Prizes';
+import Guayaquil from './pages/Guayaquil';
 import ChampionPredictionModal from './components/ChampionPredictionModal';
 import KnowledgeRanking from './pages/KnowledgeRanking';
 import KnowledgeTrivia, { canSeeKnowledge } from './components/KnowledgeTrivia';
@@ -155,6 +156,12 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      {/* Juego del Jurado (Fiestas de Guayaquil) — pantalla completa, solo daniel.leon */}
+      <Route path="/guayaquil" element={
+        isAuthenticated && user?.username?.toLowerCase() === 'daniel.leon'
+          ? <Guayaquil />
+          : <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />
+      } />
       <Route element={<ProtectedLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/matches" element={<Matches />} />

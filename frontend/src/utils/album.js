@@ -5,10 +5,12 @@ export const ALBUM_ENABLED   = true;           // true = abierto a toda la firma
 export const ALBUM_BETA_USERS = ['daniel.leon', 'kevin.castro'];
 export const isAlbumBeta = (username) => ALBUM_ENABLED || ALBUM_BETA_USERS.includes((username || '').toLowerCase());
 
-// ── Reglas (fáciles de cambiar a futuro) ───────────────────────────────────
-export const DAILY_LIMIT   = 6;                 // fichas (aciertos) máximos por día
-export const ATTEMPT_LIMIT = 6;                 // intentos máximos por día (acierte o falle)
-export const COOLDOWN_MS  = 60 * 60 * 1000;     // 1 hora entre intentos
+// ── Reglas ──────────────────────────────────────────────────────────────────
+// El torneo terminó → álbum SIN límites: intentos ilimitados, sin espera, para
+// que quien no completó pueda terminarlo. (Antes: 6/día y 1h de cooldown.)
+export const DAILY_LIMIT   = 9999;              // sin tope de fichas por día
+export const ATTEMPT_LIMIT = 9999;             // sin tope de intentos por día
+export const COOLDOWN_MS  = 0;                  // sin espera entre intentos
 export const ANSWER_MS    = 5000;               // 5 seg para contestar (más difícil)
 export const ALBUM_POINTS = 3;                  // puntos al completar (aún NO oficial)
 
