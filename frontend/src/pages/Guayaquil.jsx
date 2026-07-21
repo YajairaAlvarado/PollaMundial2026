@@ -51,6 +51,34 @@ function Peluche({ size = 90 }) {
     style={{ height: size, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.3))', animation: 'gyeWave 2.2s ease-in-out infinite' }} />;
 }
 
+// Varios Juan Pueblo rebotando (efecto "gif") en el fondo inferior
+function JuanFloaters() {
+  const [ok, setOk] = useState(true);
+  const items = useMemo(() => Array.from({ length: 5 }, (_, i) => ({
+    left: 3 + i * 20 + Math.random() * 6, delay: Math.random() * 2.5, dur: 2.6 + Math.random() * 1.8, size: 62 + Math.random() * 34,
+  })), []);
+  if (!ok) return null;
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      {items.map((it, i) => (
+        <img key={i} src={`${import.meta.env.BASE_URL}juan-pueblo.png`} alt="" onError={() => setOk(false)}
+          style={{ position: 'absolute', bottom: -12, left: `${it.left}%`, height: it.size, opacity: 0.9,
+            filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))', animation: `gyeBounce ${it.dur}s ease-in-out ${it.delay}s infinite` }} />
+      ))}
+    </div>
+  );
+}
+
+// Banda animada con la imagen de "varios" Juan Pueblo
+function JuanVarios({ maxWidth = 560 }) {
+  const [ok, setOk] = useState(true);
+  if (!ok) return null;
+  return (
+    <img src={`${import.meta.env.BASE_URL}juan-pueblo-varios.png`} alt="Juan Pueblo" onError={() => setOk(false)}
+      style={{ width: '90%', maxWidth, marginTop: 10, filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.3))', animation: 'gyeSway 2.4s ease-in-out infinite' }} />
+  );
+}
+
 // Guacamayas volando de fondo 🦜
 function Guacamayas() {
   const birds = useMemo(() => Array.from({ length: 7 }, (_, i) => ({
@@ -186,11 +214,14 @@ export default function Guayaquil() {
         @keyframes gyePop { 0%{ transform: scale(0.6); opacity:0;} 60%{ transform: scale(1.15);} 100%{ transform: scale(1); opacity:1;} }
         @keyframes gyePulse { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.06);} }
         @keyframes gyeWave { 0%,100%{ transform: rotate(-6deg);} 50%{ transform: rotate(8deg);} }
+        @keyframes gyeBounce { 0%,100%{ transform: translateY(0) rotate(-2deg);} 50%{ transform: translateY(-22px) rotate(3deg);} }
+        @keyframes gyeSway { 0%,100%{ transform: translateY(0) scale(1);} 50%{ transform: translateY(-10px) scale(1.03);} }
         @keyframes gyeConfetti { to { transform: translateY(105vh) rotate(540deg); } }
         .gye-btn { transition: transform .08s ease, box-shadow .12s ease; }
         .gye-btn:active { transform: scale(0.97); }
       `}</style>
       <Guacamayas />
+      {(phase === 'setup' || phase === 'final') && <JuanFloaters />}
 
       {/* Franja decorativa (bandera celeste-blanco-celeste) arriba */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, background: `linear-gradient(90deg, ${C.celeste} 0 33%, #fff 33% 66%, ${C.celeste} 66% 100%)`, zIndex: 1 }} />
@@ -306,6 +337,7 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
         style={{ marginTop: 26, background: C.oro, color: '#083D77', border: 'none', borderRadius: 999, padding: '16px 48px', fontWeight: 900, fontSize: 22, boxShadow: '0 10px 30px rgba(0,0,0,0.3)', animation: 'gyePulse 1.8s ease-in-out infinite' }}>
         ▶ COMENZAR
       </button>
+      <JuanVarios maxWidth={520} />
     </div>
   );
 }
@@ -446,8 +478,10 @@ function FinalScreen({ ranking, onRestart }) {
         ))}
       </div>
 
+      <JuanVarios maxWidth={520} />
+
       <button onClick={onRestart} className="gye-btn"
-        style={{ marginTop: 24, background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 999, padding: '13px 36px', fontWeight: 800, fontSize: 16 }}>
+        style={{ marginTop: 18, background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 999, padding: '13px 36px', fontWeight: 800, fontSize: 16 }}>
         🔄 Jugar de nuevo
       </button>
     </div>
