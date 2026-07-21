@@ -32,6 +32,25 @@ function shuffle(a) {
   return r;
 }
 
+// Juan Pueblo (la mascota). Carga la imagen real desde /juan-pueblo.png;
+// si aún no está subida, cae a un emoji para no romper.
+function JuanPueblo({ size = 130 }) {
+  const [ok, setOk] = useState(true);
+  const src = `${import.meta.env.BASE_URL}juan-pueblo.png`;
+  if (!ok) return <div style={{ fontSize: size * 0.5, animation: 'gyeWave 2.5s ease-in-out infinite' }}>🙋‍♂️</div>;
+  return <img src={src} alt="Juan Pueblo" onError={() => setOk(false)}
+    style={{ height: size, width: 'auto', filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.35))', animation: 'gyeWave 2.6s ease-in-out infinite', transformOrigin: 'bottom center' }} />;
+}
+
+// Peluche premio. Carga /peluche.png; si no está, emoji.
+function Peluche({ size = 90 }) {
+  const [ok, setOk] = useState(true);
+  const src = `${import.meta.env.BASE_URL}peluche.png`;
+  if (!ok) return <div style={{ fontSize: size * 0.6, animation: 'gyeWave 2.2s ease-in-out infinite' }}>🧸🍪</div>;
+  return <img src={src} alt="Peluche" onError={() => setOk(false)}
+    style={{ height: size, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.3))', animation: 'gyeWave 2.2s ease-in-out infinite' }} />;
+}
+
 // Guacamayas volando de fondo 🦜
 function Guacamayas() {
   const birds = useMemo(() => Array.from({ length: 7 }, (_, i) => ({
@@ -232,8 +251,8 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-      <div style={{ fontSize: 56, animation: 'gyeWave 2.5s ease-in-out infinite' }}>🙋‍♂️</div>
-      <h1 style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05, textShadow: '0 6px 20px rgba(0,0,0,0.25)' }}>El Reto del Jurado</h1>
+      <JuanPueblo size={150} />
+      <h1 style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05, textShadow: '0 6px 20px rgba(0,0,0,0.25)', marginTop: 6 }}>El Reto del Jurado</h1>
       <p style={{ fontSize: 18, fontWeight: 700, color: C.oro }}>🎉 Fiestas de Guayaquil 🦜</p>
       <p style={{ opacity: 0.9, marginTop: 6, maxWidth: 520 }}>Los 3 jurados responden a la vez en la tablet. Gana quien acierte y sea el más rápido. ¡Toquen todos al mismo tiempo!</p>
 
@@ -318,22 +337,26 @@ function QuestionScreen({ question, qIndex, total, jurors, orders, answers, time
               <div style={{ textAlign: 'center', marginBottom: 10 }}>
                 <span style={{ display: 'inline-block', background: JUROR_COLORS[ji], color: 'white', fontWeight: 900, fontSize: 15, padding: '4px 16px', borderRadius: 999 }}>{name}</span>
               </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'center' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
                 {orders[ji].map((opt, oi) => {
                   const chosen = answered?.text === opt;
+                  const letter = String.fromCharCode(65 + oi);
                   return (
                     <button key={oi} className="gye-btn"
                       onPointerDown={() => onPick(ji, opt)}
                       disabled={!!answered}
                       style={{
-                        padding: '18px 12px', borderRadius: 16, fontWeight: 800, fontSize: 19, lineHeight: 1.15,
-                        background: chosen ? JUROR_COLORS[ji] : 'rgba(255,255,255,0.95)',
+                        display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
+                        padding: '20px 16px', minHeight: 78, borderRadius: 18, fontWeight: 900, fontSize: 23, lineHeight: 1.15,
+                        background: chosen ? JUROR_COLORS[ji] : '#ffffff',
                         color: chosen ? 'white' : '#083D77',
-                        border: chosen ? '3px solid #fff' : '3px solid transparent',
-                        opacity: answered && !chosen ? 0.35 : 1,
-                        boxShadow: '0 5px 14px rgba(0,0,0,0.18)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                        border: chosen ? '4px solid #fff' : `3px solid ${JUROR_COLORS[ji]}`,
+                        opacity: answered && !chosen ? 0.3 : 1,
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.22)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
                       }}>
-                      {opt}
+                      <span style={{ flexShrink: 0, width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: chosen ? 'rgba(255,255,255,0.3)' : JUROR_COLORS[ji], color: '#fff', fontSize: 20, fontWeight: 900 }}>{letter}</span>
+                      <span style={{ flex: 1 }}>{opt}</span>
                     </button>
                   );
                 })}
@@ -397,14 +420,17 @@ function FinalScreen({ ranking, onRestart }) {
         <span key={i} style={{ position: 'fixed', top: -30, left: `${c.left}%`, fontSize: 26, animation: `gyeConfetti ${c.dur}s ${c.delay}s ease-in forwards` }}>{c.e}</span>
       ))}
       <p style={{ fontSize: 20, fontWeight: 800 }}>🏆 ¡Tenemos ganador! 🏆</p>
-      <div style={{ fontSize: 70, margin: '6px 0', animation: 'gyePop 0.6s ease' }}>👑</div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, margin: '6px 0' }}>
+        <JuanPueblo size={120} />
+        <div style={{ fontSize: 56, animation: 'gyePop 0.6s ease' }}>👑</div>
+      </div>
       <h1 style={{ fontSize: 46, fontWeight: 900, color: C.oro, textShadow: '0 6px 20px rgba(0,0,0,0.3)' }}>{champ.name}</h1>
       <p style={{ opacity: 0.9 }}>{champ.wins} ronda{champ.wins === 1 ? '' : 's'} ganada{champ.wins === 1 ? '' : 's'} · {(champ.ms / 1000).toFixed(2)}s en total</p>
 
       {/* Premio */}
       <div style={{ marginTop: 18, background: 'rgba(255,255,255,0.14)', border: `2px solid ${C.oro}`, borderRadius: 20, padding: '16px 26px' }}>
         <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.85 }}>PREMIO</p>
-        <div style={{ fontSize: 54, animation: 'gyeWave 2.2s ease-in-out infinite' }}>🧸🍪</div>
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '6px 0' }}><Peluche size={110} /></div>
         <p style={{ fontWeight: 900, fontSize: 18 }}>¡Peluche de galleta!</p>
       </div>
 
