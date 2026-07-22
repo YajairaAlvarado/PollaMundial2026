@@ -609,6 +609,24 @@ export default function Prizes() {
 
             {/* Campeón del Mundial */}
             <PrizeCard icon={<Globe2 size={22} />} accent="#F59E0B" title="⚽ Campeón del Mundial" prizeLabel="Gift Card $50" ribbon="🌎">
+              {/* 🏆 GANADOR OFICIAL (definido por sorteo entre los que acertaron) */}
+              {derived.finalDone && (
+                <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, marginBottom: 12, padding: '16px 14px', textAlign: 'center',
+                  background: 'linear-gradient(160deg, rgba(245,158,11,0.22), rgba(245,158,11,0.06))', border: '2px solid rgba(245,158,11,0.55)', boxShadow: '0 8px 28px rgba(245,158,11,0.18)' }}>
+                  {['🎉','🎊','⭐','🏆'].map((e, i) => (
+                    <span key={i} aria-hidden="true" style={{ position: 'absolute', fontSize: 18, opacity: 0.85,
+                      left: `${[5, 90, 10, 86][i]}%`, top: `${[8, 12, 78, 74][i]}%`, animation: `twinkle ${1.7 + i * 0.3}s ease-in-out ${i * 0.25}s infinite` }}>{e}</span>
+                  ))}
+                  <p style={{ color: '#FCD34D', fontWeight: 900, fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase' }}>🏆 Ganador del premio</p>
+                  <img src={`${import.meta.env.BASE_URL}ganador-campeon.jpg`} alt="Francisco Pita"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                    style={{ width: 190, maxWidth: '80%', borderRadius: 14, margin: '10px auto 6px', display: 'block', border: '3px solid rgba(245,158,11,0.7)', boxShadow: '0 10px 26px rgba(0,0,0,0.45)' }} />
+                  <p style={{ color: 'white', fontWeight: 900, fontSize: 20, marginTop: 4 }}>Francisco Pita</p>
+                  <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12.5, lineHeight: 1.45, marginTop: 4, maxWidth: 420, margin: '4px auto 0' }}>
+                    Acertó a <b style={{ color: '#FCD34D' }}>España campeón</b> y ganó tras el <b>sorteo</b> entre quienes acertaron el pronóstico. ¡Felicidades! 🎉
+                  </p>
+                </div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: revealed ? 'rgba(52,211,153,0.1)' : 'rgba(96,165,250,0.1)', border: `1px solid ${revealed ? 'rgba(52,211,153,0.3)' : 'rgba(96,165,250,0.3)'}`, borderRadius: 10, padding: '8px 12px', marginBottom: 10 }}>
                 {revealed ? <Sparkles size={15} style={{ color: '#34d399' }} /> : <Lock size={15} style={{ color: '#93c5fd' }} />}
                 <p style={{ color: revealed ? '#a7f3d0' : '#bfdbfe', fontSize: 11.5, fontWeight: 600 }}>
