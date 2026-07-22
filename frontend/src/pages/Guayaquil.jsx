@@ -51,44 +51,21 @@ function Peluche({ size = 90 }) {
     style={{ height: size, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.3))', animation: 'gyeWave 2.2s ease-in-out infinite' }} />;
 }
 
-// Varios Juan Pueblo rebotando (efecto "gif") en el fondo inferior
-function JuanFloaters() {
-  const [ok, setOk] = useState(true);
-  const items = useMemo(() => Array.from({ length: 5 }, (_, i) => ({
-    left: 3 + i * 20 + Math.random() * 6, delay: Math.random() * 2.5, dur: 2.6 + Math.random() * 1.8, size: 62 + Math.random() * 34,
-  })), []);
-  if (!ok) return null;
+// Decoración con los GIFs de Guayaquil en las esquinas (guayaquil, baile, ceviche, bolón)
+function GifDecor() {
+  const B = import.meta.env.BASE_URL;
+  const items = [
+    { g: 'guayaquil.gif',            s: { top: 10, left: 12, width: 140 } },
+    { g: 'baile-guayaquil.gif',      s: { bottom: 10, left: 14, width: 140 } },
+    { g: 'ceviche.gif',              s: { top: 14, right: 14, width: 120 } },
+    { g: 'bolon-bolon-de-verde.gif', s: { bottom: 14, right: 16, width: 130 } },
+  ];
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
       {items.map((it, i) => (
-        <img key={i} src={`${import.meta.env.BASE_URL}juan-pueblo.png`} alt="" onError={() => setOk(false)}
-          style={{ position: 'absolute', bottom: -12, left: `${it.left}%`, height: it.size, opacity: 0.9,
-            filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))', animation: `gyeBounce ${it.dur}s ease-in-out ${it.delay}s infinite` }} />
-      ))}
-    </div>
-  );
-}
-
-// Banda animada con la imagen de "varios" Juan Pueblo
-function JuanVarios({ maxWidth = 560 }) {
-  const [ok, setOk] = useState(true);
-  if (!ok) return null;
-  return (
-    <img src={`${import.meta.env.BASE_URL}juan-pueblo-varios.png`} alt="Juan Pueblo" onError={() => setOk(false)}
-      style={{ width: '90%', maxWidth, marginTop: 10, filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.3))', animation: 'gyeSway 2.4s ease-in-out infinite' }} />
-  );
-}
-
-// Guacamayas volando de fondo 🦜
-function Guacamayas() {
-  const birds = useMemo(() => Array.from({ length: 7 }, (_, i) => ({
-    top: 6 + Math.random() * 70, dur: 9 + Math.random() * 8, delay: Math.random() * 8, size: 22 + Math.random() * 20, e: i % 2 ? '🦜' : '🦜',
-  })), []);
-  return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      {birds.map((b, i) => (
-        <span key={i} style={{ position: 'absolute', top: `${b.top}%`, left: '-8%', fontSize: b.size, opacity: 0.85,
-          animation: `gyeFly ${b.dur}s linear ${b.delay}s infinite` }}>{b.e}</span>
+        <img key={i} src={`${B}${it.g}`} alt="" onError={(e) => { e.target.style.display = 'none'; }}
+          style={{ position: 'absolute', borderRadius: 16, boxShadow: '0 8px 20px rgba(0,0,0,0.28)', border: '3px solid rgba(255,255,255,0.35)',
+            opacity: 0.92, animation: `gyeSway ${3 + i * 0.6}s ease-in-out infinite`, ...it.s }} />
       ))}
     </div>
   );
@@ -220,8 +197,7 @@ export default function Guayaquil() {
         .gye-btn { transition: transform .08s ease, box-shadow .12s ease; }
         .gye-btn:active { transform: scale(0.97); }
       `}</style>
-      <Guacamayas />
-      {(phase === 'setup' || phase === 'final') && <JuanFloaters />}
+      <GifDecor />
 
       {/* Franja decorativa (bandera celeste-blanco-celeste) arriba */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, background: `linear-gradient(90deg, ${C.celeste} 0 33%, #fff 33% 66%, ${C.celeste} 66% 100%)`, zIndex: 1 }} />
@@ -337,7 +313,6 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
         style={{ marginTop: 26, background: C.oro, color: '#083D77', border: 'none', borderRadius: 999, padding: '16px 48px', fontWeight: 900, fontSize: 22, boxShadow: '0 10px 30px rgba(0,0,0,0.3)', animation: 'gyePulse 1.8s ease-in-out infinite' }}>
         ▶ COMENZAR
       </button>
-      <JuanVarios maxWidth={520} />
     </div>
   );
 }
@@ -415,18 +390,25 @@ function RevealScreen({ question, jurors, answers, winner, isLast, onNext }) {
         ✓ {question.correct}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, width: '100%', maxWidth: 900 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, width: '100%', maxWidth: 960 }}>
         {jurors.map((name, ji) => {
           const a = answers[ji];
           const ok = a && a.text === question.correct;
           const isWin = winner === ji;
           return (
-            <div key={ji} style={{ background: isWin ? 'rgba(255,197,51,0.22)' : 'rgba(255,255,255,0.1)', border: `3px solid ${isWin ? C.oro : JUROR_COLORS[ji]}`, borderRadius: 18, padding: 16, position: 'relative' }}>
-              {isWin && <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: C.oro, color: '#083D77', fontWeight: 900, fontSize: 12, padding: '3px 12px', borderRadius: 999 }}>🏆 GANÓ LA RONDA</div>}
-              <p style={{ fontWeight: 900, fontSize: 16 }}>{name}</p>
-              <p style={{ fontSize: 40, margin: '6px 0' }}>{ok ? '✅' : a ? '❌' : '⌛'}</p>
-              <p style={{ fontSize: 13, opacity: 0.9 }}>{a ? `"${a.text}"` : 'No respondió'}</p>
-              {a && <p style={{ fontSize: 13, fontWeight: 800, color: ok ? '#c9ffdf' : '#ffd0d0' }}>{(a.ms / 1000).toFixed(2)}s</p>}
+            <div key={ji} style={{ overflow: 'hidden', borderRadius: 20, border: `4px solid ${isWin ? C.oro : JUROR_COLORS[ji]}`, background: isWin ? 'rgba(255,197,51,0.18)' : 'rgba(255,255,255,0.1)', boxShadow: isWin ? '0 0 30px rgba(255,197,51,0.5)' : 'none' }}>
+              {/* Cabecera con el nombre */}
+              <div style={{ background: isWin ? C.oro : JUROR_COLORS[ji], color: isWin ? '#083D77' : '#fff', padding: '10px 8px', fontWeight: 900, fontSize: 18 }}>
+                {isWin && '👑 '}{name}
+              </div>
+              {/* Cuerpo: resultado */}
+              <div style={{ padding: '18px 14px', textAlign: 'center' }}>
+                <p style={{ fontSize: 52, margin: 0, lineHeight: 1 }}>{ok ? '✅' : a ? '❌' : '⌛'}</p>
+                <p style={{ fontSize: 15, opacity: 0.9, marginTop: 10 }}>{a ? `Respondió "${a.text}"` : 'No respondió'}</p>
+                {a && <p style={{ fontSize: 22, fontWeight: 900, color: ok ? '#c9ffdf' : '#ffd0d0', marginTop: 2 }}>⏱ {(a.ms / 1000).toFixed(2)}s</p>}
+              </div>
+              {/* Franja ganador (abajo, sin encimar nada) */}
+              {isWin && <div style={{ background: C.oro, color: '#083D77', fontWeight: 900, fontSize: 14, padding: '8px', letterSpacing: '0.03em' }}>🏆 GANÓ LA RONDA</div>}
             </div>
           );
         })}
@@ -478,10 +460,8 @@ function FinalScreen({ ranking, onRestart }) {
         ))}
       </div>
 
-      <JuanVarios maxWidth={520} />
-
       <button onClick={onRestart} className="gye-btn"
-        style={{ marginTop: 18, background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 999, padding: '13px 36px', fontWeight: 800, fontSize: 16 }}>
+        style={{ marginTop: 22, background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 999, padding: '13px 36px', fontWeight: 800, fontSize: 16 }}>
         🔄 Jugar de nuevo
       </button>
     </div>
