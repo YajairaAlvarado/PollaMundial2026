@@ -157,8 +157,9 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       {/* Juego del Jurado (Fiestas de Guayaquil) — pantalla completa, solo daniel.leon */}
+      {/* Juego del Jurado: acceso para daniel.leon, gabriela.romero, kevin.castro */}
       <Route path="/guayaquil" element={
-        isAuthenticated && user?.username?.toLowerCase() === 'daniel.leon'
+        isAuthenticated && ['daniel.leon', 'gabriela.romero', 'kevin.castro'].includes(user?.username?.toLowerCase())
           ? <Guayaquil />
           : <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />
       } />
