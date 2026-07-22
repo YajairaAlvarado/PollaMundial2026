@@ -46,19 +46,22 @@ function JuanPueblo({ size = 130 }) {
 function Peluche({ size = 90 }) {
   const [ok, setOk] = useState(true);
   const src = `${import.meta.env.BASE_URL}peluche.png`;
-  if (!ok) return <div style={{ fontSize: size * 0.6, animation: 'gyeWave 2.2s ease-in-out infinite' }}>🧸🍪</div>;
+  if (!ok) return <div style={{ fontSize: size * 0.6, animation: 'gyeWave 2.2s ease-in-out infinite' }}>🧸🍲</div>;
   return <img src={src} alt="Peluche" onError={() => setOk(false)}
     style={{ height: size, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.3))', animation: 'gyeWave 2.2s ease-in-out infinite' }} />;
 }
 
-// Decoración con los GIFs de Guayaquil en las esquinas (guayaquil, baile, ceviche, bolón)
+// Decoración con una MEZCLA de GIFs guayaquileños en las esquinas
+// (Barcelona, Emelec, Guayaquil 3, ceviche, bolón, baile).
 function GifDecor() {
   const B = import.meta.env.BASE_URL;
   const items = [
-    { g: 'guayaquil.gif',            s: { top: 10, left: 12, width: 140 } },
-    { g: 'baile-guayaquil.gif',      s: { bottom: 10, left: 14, width: 140 } },
-    { g: 'ceviche.gif',              s: { top: 14, right: 14, width: 120 } },
-    { g: 'bolon-bolon-de-verde.gif', s: { bottom: 14, right: 16, width: 130 } },
+    { g: 'barcelona.gif',            s: { top: 10, left: 12, width: 135 } },
+    { g: 'emelec.gif',               s: { top: 150, left: 16, width: 120 } },
+    { g: 'baile-guayaquil.gif',      s: { bottom: 12, left: 14, width: 135 } },
+    { g: 'guayaquil3.gif',           s: { top: 12, right: 12, width: 140 } },
+    { g: 'ceviche.gif',              s: { bottom: 150, right: 16, width: 115 } },
+    { g: 'bolon-bolon-de-verde.gif', s: { bottom: 14, right: 16, width: 120 } },
   ];
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
@@ -445,7 +448,7 @@ function FinalScreen({ ranking, onRestart }) {
       <div style={{ marginTop: 18, background: 'rgba(255,255,255,0.14)', border: `2px solid ${C.oro}`, borderRadius: 20, padding: '16px 26px' }}>
         <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.85 }}>PREMIO</p>
         <div style={{ display: 'flex', justifyContent: 'center', margin: '6px 0' }}><Peluche size={110} /></div>
-        <p style={{ fontWeight: 900, fontSize: 18 }}>¡Peluche de galleta!</p>
+        <p style={{ fontWeight: 900, fontSize: 18 }}>¡Peluche de encebollado! 🍲</p>
       </div>
 
       {/* Tabla completa */}
