@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 const TZ = 'America/Guayaquil';
 const ROUND_SECONDS = 20;
 const COUNTDOWN_SECONDS = 7; // tiempo entre preguntas para LEERLA en voz alta
-const STORAGE = 'guayaquil_trivia_v2';
+const STORAGE = 'guayaquil_trivia_v3';
 
 // Paleta Guayaquil (celeste + blanco + azul)
 const C = {
@@ -46,9 +46,9 @@ const DEFAULT_QUESTIONS = [
   {
     q: '¿Quién NO nació en Guayaquil?',
     options: [
-      { t: 'Julio Jaramillo', img: 'julioJaramillo.png' },
-      { t: 'José Joaquín de Olmedo', img: 'olmedo.png' },
-      { t: 'Eloy Alfaro', img: 'eloyalfaro.png' },
+      { t: 'Julio Jaramillo', img: 'julioJaramillo.jpg' },
+      { t: 'José Joaquín de Olmedo', img: 'olmedo.jpg' },
+      { t: 'Eloy Alfaro', img: 'eloyalfaro.jpg' },
       { t: 'Carlos Rubira Infante', img: 'carlosrubirainfante.jpg' },
     ],
     correct: 'Eloy Alfaro',
@@ -68,10 +68,10 @@ const DEFAULT_QUESTIONS = [
   {
     q: '¿Qué presidente NO nació en Guayaquil?',
     options: [
-      { t: 'Jaime Roldós', img: 'roldos.png' },
-      { t: 'Carlos Julio Arosemena Monroy', img: 'arosemena-monroy.png' },
-      { t: 'Carlos Julio Arosemena Tola', img: 'arosemena-tola.png' },
-      { t: 'Daniel Noboa', img: 'danielnoboa.png' },
+      { t: 'Jaime Roldós', img: 'roldos.jpg' },
+      { t: 'Carlos Julio Arosemena Monroy', img: 'arosemena-monroy.jpg' },
+      { t: 'Carlos Julio Arosemena Tola', img: 'arosemena-tola.jpg' },
+      { t: 'Daniel Noboa', img: 'danielnoboa.jpg' },
     ],
     correct: 'Daniel Noboa',
     explain: 'Daniel Noboa no nació en Guayaquil; los otros tres presidentes sí son guayaquileños.',
@@ -172,6 +172,14 @@ export default function Guayaquil() {
     } catch { /* noop */ }
   }, []);
   const saveConfig = (j, qs) => { try { localStorage.setItem(STORAGE, JSON.stringify({ jurors: j, questions: qs })); } catch { /* noop */ } };
+
+  // Precargar TODAS las fotos al abrir la página (quedan en caché y salen al instante con la pregunta)
+  useEffect(() => {
+    const B = import.meta.env.BASE_URL;
+    const srcs = new Set([`${B}fotosjuego/estrellas.jpg`]);
+    for (const q of questions) for (const o of q.options) if (o.img) srcs.add(`${B}fotosjuego/${o.img}`);
+    srcs.forEach((s) => { const im = new Image(); im.src = s; });
+  }, [questions]);
 
   const question = questions[qIndex];
 
