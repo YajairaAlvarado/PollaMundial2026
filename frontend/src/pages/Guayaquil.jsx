@@ -98,7 +98,9 @@ function OptionMedia({ opt, size = 76 }) {
   );
 }
 
-const JUROR_COLORS = ['#E4002B', '#0A6CB0', '#12B76A']; // rojo, azul, verde para distinguir jurados
+// Mismo color para los 3 jurados (el rojo/verde confundía: parecía correcto/incorrecto).
+// El resultado se distingue con ✅/❌ y el dorado del ganador.
+const JUROR_COLORS = ['#083D77', '#083D77', '#083D77'];
 
 function shuffle(a) {
   const r = a.slice();
