@@ -265,7 +265,9 @@ export default function Guayaquil() {
 
   // ── Estilos base de pantalla ──
   const screen = {
-    position: 'fixed', inset: 0, zIndex: 200000, overflow: 'auto',
+    position: 'fixed', inset: 0, zIndex: 200000,
+    // Sin scroll durante el juego (confunde en la tablet); solo el setup puede scrollear
+    overflow: (phase === 'setup' || phase === 'final') ? 'auto' : 'hidden',
     background: `linear-gradient(160deg, ${C.celeste} 0%, ${C.celesteDark} 55%, ${C.azul} 100%)`,
     color: 'white', fontFamily: "'Inter', system-ui, sans-serif", userSelect: 'none', WebkitUserSelect: 'none',
     touchAction: 'manipulation',
@@ -290,8 +292,9 @@ export default function Guayaquil() {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, background: `linear-gradient(90deg, ${C.celeste} 0 33%, #fff 33% 66%, ${C.celeste} 66% 100%)`, zIndex: 1 }} />
 
       <div style={{ position: 'relative', zIndex: 2, maxWidth: 1500, margin: '0 auto',
-        padding: phase === 'question' ? '14px 14px 12px' : '28px 20px 40px',
-        height: phase === 'question' ? '100vh' : 'auto', minHeight: phase === 'question' ? 0 : '100vh',
+        padding: phase === 'question' ? '14px 14px 12px' : (phase === 'countdown' || phase === 'reveal') ? '16px 20px 16px' : '28px 20px 40px',
+        height: (phase === 'question' || phase === 'countdown' || phase === 'reveal') ? '100vh' : 'auto',
+        minHeight: (phase === 'question' || phase === 'countdown' || phase === 'reveal') ? 0 : '100vh',
         display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
 
         {/* ── SETUP ── */}
