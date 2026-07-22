@@ -7,7 +7,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 const TZ = 'America/Guayaquil';
 const ROUND_SECONDS = 20;
-const STORAGE = 'guayaquil_trivia_v1';
+const COUNTDOWN_SECONDS = 7; // tiempo entre preguntas para LEERLA en voz alta
+const STORAGE = 'guayaquil_trivia_v2';
 
 // Paleta Guayaquil (celeste + blanco + azul)
 const C = {
@@ -18,11 +19,84 @@ const C = {
   oro: '#FFC533',
 };
 
+// Opciones: { t: texto, img: foto en /fotosjuego, stars: N repite la estrella N veces }
 const DEFAULT_QUESTIONS = [
-  { q: '¿Cuántas estrellas tiene la bandera de Guayaquil?', options: ['3', '2', '5'], correct: '3' },
-  { q: '¿Qué se celebra el 9 de octubre en Guayaquil?', options: ['La Independencia de Guayaquil', 'La Fundación de Guayaquil', 'La Batalla de Pichincha'], correct: 'La Independencia de Guayaquil' },
-  { q: '¿Cómo se llama el personaje símbolo del guayaquileño de a pie?', options: ['Juan Pueblo', 'Juan Bimba', 'Don Evaristo'], correct: 'Juan Pueblo' },
+  {
+    q: '¿Cuál NO es un plato típico de Guayaquil?',
+    options: [
+      { t: 'Encebollado', img: 'encebollado.jpeg' },
+      { t: 'Bolón de verde', img: 'bolonverde.jpg' },
+      { t: 'Cangrejo criollo', img: 'cangrejo.jpg' },
+      { t: 'Fritada', img: 'fritada.jpg' },
+    ],
+    correct: 'Fritada',
+    explain: 'La fritada es ecuatoriana, pero se asocia principalmente con la región Sierra.',
+  },
+  {
+    q: '¿Cuántas estrellas tiene la bandera de Guayaquil?',
+    options: [
+      { t: '2', stars: 2 },
+      { t: '3', stars: 3 },
+      { t: '4', stars: 4 },
+      { t: '5', stars: 5 },
+    ],
+    correct: '3',
+    explain: 'La bandera de Guayaquil tiene 3 estrellas, que representan los tres primeros cantones de la provincia.',
+  },
+  {
+    q: '¿Quién NO nació en Guayaquil?',
+    options: [
+      { t: 'Julio Jaramillo', img: 'julioJaramillo.png' },
+      { t: 'José Joaquín de Olmedo', img: 'olmedo.png' },
+      { t: 'Eloy Alfaro', img: 'eloyalfaro.png' },
+      { t: 'Carlos Rubira Infante', img: 'carlosrubirainfante.jpg' },
+    ],
+    correct: 'Eloy Alfaro',
+    explain: 'Eloy Alfaro nació en Montecristi, Manabí.',
+  },
+  {
+    q: '¿En qué año se fundó Guayaquil?',
+    options: [
+      { t: '1534' },
+      { t: '1535' },
+      { t: '1538' },
+      { t: '1820' },
+    ],
+    correct: '1535',
+    explain: 'Fue en 1535, concretamente el 25 de julio de 1535. La fundación fue un proceso con varios asentamientos, por eso a veces también aparece 1538 en algunas fuentes.',
+  },
+  {
+    q: '¿Qué presidente NO nació en Guayaquil?',
+    options: [
+      { t: 'Jaime Roldós', img: 'roldos.png' },
+      { t: 'Carlos Julio Arosemena Monroy', img: 'arosemena-monroy.png' },
+      { t: 'Carlos Julio Arosemena Tola', img: 'arosemena-tola.png' },
+      { t: 'Daniel Noboa', img: 'danielnoboa.png' },
+    ],
+    correct: 'Daniel Noboa',
+    explain: 'Daniel Noboa no nació en Guayaquil; los otros tres presidentes sí son guayaquileños.',
+  },
 ];
+
+// Imagen de una opción (foto o fila de estrellas)
+function OptionMedia({ opt, size = 76 }) {
+  const B = import.meta.env.BASE_URL;
+  if (opt.stars) {
+    return (
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+        {Array.from({ length: opt.stars }).map((_, i) => (
+          <img key={i} src={`${B}fotosjuego/estrellas.jpg`} alt="" onError={(e) => { e.target.style.display = 'none'; }}
+            style={{ height: size * 0.62, width: size * 0.62, objectFit: 'cover', borderRadius: 10, border: '2px solid rgba(255,255,255,0.6)' }} />
+        ))}
+      </div>
+    );
+  }
+  if (!opt.img) return null;
+  return (
+    <img src={`${B}fotosjuego/${opt.img}`} alt="" onError={(e) => { e.target.style.display = 'none'; }}
+      style={{ height: size, width: size, objectFit: 'cover', objectPosition: 'top', borderRadius: 12, border: '2px solid rgba(255,255,255,0.65)', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', flexShrink: 0 }} />
+  );
+}
 
 const JUROR_COLORS = ['#E4002B', '#0A6CB0', '#12B76A']; // rojo, azul, verde para distinguir jurados
 
@@ -99,12 +173,12 @@ export default function Guayaquil() {
 
   const question = questions[qIndex];
 
-  // Cuenta regresiva 3-2-1 antes de cada pregunta
+  // Cuenta regresiva de 7s antes de cada pregunta (tiempo para LEERLA en voz alta)
   useEffect(() => {
     if (phase !== 'countdown') return;
-    setCount(3);
-    const iv = setInterval(() => setCount((c) => c - 1), 800);
-    const to = setTimeout(() => { clearInterval(iv); beginQuestion(); }, 3 * 800);
+    setCount(COUNTDOWN_SECONDS);
+    const iv = setInterval(() => setCount((c) => c - 1), 1000);
+    const to = setTimeout(() => { clearInterval(iv); beginQuestion(); }, COUNTDOWN_SECONDS * 1000);
     return () => { clearInterval(iv); clearTimeout(to); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, qIndex]);
@@ -205,7 +279,10 @@ export default function Guayaquil() {
       {/* Franja decorativa (bandera celeste-blanco-celeste) arriba */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, background: `linear-gradient(90deg, ${C.celeste} 0 33%, #fff 33% 66%, ${C.celeste} 66% 100%)`, zIndex: 1 }} />
 
-      <div style={{ position: 'relative', zIndex: 2, maxWidth: 1400, margin: '0 auto', padding: '28px 20px 40px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: 1500, margin: '0 auto',
+        padding: phase === 'question' ? '14px 14px 12px' : '28px 20px 40px',
+        height: phase === 'question' ? '100vh' : 'auto', minHeight: phase === 'question' ? 0 : '100vh',
+        display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
 
         {/* ── SETUP ── */}
         {phase === 'setup' && (
@@ -216,11 +293,15 @@ export default function Guayaquil() {
         {/* ── COUNTDOWN ── */}
         {phase === 'countdown' && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-            <p style={{ fontSize: 20, fontWeight: 800, opacity: 0.9 }}>Pregunta {qIndex + 1} de {questions.length}</p>
-            <div key={count} style={{ fontSize: 160, fontWeight: 900, animation: 'gyePop 0.6s ease', textShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
+            <p style={{ fontSize: 18, fontWeight: 800, opacity: 0.9 }}>Pregunta {qIndex + 1} de {questions.length}</p>
+            <h2 style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.2, maxWidth: 900, margin: '10px auto 6px', textShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
+              🎙️ {question.q}
+            </h2>
+            <p style={{ fontSize: 15, fontWeight: 700, color: C.oro }}>El presentador lee la pregunta en voz alta…</p>
+            <div key={count} style={{ fontSize: 120, fontWeight: 900, animation: 'gyePop 0.6s ease', textShadow: '0 8px 30px rgba(0,0,0,0.3)', lineHeight: 1.1 }}>
               {count > 0 ? count : '¡YA!'}
             </div>
-            <p style={{ fontSize: 22 }}>🦜 ¡Prepárense jurados! 🦜</p>
+            <p style={{ fontSize: 20 }}>🦜 ¡Prepárense jurados! 🦜</p>
           </div>
         )}
 
@@ -250,13 +331,14 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
   const [showQ, setShowQ] = useState(false);
   const setJ = (i, v) => { const n = jurors.slice(); n[i] = v; setJurors(n); };
   const setQField = (qi, field, v) => {
-    const n = questions.map((q) => ({ ...q, options: [...q.options] }));
+    const n = questions.map((q) => ({ ...q, options: q.options.map((o) => ({ ...o })) }));
     if (field === 'q') n[qi].q = v;
-    else if (field.startsWith('opt')) { const oi = +field.slice(3); const old = n[qi].options[oi]; n[qi].options[oi] = v; if (n[qi].correct === old) n[qi].correct = v; }
+    else if (field === 'explain') n[qi].explain = v;
+    else if (field.startsWith('opt')) { const oi = +field.slice(3); const old = n[qi].options[oi].t; n[qi].options[oi].t = v; if (n[qi].correct === old) n[qi].correct = v; }
     else if (field === 'correct') n[qi].correct = v;
     setQuestions(n);
   };
-  const addQ = () => setQuestions([...questions, { q: 'Nueva pregunta', options: ['Opción A', 'Opción B', 'Opción C'], correct: 'Opción A' }]);
+  const addQ = () => setQuestions([...questions, { q: 'Nueva pregunta', options: [{ t: 'Opción A' }, { t: 'Opción B' }, { t: 'Opción C' }, { t: 'Opción D' }], correct: 'Opción A', explain: '' }]);
   const delQ = (qi) => setQuestions(questions.filter((_, i) => i !== qi));
 
   return (
@@ -294,14 +376,16 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
               </div>
               {q.options.map((o, oi) => (
                 <div key={oi} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                  <button onClick={() => setQField(qi, 'correct', o)} title="Marcar como correcta"
-                    style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: q.correct === o ? C.oro : 'rgba(255,255,255,0.2)', color: q.correct === o ? '#083D77' : 'white', fontWeight: 900 }}>
-                    {q.correct === o ? '✓' : ''}
+                  <button onClick={() => setQField(qi, 'correct', o.t)} title="Marcar como correcta"
+                    style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: q.correct === o.t ? C.oro : 'rgba(255,255,255,0.2)', color: q.correct === o.t ? '#083D77' : 'white', fontWeight: 900 }}>
+                    {q.correct === o.t ? '✓' : ''}
                   </button>
-                  <input value={o} onChange={(e) => setQField(qi, `opt${oi}`, e.target.value)}
+                  <input value={o.t} onChange={(e) => setQField(qi, `opt${oi}`, e.target.value)}
                     style={{ flex: 1, background: 'rgba(255,255,255,0.9)', color: '#083D77', border: 'none', borderRadius: 8, padding: '6px 10px', fontWeight: 600 }} />
                 </div>
               ))}
+              <input value={q.explain || ''} onChange={(e) => setQField(qi, 'explain', e.target.value)} placeholder="Explicación de la respuesta (la lee el expositor)"
+                style={{ width: '100%', background: 'rgba(255,255,255,0.75)', color: '#083D77', border: 'none', borderRadius: 8, padding: '6px 10px', fontWeight: 600, fontSize: 12, marginTop: 2 }} />
               <p style={{ fontSize: 10.5, opacity: 0.75, marginTop: 4 }}>Toca el círculo para marcar la respuesta correcta.</p>
             </div>
           ))}
@@ -325,56 +409,55 @@ function QuestionScreen({ question, qIndex, total, jurors, orders, answers, time
   const pct = (timeLeft / ROUND_SECONDS) * 100;
   const urgent = timeLeft <= 5;
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      {/* Cabecera: pregunta + cronómetro */}
-      <div style={{ textAlign: 'center', marginBottom: 14 }}>
-        <p style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.85 }}>PREGUNTA {qIndex + 1} DE {total}</p>
-        <h2 style={{ fontSize: 30, fontWeight: 900, lineHeight: 1.15, margin: '4px auto', maxWidth: 900, textShadow: '0 4px 16px rgba(0,0,0,0.25)' }}>{question.q}</h2>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 8 }}>
-          <div style={{ width: 340, maxWidth: '70vw', height: 12, background: 'rgba(255,255,255,0.25)', borderRadius: 8, overflow: 'hidden' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Cabecera compacta: la pregunta se LEE en voz alta → letra pequeña, foco en botones */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.8 }}>PREGUNTA {qIndex + 1}/{total}</span>
+        <span style={{ fontSize: 14, fontWeight: 700, opacity: 0.85, maxWidth: 560, lineHeight: 1.15, textAlign: 'center' }}>🎙️ {question.q}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 180, height: 10, background: 'rgba(255,255,255,0.25)', borderRadius: 8, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${pct}%`, background: urgent ? '#E4002B' : C.oro, transition: 'width .1s linear' }} />
           </div>
-          <span style={{ fontSize: 30, fontWeight: 900, color: urgent ? '#ffd0d0' : 'white', minWidth: 54, textAlign: 'left' }}>{Math.ceil(timeLeft)}s</span>
+          <span style={{ fontSize: 24, fontWeight: 900, color: urgent ? '#ffd0d0' : 'white', minWidth: 44 }}>{Math.ceil(timeLeft)}s</span>
         </div>
       </div>
 
-      {/* 3 columnas de jurados */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+      {/* 3 columnas de jurados a pantalla completa */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
         {jurors.map((name, ji) => {
           const answered = answers[ji];
           return (
-            <div key={ji} style={{ background: 'rgba(255,255,255,0.1)', border: `3px solid ${JUROR_COLORS[ji]}`, borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <div style={{ textAlign: 'center', marginBottom: 10 }}>
-                <span style={{ display: 'inline-block', background: JUROR_COLORS[ji], color: 'white', fontWeight: 900, fontSize: 15, padding: '4px 16px', borderRadius: 999 }}>{name}</span>
+            <div key={ji} style={{ background: 'rgba(255,255,255,0.1)', border: `3px solid ${JUROR_COLORS[ji]}`, borderRadius: 18, padding: 10, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <div style={{ textAlign: 'center', marginBottom: 8, flexShrink: 0 }}>
+                <span style={{ display: 'inline-block', background: JUROR_COLORS[ji], color: 'white', fontWeight: 900, fontSize: 14, padding: '3px 16px', borderRadius: 999 }}>
+                  {name} {answered ? `· ✔ ${(answered.ms / 1000).toFixed(2)}s` : ''}
+                </span>
               </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {orders[ji].map((opt, oi) => {
-                  const chosen = answered?.text === opt;
+                  const chosen = answered?.text === opt.t;
                   const letter = String.fromCharCode(65 + oi);
                   return (
                     <button key={oi} className="gye-btn"
-                      onPointerDown={() => onPick(ji, opt)}
+                      onPointerDown={() => onPick(ji, opt.t)}
                       disabled={!!answered}
                       style={{
+                        flex: 1, minHeight: 0,
                         display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
-                        padding: '20px 16px', minHeight: 78, borderRadius: 18, fontWeight: 900, fontSize: 23, lineHeight: 1.15,
+                        padding: '8px 14px', borderRadius: 16, fontWeight: 900, fontSize: 22, lineHeight: 1.1,
                         background: chosen ? JUROR_COLORS[ji] : '#ffffff',
                         color: chosen ? 'white' : '#083D77',
                         border: chosen ? '4px solid #fff' : `3px solid ${JUROR_COLORS[ji]}`,
                         opacity: answered && !chosen ? 0.3 : 1,
                         boxShadow: '0 6px 16px rgba(0,0,0,0.22)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
                       }}>
-                      <span style={{ flexShrink: 0, width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: chosen ? 'rgba(255,255,255,0.3)' : JUROR_COLORS[ji], color: '#fff', fontSize: 20, fontWeight: 900 }}>{letter}</span>
-                      <span style={{ flex: 1 }}>{opt}</span>
+                      <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: chosen ? 'rgba(255,255,255,0.3)' : JUROR_COLORS[ji], color: '#fff', fontSize: 18, fontWeight: 900 }}>{letter}</span>
+                      <OptionMedia opt={opt} size={Math.min(96, window.innerHeight / 9)} />
+                      <span style={{ flex: 1 }}>{opt.t}</span>
                     </button>
                   );
                 })}
-              </div>
-              <div style={{ textAlign: 'center', marginTop: 10, height: 24 }}>
-                {answered
-                  ? <span style={{ color: C.oro, fontWeight: 900, fontSize: 14 }}>✔ Respondió · {(answered.ms / 1000).toFixed(2)}s</span>
-                  : <span style={{ opacity: 0.55, fontSize: 13 }}>Esperando…</span>}
               </div>
             </div>
           );
@@ -386,14 +469,24 @@ function QuestionScreen({ question, qIndex, total, jurors, orders, answers, time
 
 // ── Reveal de la ronda ───────────────────────────────────────────────────────
 function RevealScreen({ question, jurors, answers, winner, isLast, onNext }) {
+  const correctOpt = question.options.find((o) => o.t === question.correct) || { t: question.correct };
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-      <p style={{ fontSize: 15, fontWeight: 800, opacity: 0.85 }}>Respuesta correcta:</p>
-      <div style={{ background: C.oro, color: '#083D77', fontWeight: 900, fontSize: 26, padding: '12px 28px', borderRadius: 16, margin: '10px 0 24px', boxShadow: '0 8px 24px rgba(0,0,0,0.25)', animation: 'gyePop 0.5s ease' }}>
-        ✓ {question.correct}
+      {/* Respuesta correcta con foto + explicación (el expositor la LEE antes de continuar) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: C.oro, color: '#083D77', borderRadius: 18, padding: '12px 24px', boxShadow: '0 8px 24px rgba(0,0,0,0.25)', animation: 'gyePop 0.5s ease' }}>
+        <OptionMedia opt={correctOpt} size={86} />
+        <div style={{ textAlign: 'left' }}>
+          <p style={{ fontSize: 12, fontWeight: 800, opacity: 0.75, letterSpacing: '0.05em' }}>RESPUESTA CORRECTA</p>
+          <p style={{ fontWeight: 900, fontSize: 26, lineHeight: 1.1 }}>✓ {question.correct}</p>
+        </div>
       </div>
+      {question.explain && (
+        <div style={{ maxWidth: 760, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 14, padding: '10px 20px', margin: '12px 0 4px' }}>
+          <p style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.35 }}>📢 {question.explain}</p>
+        </div>
+      )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, width: '100%', maxWidth: 960 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, width: '100%', maxWidth: 960, marginTop: 14 }}>
         {jurors.map((name, ji) => {
           const a = answers[ji];
           const ok = a && a.text === question.correct;
@@ -401,24 +494,24 @@ function RevealScreen({ question, jurors, answers, winner, isLast, onNext }) {
           return (
             <div key={ji} style={{ overflow: 'hidden', borderRadius: 20, border: `4px solid ${isWin ? C.oro : JUROR_COLORS[ji]}`, background: isWin ? 'rgba(255,197,51,0.18)' : 'rgba(255,255,255,0.1)', boxShadow: isWin ? '0 0 30px rgba(255,197,51,0.5)' : 'none' }}>
               {/* Cabecera con el nombre */}
-              <div style={{ background: isWin ? C.oro : JUROR_COLORS[ji], color: isWin ? '#083D77' : '#fff', padding: '10px 8px', fontWeight: 900, fontSize: 18 }}>
+              <div style={{ background: isWin ? C.oro : JUROR_COLORS[ji], color: isWin ? '#083D77' : '#fff', padding: '8px', fontWeight: 900, fontSize: 17 }}>
                 {isWin && '👑 '}{name}
               </div>
               {/* Cuerpo: resultado */}
-              <div style={{ padding: '18px 14px', textAlign: 'center' }}>
-                <p style={{ fontSize: 52, margin: 0, lineHeight: 1 }}>{ok ? '✅' : a ? '❌' : '⌛'}</p>
-                <p style={{ fontSize: 15, opacity: 0.9, marginTop: 10 }}>{a ? `Respondió "${a.text}"` : 'No respondió'}</p>
-                {a && <p style={{ fontSize: 22, fontWeight: 900, color: ok ? '#c9ffdf' : '#ffd0d0', marginTop: 2 }}>⏱ {(a.ms / 1000).toFixed(2)}s</p>}
+              <div style={{ padding: '12px 12px', textAlign: 'center' }}>
+                <p style={{ fontSize: 42, margin: 0, lineHeight: 1 }}>{ok ? '✅' : a ? '❌' : '⌛'}</p>
+                <p style={{ fontSize: 14, opacity: 0.9, marginTop: 6 }}>{a ? `Respondió "${a.text}"` : 'No respondió'}</p>
+                {a && <p style={{ fontSize: 20, fontWeight: 900, color: ok ? '#c9ffdf' : '#ffd0d0', marginTop: 2 }}>⏱ {(a.ms / 1000).toFixed(2)}s</p>}
               </div>
               {/* Franja ganador (abajo, sin encimar nada) */}
-              {isWin && <div style={{ background: C.oro, color: '#083D77', fontWeight: 900, fontSize: 14, padding: '8px', letterSpacing: '0.03em' }}>🏆 GANÓ LA RONDA</div>}
+              {isWin && <div style={{ background: C.oro, color: '#083D77', fontWeight: 900, fontSize: 13, padding: '6px', letterSpacing: '0.03em' }}>🏆 GANÓ LA RONDA</div>}
             </div>
           );
         })}
       </div>
 
       <button onClick={onNext} className="gye-btn"
-        style={{ marginTop: 30, background: C.oro, color: '#083D77', border: 'none', borderRadius: 999, padding: '15px 44px', fontWeight: 900, fontSize: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
+        style={{ marginTop: 20, background: C.oro, color: '#083D77', border: 'none', borderRadius: 999, padding: '15px 44px', fontWeight: 900, fontSize: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
         {isLast ? '🏁 Ver ganador' : 'Siguiente pregunta ▶'}
       </button>
     </div>
