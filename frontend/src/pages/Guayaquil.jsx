@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 const TZ = 'America/Guayaquil';
 const ROUND_SECONDS = 20;
 const COUNTDOWN_SECONDS = 7; // tiempo entre preguntas para LEERLA en voz alta
-const STORAGE = 'guayaquil_trivia_v3';
+const STORAGE = 'guayaquil_trivia_v4';
 
 // Paleta Guayaquil (celeste + blanco + azul)
 const C = {
@@ -20,7 +20,20 @@ const C = {
 };
 
 // Opciones: { t: texto, img: foto en /fotosjuego, stars: N repite la estrella N veces }
+// practice: true → pregunta de ENTRENAMIENTO, no suma puntos ni cuenta ronda
 const DEFAULT_QUESTIONS = [
+  {
+    practice: true,
+    q: '¿Cuántas franjas celestes (azules) tiene la bandera de Guayaquil?',
+    options: [
+      { t: '2' },
+      { t: '3' },
+      { t: '4' },
+      { t: '5' },
+    ],
+    correct: '3',
+    explain: 'Era solo de práctica 😉 La bandera tiene 5 franjas: 3 celestes y 2 blancas. ¡Ahora sí, empieza el juego de verdad!',
+  },
   {
     q: '¿Cuál NO es un plato típico de Guayaquil?',
     options: [
@@ -163,7 +176,7 @@ function GifDecor() {
 
 export default function Guayaquil() {
   const [phase, setPhase]   = useState('setup'); // setup | countdown | question | reveal | final
-  const [jurors, setJurors] = useState(['Jurado 1', 'Jurado 2', 'Jurado 3']);
+  const [jurors, setJurors] = useState(['Monica Franco', 'Francisco Briones', 'Gianpaolo Lauri']);
   const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
   const [qIndex, setQIndex] = useState(0);
   const [orders, setOrders] = useState([[], [], []]); // opciones barajadas por jurado
@@ -193,6 +206,10 @@ export default function Guayaquil() {
   }, [questions]);
 
   const question = questions[qIndex];
+  // Etiqueta: la práctica no numera; las reales se numeran sin contar la práctica
+  const realTotal = questions.filter((x) => !x.practice).length;
+  const realIdx   = questions.slice(0, qIndex).filter((x) => !x.practice).length + 1;
+  const qLabel    = question?.practice ? '🎯 PREGUNTA DE PRÁCTICA · no cuenta' : `Pregunta ${realIdx} de ${realTotal}`;
 
   // Cuenta regresiva de 7s antes de cada pregunta (tiempo para LEERLA en voz alta)
   useEffect(() => {
@@ -253,13 +270,15 @@ export default function Guayaquil() {
   }, [phase, answers, question]);
 
   const nextQuestion = () => {
-    // sumar puntaje de esta ronda
-    setScores((prev) => {
-      const next = prev.map((s) => ({ ...s }));
-      answers.forEach((a, i) => { if (a) next[i].ms += a.ms; });
-      if (roundResult?.winner != null) next[roundResult.winner].wins += 1;
-      return next;
-    });
+    // sumar puntaje de esta ronda (la de PRÁCTICA no cuenta)
+    if (!question.practice) {
+      setScores((prev) => {
+        const next = prev.map((s) => ({ ...s }));
+        answers.forEach((a, i) => { if (a) next[i].ms += a.ms; });
+        if (roundResult?.winner != null) next[roundResult.winner].wins += 1;
+        return next;
+      });
+    }
     if (qIndex + 1 < questions.length) { setQIndex(qIndex + 1); setPhase('countdown'); }
     else setPhase('final');
   };
@@ -317,7 +336,7 @@ export default function Guayaquil() {
         {/* ── COUNTDOWN ── */}
         {phase === 'countdown' && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-            <p style={{ fontSize: 18, fontWeight: 800, opacity: 0.9 }}>Pregunta {qIndex + 1} de {questions.length}</p>
+            <p style={{ fontSize: 18, fontWeight: 800, opacity: 0.9, color: question?.practice ? C.oro : 'white' }}>{qLabel}</p>
             <h2 style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.2, maxWidth: 900, margin: '10px auto 6px', textShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
               🎙️ {question.q}
             </h2>
@@ -331,7 +350,7 @@ export default function Guayaquil() {
 
         {/* ── QUESTION (multitouch) ── */}
         {phase === 'question' && (
-          <QuestionScreen question={question} qIndex={qIndex} total={questions.length}
+          <QuestionScreen question={question} label={qLabel}
             jurors={jurors} orders={orders} answers={answers} timeLeft={timeLeft} onPick={pick} />
         )}
 
@@ -441,14 +460,14 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
 }
 
 // ── Pantalla de pregunta (3 columnas, multitouch) ────────────────────────────
-function QuestionScreen({ question, qIndex, total, jurors, orders, answers, timeLeft, onPick }) {
+function QuestionScreen({ question, label, jurors, orders, answers, timeLeft, onPick }) {
   const pct = (timeLeft / ROUND_SECONDS) * 100;
   const urgent = timeLeft <= 5;
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Cabecera compacta: la pregunta se LEE en voz alta → letra pequeña, foco en botones */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.8 }}>PREGUNTA {qIndex + 1}/{total}</span>
+        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.9, color: question?.practice ? C.oro : 'white', textTransform: 'uppercase' }}>{label}</span>
         <span style={{ fontSize: 14, fontWeight: 700, opacity: 0.85, maxWidth: 560, lineHeight: 1.15, textAlign: 'center' }}>🎙️ {question.q}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 180, height: 10, background: 'rgba(255,255,255,0.25)', borderRadius: 8, overflow: 'hidden' }}>
@@ -548,7 +567,7 @@ function RevealScreen({ question, jurors, answers, winner, isLast, onNext }) {
 
       <button onClick={onNext} className="gye-btn"
         style={{ marginTop: 20, background: C.oro, color: '#083D77', border: 'none', borderRadius: 999, padding: '15px 44px', fontWeight: 900, fontSize: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
-        {isLast ? '🏁 Ver ganador' : 'Siguiente pregunta ▶'}
+        {isLast ? '🏁 Ver ganador' : question.practice ? '🚀 ¡Empezar el juego de verdad!' : 'Siguiente pregunta ▶'}
       </button>
     </div>
   );
