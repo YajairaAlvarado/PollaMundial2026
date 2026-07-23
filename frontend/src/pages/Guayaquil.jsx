@@ -115,6 +115,15 @@ function OptionMedia({ opt, size = 76 }) {
 // El resultado se distingue con ✅/❌ y el dorado del ganador.
 const JUROR_COLORS = ['#083D77', '#083D77', '#083D77'];
 
+// Fotos de los jurados (por posición: 1=Monica, 2=Francisco, 3=Gianpaolo)
+const JUROR_PHOTOS = ['jurado-monica.jpg', 'jurado-francisco.jpg', 'jurado-gianpaolo.jpg'];
+function JurorPic({ i, size = 36, border = 'rgba(255,255,255,0.8)' }) {
+  const [ok, setOk] = useState(true);
+  if (!ok || !JUROR_PHOTOS[i]) return null;
+  return <img src={`${import.meta.env.BASE_URL}fotosjuego/${JUROR_PHOTOS[i]}`} alt="" onError={() => setOk(false)}
+    style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', border: `2.5px solid ${border}`, boxShadow: '0 3px 8px rgba(0,0,0,0.35)', flexShrink: 0 }} />;
+}
+
 // Pantalla completa (modo app): oculta la barra del navegador en la tablet
 function enterFullscreen() {
   const el = document.documentElement;
@@ -142,13 +151,13 @@ function JuanPueblo({ size = 130 }) {
     style={{ height: size, width: 'auto', filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.35))', animation: 'gyeWave 2.6s ease-in-out infinite', transformOrigin: 'bottom center' }} />;
 }
 
-// Peluche premio. Carga /peluche.png; si no está, emoji.
+// Premio: ¡bolón de verde! Carga la foto real; si no está, emoji.
 function Peluche({ size = 90 }) {
   const [ok, setOk] = useState(true);
-  const src = `${import.meta.env.BASE_URL}peluche.png`;
-  if (!ok) return <div style={{ fontSize: size * 0.6, animation: 'gyeWave 2.2s ease-in-out infinite' }}>🧸🍲</div>;
-  return <img src={src} alt="Peluche" onError={() => setOk(false)}
-    style={{ height: size, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.3))', animation: 'gyeWave 2.2s ease-in-out infinite' }} />;
+  const src = `${import.meta.env.BASE_URL}fotosjuego/premio-bolon.jpg`;
+  if (!ok) return <div style={{ fontSize: size * 0.6, animation: 'gyeWave 2.2s ease-in-out infinite' }}>🍌🍲</div>;
+  return <img src={src} alt="Bolón de verde" onError={() => setOk(false)}
+    style={{ height: size, width: 'auto', borderRadius: 14, border: `3px solid ${C.oro}`, boxShadow: '0 6px 14px rgba(0,0,0,0.3)', animation: 'gyeWave 2.2s ease-in-out infinite' }} />;
 }
 
 // Decoración con una MEZCLA de GIFs guayaquileños en las esquinas
@@ -200,7 +209,7 @@ export default function Guayaquil() {
   // Precargar TODAS las fotos al abrir la página (quedan en caché y salen al instante con la pregunta)
   useEffect(() => {
     const B = import.meta.env.BASE_URL;
-    const srcs = new Set([`${B}fotosjuego/estrellas.jpg`]);
+    const srcs = new Set([`${B}fotosjuego/estrellas.jpg`, `${B}fotosjuego/premio-bolon.jpg`, ...JUROR_PHOTOS.map((p) => `${B}fotosjuego/${p}`)]);
     for (const q of questions) for (const o of q.options) if (o.img) srcs.add(`${B}fotosjuego/${o.img}`);
     srcs.forEach((s) => { const im = new Image(); im.src = s; });
   }, [questions]);
@@ -395,7 +404,8 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
       <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap', justifyContent: 'center' }}>
         {jurors.map((j, i) => (
           <div key={i} style={{ background: 'rgba(255,255,255,0.14)', border: `2px solid ${JUROR_COLORS[i]}`, borderRadius: 16, padding: '10px 14px' }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: JUROR_COLORS[i], marginBottom: 4 }}>JURADO {i + 1}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}><JurorPic i={i} size={56} /></div>
+            <p style={{ fontSize: 11, fontWeight: 800, color: 'white', opacity: 0.8, marginBottom: 4 }}>JURADO {i + 1}</p>
             <input value={j} onChange={(e) => setJ(i, e.target.value)}
               style={{ background: 'rgba(255,255,255,0.9)', color: '#083D77', border: 'none', borderRadius: 8, padding: '6px 10px', fontWeight: 800, textAlign: 'center', width: 140 }} />
           </div>
@@ -483,7 +493,8 @@ function QuestionScreen({ question, label, jurors, orders, answers, timeLeft, on
           const answered = answers[ji];
           return (
             <div key={ji} style={{ background: 'rgba(255,255,255,0.1)', border: `3px solid ${JUROR_COLORS[ji]}`, borderRadius: 18, padding: 10, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <div style={{ textAlign: 'center', marginBottom: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8, flexShrink: 0 }}>
+                <JurorPic i={ji} size={38} />
                 <span style={{ display: 'inline-block', background: JUROR_COLORS[ji], color: 'white', fontWeight: 900, fontSize: 14, padding: '3px 16px', borderRadius: 999 }}>
                   {name} {answered ? `· ✔ ${(answered.ms / 1000).toFixed(2)}s` : ''}
                 </span>
@@ -548,9 +559,10 @@ function RevealScreen({ question, jurors, answers, winner, isLast, onNext }) {
           const isWin = winner === ji;
           return (
             <div key={ji} style={{ overflow: 'hidden', borderRadius: 20, border: `4px solid ${isWin ? C.oro : JUROR_COLORS[ji]}`, background: isWin ? 'rgba(255,197,51,0.18)' : 'rgba(255,255,255,0.1)', boxShadow: isWin ? '0 0 30px rgba(255,197,51,0.5)' : 'none' }}>
-              {/* Cabecera con el nombre */}
-              <div style={{ background: isWin ? C.oro : JUROR_COLORS[ji], color: isWin ? '#083D77' : '#fff', padding: '8px', fontWeight: 900, fontSize: 17 }}>
-                {isWin && '👑 '}{name}
+              {/* Cabecera con foto y nombre */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: isWin ? C.oro : JUROR_COLORS[ji], color: isWin ? '#083D77' : '#fff', padding: '7px 8px', fontWeight: 900, fontSize: 17 }}>
+                <JurorPic i={ji} size={34} border={isWin ? '#083D77' : 'rgba(255,255,255,0.8)'} />
+                <span>{isWin && '👑 '}{name}</span>
               </div>
               {/* Cuerpo: resultado */}
               <div style={{ padding: '12px 12px', textAlign: 'center' }}>
@@ -585,9 +597,12 @@ function FinalScreen({ ranking, onRestart }) {
         <span key={i} style={{ position: 'fixed', top: -30, left: `${c.left}%`, fontSize: 26, animation: `gyeConfetti ${c.dur}s ${c.delay}s ease-in forwards` }}>{c.e}</span>
       ))}
       <p style={{ fontSize: 20, fontWeight: 800 }}>🏆 ¡Tenemos ganador! 🏆</p>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, margin: '6px 0' }}>
-        <JuanPueblo size={120} />
-        <div style={{ fontSize: 56, animation: 'gyePop 0.6s ease' }}>👑</div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12, margin: '6px 0' }}>
+        <JuanPueblo size={110} />
+        <div style={{ position: 'relative', animation: 'gyePop 0.6s ease' }}>
+          <div style={{ position: 'absolute', top: -34, left: '50%', transform: 'translateX(-50%)', fontSize: 44 }}>👑</div>
+          <JurorPic i={champ.i} size={150} border={C.oro} />
+        </div>
       </div>
       <h1 style={{ fontSize: 46, fontWeight: 900, color: C.oro, textShadow: '0 6px 20px rgba(0,0,0,0.3)' }}>{champ.name}</h1>
       <p style={{ opacity: 0.9 }}>{champ.wins} ronda{champ.wins === 1 ? '' : 's'} ganada{champ.wins === 1 ? '' : 's'} · {(champ.ms / 1000).toFixed(2)}s en total</p>
@@ -596,7 +611,7 @@ function FinalScreen({ ranking, onRestart }) {
       <div style={{ marginTop: 18, background: 'rgba(255,255,255,0.14)', border: `2px solid ${C.oro}`, borderRadius: 20, padding: '16px 26px' }}>
         <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.85 }}>PREMIO</p>
         <div style={{ display: 'flex', justifyContent: 'center', margin: '6px 0' }}><Peluche size={110} /></div>
-        <p style={{ fontWeight: 900, fontSize: 18 }}>¡Peluche de encebollado! 🍲</p>
+        <p style={{ fontWeight: 900, fontSize: 18 }}>¡Bolón de verde! 🍌😋</p>
       </div>
 
       {/* Tabla completa */}
@@ -604,6 +619,7 @@ function FinalScreen({ ranking, onRestart }) {
         {ranking.map((r, i) => (
           <div key={r.i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: i === 0 ? 'rgba(255,197,51,0.18)' : 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 14px', marginBottom: 8 }}>
             <span style={{ fontSize: 20, fontWeight: 900, width: 30 }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+            <JurorPic i={r.i} size={34} border={i === 0 ? C.oro : 'rgba(255,255,255,0.6)'} />
             <span style={{ flex: 1, textAlign: 'left', fontWeight: 800 }}>{r.name}</span>
             <span style={{ fontWeight: 900, color: C.oro }}>{r.wins} pts</span>
             <span style={{ opacity: 0.7, fontSize: 13, minWidth: 64, textAlign: 'right' }}>{(r.ms / 1000).toFixed(2)}s</span>
