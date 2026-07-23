@@ -102,6 +102,17 @@ function OptionMedia({ opt, size = 76 }) {
 // El resultado se distingue con ✅/❌ y el dorado del ganador.
 const JUROR_COLORS = ['#083D77', '#083D77', '#083D77'];
 
+// Pantalla completa (modo app): oculta la barra del navegador en la tablet
+function enterFullscreen() {
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  try { fn?.call(el)?.catch?.(() => {}); } catch { /* noop */ }
+}
+function exitFullscreen() {
+  const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+  try { if (document.fullscreenElement || document.webkitFullscreenElement) fn?.call(document)?.catch?.(() => {}); } catch { /* noop */ }
+}
+
 function shuffle(a) {
   const r = a.slice();
   for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
@@ -300,7 +311,7 @@ export default function Guayaquil() {
         {/* ── SETUP ── */}
         {phase === 'setup' && (
           <SetupScreen jurors={jurors} setJurors={setJurors} questions={questions} setQuestions={setQuestions}
-            onStart={() => { saveConfig(jurors, questions); setQIndex(0); setPhase('countdown'); }} saveConfig={saveConfig} />
+            onStart={() => { enterFullscreen(); saveConfig(jurors, questions); setQIndex(0); setPhase('countdown'); }} saveConfig={saveConfig} />
         )}
 
         {/* ── COUNTDOWN ── */}
@@ -413,6 +424,18 @@ function SetupScreen({ jurors, setJurors, questions, setQuestions, onStart, save
         style={{ marginTop: 26, background: C.oro, color: '#083D77', border: 'none', borderRadius: 999, padding: '16px 48px', fontWeight: 900, fontSize: 22, boxShadow: '0 10px 30px rgba(0,0,0,0.3)', animation: 'gyePulse 1.8s ease-in-out infinite' }}>
         ▶ COMENZAR
       </button>
+
+      {/* Modo app: pantalla completa manual (también se activa sola al COMENZAR) */}
+      <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+        <button onClick={enterFullscreen}
+          style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 20, padding: '7px 16px', fontWeight: 700, fontSize: 12 }}>
+          ⛶ Pantalla completa
+        </button>
+        <button onClick={exitFullscreen}
+          style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 20, padding: '7px 16px', fontWeight: 700, fontSize: 12 }}>
+          ✕ Salir
+        </button>
+      </div>
     </div>
   );
 }
